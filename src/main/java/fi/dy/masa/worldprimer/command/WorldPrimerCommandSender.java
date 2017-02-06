@@ -1,6 +1,7 @@
 package fi.dy.masa.worldprimer.command;
 
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandResultStats.Type;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
@@ -31,7 +32,10 @@ public class WorldPrimerCommandSender implements ICommandSender
 
         for (String command : commands)
         {
-            manager.executeCommand(this, command);
+            if (StringUtils.isBlank(command) == false)
+            {
+                manager.executeCommand(this, command);
+            }
         }
     }
 
