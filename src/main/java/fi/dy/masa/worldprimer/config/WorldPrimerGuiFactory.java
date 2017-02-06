@@ -3,7 +3,7 @@ package fi.dy.masa.worldprimer.config;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
+import cpw.mods.fml.client.IModGuiFactory;
 
 public class WorldPrimerGuiFactory implements IModGuiFactory
 {
@@ -24,7 +24,6 @@ public class WorldPrimerGuiFactory implements IModGuiFactory
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
     {

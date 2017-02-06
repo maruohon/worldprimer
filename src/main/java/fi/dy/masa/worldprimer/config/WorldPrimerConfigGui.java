@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
-import net.minecraftforge.fml.client.config.GuiConfig;
-import net.minecraftforge.fml.client.config.IConfigElement;
+import cpw.mods.fml.client.config.GuiConfig;
+import cpw.mods.fml.client.config.IConfigElement;
 import fi.dy.masa.worldprimer.reference.Reference;
 
+@SuppressWarnings("rawtypes")
 public class WorldPrimerConfigGui extends GuiConfig
 {
     public WorldPrimerConfigGui(GuiScreen parent)
@@ -15,6 +16,7 @@ public class WorldPrimerConfigGui extends GuiConfig
         super(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle(parent));
     }
 
+    @SuppressWarnings("unchecked")
     private static List<IConfigElement> getConfigElements()
     {
         List<IConfigElement> configElements = new ArrayList<IConfigElement>();

@@ -3,7 +3,7 @@ package fi.dy.masa.worldprimer.event;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
@@ -15,10 +15,10 @@ public class EventHandler
     @SubscribeEvent
     public void onCreateSpawn(WorldEvent.CreateSpawnPosition event)
     {
-        World world = event.getWorld();
+        World world = event.world;
 
         // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist
-        if (world.isRemote == false && world.provider.getDimension() == 0)
+        if (world.isRemote == false && world.provider.dimensionId == 0)
         {
             // Defer running the commands until the world is actually ready to load
             this.runCreationCommands = Configs.enableWorldCreationCommands;
@@ -28,11 +28,11 @@ public class EventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        World world = event.getWorld();
+        World world = event.world;
 
         if (world.isRemote == false)
         {
-            int dimension = world.provider.getDimension();
+            int dimension = world.provider.dimensionId;
 
             if (dimension == 0)
             {

@@ -1,18 +1,17 @@
 package fi.dy.masa.worldprimer;
 
 import org.apache.logging.log4j.Logger;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.worldprimer.config.WorldPrimerGuiFactory",
-    updateJSON = "https://raw.githubusercontent.com/maruohon/worldprimer/master/update.json",
-    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.10,1.11.2]")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.7,1.7.10]")
 public class WorldPrimer
 {
     @Mod.Instance(Reference.MOD_ID)
