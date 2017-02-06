@@ -1,16 +1,18 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-primer",
     "promos": {
-        "1.11.2-latest": "0.2.0",
-        "1.11.2-recommended": "0.2.0",
-        "1.10.2-latest": "0.2.0",
-        "1.10.2-recommended": "0.2.0"
+        "1.11.2-latest": "0.2.1",
+        "1.11.2-recommended": "0.2.1",
+        "1.10.2-latest": "0.2.1",
+        "1.10.2-recommended": "0.2.1"
     },
     "1.11.2": {
+        "0.2.1": "Fix non-dimension-specific dimension loading commands not working",
         "0.2.0": "Added the options to run commands on every world load or on every dimension load\nAdded toggle options to disable the commands without having to remove all of them",
         "0.1.0": "Initial release - can run a set of commands on initial world creation"
     },
     "1.10.2": {
+        "0.2.1": "Fix non-dimension-specific dimension loading commands not working",
         "0.2.0": "Added the options to run commands on every world load or on every dimension load\nAdded toggle options to disable the commands without having to remove all of them",
         "0.1.0": "Initial release - can run a set of commands on initial world creation"
     }
