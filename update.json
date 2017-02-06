@@ -1,0 +1,15 @@
+{
+    "homepage": "http://minecraft.curseforge.com/projects/world-primer",
+    "promos": {
+        "1.11.2-latest": "0.0.0",
+        "1.11.2-recommended": "0.0.0",
+        "1.10.2-latest": "0.0.0",
+        "1.10.2-recommended": "0.0.0"
+    },
+    "1.11.2": {
+        "0.0.0": ""
+    },
+    "1.10.2": {
+        "0.0.0": ""
+    }
+}
