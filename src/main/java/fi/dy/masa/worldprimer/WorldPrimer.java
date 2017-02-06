@@ -12,7 +12,7 @@ import fi.dy.masa.worldprimer.reference.Reference;
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.worldprimer.config.WorldPrimerGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldprimer/master/update.json",
-    acceptedMinecraftVersions = "[1.10,1.10.2]")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.10,1.11.2]")
 public class WorldPrimer
 {
     @Mod.Instance(Reference.MOD_ID)
