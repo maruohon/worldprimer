@@ -68,11 +68,7 @@ public class EventHandler
 
             String[] parts = command.split(" ");
 
-            if (parts.length < 3)
-            {
-                WorldPrimerCommandSender.instance().runCommands(command);
-            }
-            else if (parts[0].equals("worldprimer-dim-command"))
+            if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
             {
                 try
                 {
@@ -88,6 +84,10 @@ public class EventHandler
                 {
                     WorldPrimer.logger.warn("Invalid dimension id '{}' in dimension-specific command '{}'", parts[1], command);
                 }
+            }
+            else
+            {
+                WorldPrimerCommandSender.instance().runCommands(command);
             }
         }
     }
