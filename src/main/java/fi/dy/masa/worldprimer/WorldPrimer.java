@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Logger;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
@@ -29,6 +30,12 @@ public class WorldPrimer
 
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
         proxy.registerEventHandlers();
+    }
+
+    @Mod.EventHandler
+    public void onServerAboutToStart(FMLServerAboutToStartEvent event)
+    {
+        Configs.reloadConfigs();
     }
 
     public static void logInfo(String message, Object... params)

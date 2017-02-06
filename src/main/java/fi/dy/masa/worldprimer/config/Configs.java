@@ -9,38 +9,48 @@ import fi.dy.masa.worldprimer.reference.Reference;
 
 public class Configs
 {
-    public static File configurationFile;
-    public static Configuration config;
-    
+    static File configurationFile;
+    static Configuration config;
+
     public static final String CATEGORY_GENERIC = "Generic";
 
     public static boolean enableLoggingInfo;
+    public static String[] worldCreationCommands;
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
     {
         if (Reference.MOD_ID.equals(event.getModID()))
         {
-            loadConfigs(config);
+            reloadConfigs();
         }
     }
 
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
-        config = new Configuration(configFile, null, false);
+        config = new Configuration(configurationFile, null, false);
         config.load();
 
+        reloadConfigs();
+    }
+
+    public static void reloadConfigs()
+    {
         loadConfigs(config);
     }
 
-    public static void loadConfigs(Configuration conf)
+    private static void loadConfigs(Configuration conf)
     {
         Property prop;
 
         prop = conf.get(CATEGORY_GENERIC, "enableDebugLogging", false).setRequiresMcRestart(false);
         prop.setComment("Enables more verbose logging");
         enableLoggingInfo = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_GENERIC, "worldCreationCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run on initial world creation");
+        worldCreationCommands = prop.getStringList();
 
         if (conf.hasChanged())
         {
