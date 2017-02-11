@@ -42,7 +42,7 @@ public class WorldPrimerCommandSender implements ICommandSender
     }
 
     @Override
-    public IChatComponent getFormattedCommandSenderName()
+    public IChatComponent func_145748_c_()
     {
         return DISPLAY_NAME;
     }
@@ -60,7 +60,7 @@ public class WorldPrimerCommandSender implements ICommandSender
     }
 
     @Override
-    public ChunkCoordinates getCommandSenderPosition()
+    public ChunkCoordinates getPlayerCoordinates()
     {
         return POSITION;
     }
