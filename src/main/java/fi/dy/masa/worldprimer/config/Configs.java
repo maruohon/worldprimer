@@ -27,26 +27,26 @@ public class Configs
     {
         if (Reference.MOD_ID.equals(event.modID))
         {
-            reloadConfigs();
+            loadConfigs();
         }
     }
 
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
-        config = new Configuration(configurationFile, null, false);
-        config.load();
-
         reloadConfigs();
     }
 
     public static void reloadConfigs()
     {
-        loadConfigs(config);
+        config = new Configuration(configurationFile, null, false);
+        config.load();
+        loadConfigs();
     }
 
-    private static void loadConfigs(Configuration conf)
+    private static void loadConfigs()
     {
+        Configuration conf = config;
         Property prop;
 
         prop = conf.get(CATEGORY_GENERIC, "enableDebugLogging", false).setRequiresMcRestart(false);
