@@ -12,7 +12,7 @@ public class Configs
     static File configurationFile;
     static Configuration config;
 
-    public static final String CATEGORY_GENERIC = "Generic";
+    public static final String CATEGORY_GENERIC = "generic";
 
     public static boolean enableLoggingInfo;
     public static boolean enableDimensionLoadingCommands;
@@ -34,7 +34,7 @@ public class Configs
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
-        config = new Configuration(configurationFile, null, true);
+        config = new Configuration(configurationFile, null, false);
         config.load();
 
         reloadConfigs();
