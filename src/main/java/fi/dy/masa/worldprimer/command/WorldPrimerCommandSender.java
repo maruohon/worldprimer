@@ -60,7 +60,7 @@ public class WorldPrimerCommandSender implements ICommandSender
     @Override
     public boolean canUseCommand(int permLevel, String commandName)
     {
-        return permLevel <= 2;
+        return true;
     }
 
     @Override
