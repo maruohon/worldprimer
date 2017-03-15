@@ -35,7 +35,7 @@ public class Configs
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
-        config = new Configuration(configurationFile, null, false);
+        config = new Configuration(configurationFile, null, true);
         config.load();
 
         reloadConfigs();
