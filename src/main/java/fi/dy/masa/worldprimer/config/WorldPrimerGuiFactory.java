@@ -19,6 +19,18 @@ public class WorldPrimerGuiFactory implements IModGuiFactory
     }
 
     @Override
+    public boolean hasConfigGui()
+    {
+        return true;
+    }
+
+    @Override
+    public GuiScreen createConfigGui(GuiScreen parentScreen)
+    {
+        return new WorldPrimerConfigGui(parentScreen);
+    }
+
+    @Override
     public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
     {
         return null;
