@@ -1,18 +1,20 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-primer",
     "promos": {
-        "1.11.2-latest": "0.3.0",
-        "1.11.2-recommended": "0.3.0",
-        "1.10.2-latest": "0.3.0",
-        "1.10.2-recommended": "0.3.0"
+        "1.11.2-latest": "0.4.0",
+        "1.11.2-recommended": "0.4.0",
+        "1.10.2-latest": "0.4.0",
+        "1.10.2-recommended": "0.4.0"
     },
     "1.11.2": {
+        "0.4.0": "Added new world creation and loading command variants\nAdded some command string substitutions\nFixed dimension load tracker not clearing data on new world creation (SP)",
         "0.3.0": "Added dimension load count tracking\nAdded new dimension loading command variants, to run command on a specific load count, or on a multiple of some load count",
         "0.2.1": "Fix non-dimension-specific dimension loading commands not working",
         "0.2.0": "Added the options to run commands on every world load or on every dimension load\nAdded toggle options to disable the commands without having to remove all of them",
         "0.1.0": "Initial release - can run a set of commands on initial world creation"
     },
     "1.10.2": {
+        "0.4.0": "Added new world creation and loading command variants\nAdded some command string substitutions\nFixed dimension load tracker not clearing data on new world creation (SP)",
         "0.3.0": "Added dimension load count tracking\nAdded new dimension loading command variants, to run command on a specific load count, or on a multiple of some load count",
         "0.2.1": "Fix non-dimension-specific dimension loading commands not working",
         "0.2.0": "Added the options to run commands on every world load or on every dimension load\nAdded toggle options to disable the commands without having to remove all of them",
