@@ -43,20 +43,53 @@ public class WorldPrimer
         logInfo("FMLServerAboutToStartEvent");
         Configs.reloadConfigs();
 
-        File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory, event.getServer().getFolderName());
-        // We need to read the data before any dimension loads
-        DimensionLoadTracker.instance().readFromDisk(worldDir);
+        File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory,
+                event.getServer().getFolderName());
+
+        if (Configs.enableDimensionLoadTracking)
+        {
+            // We need to read the data before any dimension loads
+            DimensionLoadTracker.instance().readFromDisk(worldDir);
+
+            int count = DimensionLoadTracker.instance().getServerStartCount();
+            logInfo("FMLServerAboutToStartEvent - server starting, previous start count: {}", count);
+
+            // The server start count is incremented in the FMLServerStartedEvent,
+            // so on world creation it will be 0 here
+            if (Configs.enableEarlyWorldCreationCommands && count == 0)
+            {
+                WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldCreationCommands");
+                WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldCreationCommands);
+            }
+        }
+
+        if (Configs.enableEarlyWorldLoadingCommands)
+        {
+            WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
+            WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldLoadingCommands);
+        }
     }
 
     @Mod.EventHandler
     public void onServerStarted(FMLServerStartedEvent event)
     {
         logInfo("FMLServerStartedEvent");
+
+        if (Configs.enableDimensionLoadTracking &&
+            Configs.enablePostWorldCreationCommands &&
+            DimensionLoadTracker.instance().getServerStartCount() == 0)
+        {
+            WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
+            WorldPrimerCommandSender.instance().runCommands(Configs.postWorldCreationCommands);
+        }
+
+        // Increment the server start count
         DimensionLoadTracker.instance().serverStarted();
 
-        if (Configs.enableWorldLoadingCommands)
+        if (Configs.enablePostWorldLoadingCommands)
         {
-            WorldPrimerCommandSender.instance().runCommands(Configs.worldLoadingCommands);
+            WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
+            WorldPrimerCommandSender.instance().runCommands(Configs.postWorldLoadingCommands);
         }
     }
 

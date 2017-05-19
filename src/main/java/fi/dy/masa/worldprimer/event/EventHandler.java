@@ -19,11 +19,19 @@ public class EventHandler
         WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition");
         World world = event.getWorld();
 
-        // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist
-        if (Configs.enableDimensionLoadTracking == false && world.isRemote == false && world.provider.getDimension() == 0)
+        // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist.
+        // This is only used if the load tracking is not used.
+        if (Configs.enableDimensionLoadTracking == false &&
+            world.isRemote == false && world.provider.getDimension() == 0)
         {
+            if (Configs.enableEarlyWorldCreationCommands)
+            {
+                WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition - running earlyWorldCreationCommands");
+                WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldCreationCommands);
+            }
+
             // Defer running the commands until the world is actually ready to load
-            this.runCreationCommands = Configs.enableWorldCreationCommands;
+            this.runCreationCommands = Configs.enablePostWorldCreationCommands;
         }
     }
 
@@ -40,24 +48,19 @@ public class EventHandler
             // The creation commands are only run via this method when not using dimension load count tracking
             if (this.runCreationCommands && dimension == 0)
             {
-                WorldPrimer.logInfo("WorldEvent.Load - running worldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(Configs.worldCreationCommands);
+                WorldPrimer.logInfo("WorldEvent.Load - running postWorldCreationCommands");
+                WorldPrimerCommandSender.instance().runCommands(Configs.postWorldCreationCommands);
                 this.runCreationCommands = false;
             }
 
             if (Configs.enableDimensionLoadTracking)
             {
                 DimensionLoadTracker.instance().dimensionLoaded(dimension);
-
-                if (dimension == 0 && DimensionLoadTracker.instance().getLoadCountFor(0) == 1)
-                {
-                    WorldPrimer.logInfo("WorldEvent.Load - running worldCreationCommands");
-                    WorldPrimerCommandSender.instance().runCommands(Configs.worldCreationCommands);
-                }
             }
 
             if (Configs.enableDimensionLoadingCommands)
             {
+                WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
                 this.runDimensionLoadingCommands(dimension);
             }
         }
@@ -71,7 +74,6 @@ public class EventHandler
 
     private void runDimensionLoadingCommands(int dimension)
     {
-        WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
         String[] commands = Configs.dimensionLoadingCommands;
 
         for (String command : commands)

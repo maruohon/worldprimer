@@ -58,6 +58,11 @@ public class DimensionLoadTracker
         return count != null ? count.intValue() : 0;
     }
 
+    public int getServerStartCount()
+    {
+        return this.serverStarts;
+    }
+
     private void readFromNBT(NBTTagCompound nbt)
     {
         if (nbt == null || nbt.hasKey("DimLoadCounts", Constants.NBT.TAG_LIST) == false)
