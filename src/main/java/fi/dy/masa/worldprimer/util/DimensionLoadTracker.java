@@ -129,6 +129,10 @@ public class DimensionLoadTracker
             return;
         }
 
+        // Clear old data regardless of whether there is a data file
+        this.loadCounts.clear();
+        this.serverStarts = 0;
+
         this.worldDir = worldDir;
         File file = new File(new File(worldDir, Reference.MOD_ID), "dim_loads.nbt");
 
