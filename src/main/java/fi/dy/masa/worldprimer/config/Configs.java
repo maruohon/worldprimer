@@ -1,6 +1,7 @@
 package fi.dy.masa.worldprimer.config;
 
 import java.io.File;
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
@@ -52,6 +53,27 @@ public class Configs
 
     private static void loadConfigs(Configuration conf)
     {
+        ConfigCategory category = conf.getCategory(CATEGORY_GENERIC);
+        category.setComment("Generic tips:\n" +
+                            "There are a few substitutions available to use in the commands.\n" +
+                            "They are: {DIMENSION}, {SPAWNX}, {SPAWNY} and {SPAWNZ}\n" +
+                            "Any occurences of those strings will be replaced by the current dimension ID,\n" +
+                            "or the coordinates of the spawn point, respectively. They also support\n" +
+                            "adding or subtracting a value from them. So you can do for example:\n" +
+                            "fill {SPAWNX}-2 {SPAWNY}+3 {SPAWNZ}-2 {SPAWNX}+2 {SPAWNY}+7 {SPAWNZ}+2 minecraft:emerald_block" +
+                            "Note however, that the earlyWorldCreationCommands and the earlyWorldLoadingCommands\n" +
+                            "DO NOT have a world available yet, so the substitutions will NOT happen for those commands.\n" +
+                            "Thus, those commands also can't do anything that would require a world.\n" +
+                            "An example of this is setting the game rules - those are kept in the WorldInfo object,\n" +
+                            "which is stored in the World, so the overworld specifically needs to be loaded for changing any game rules.\n" +
+                            "Additionally, the postWorldCreationCommands and the postWorldLoadingCommands will use\n" +
+                            "the Overworld (or whichever world is dimension 0) for the substitutions.\n" +
+                            "So it's mostly the dimension loading commands that benefit from the {DIMENSION} substitution.\n" +
+                            "Note also, that by default in vanilla/Forge, ALL dimensions use the WorldInfo from the overworld,\n" +
+                            "which means that they will have the exact same spawn coordinates and game rules etc. as the overworld.\n" +
+                            "Some mods may change this so that dimensions can have separate spawn points, game rules etc.\n" +
+                            "One such mod is Just Enough Dimensions.");
+
         Property prop;
 
         prop = conf.get(CATEGORY_GENERIC, "enableDebugLogging", false).setRequiresMcRestart(false);

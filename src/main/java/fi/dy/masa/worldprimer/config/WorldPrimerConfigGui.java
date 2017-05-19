@@ -19,7 +19,7 @@ public class WorldPrimerConfigGui extends GuiConfig
     {
         List<IConfigElement> configElements = new ArrayList<IConfigElement>();
 
-        configElements.addAll(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)).getChildElements());
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)));
 
         return configElements;
     }

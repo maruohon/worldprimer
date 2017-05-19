@@ -27,7 +27,7 @@ public class EventHandler
             if (Configs.enableEarlyWorldCreationCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition - running earlyWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldCreationCommands);
+                WorldPrimerCommandSender.instance().runCommands(world, Configs.earlyWorldCreationCommands);
             }
 
             // Defer running the commands until the world is actually ready to load
@@ -49,7 +49,7 @@ public class EventHandler
             if (this.runCreationCommands && dimension == 0)
             {
                 WorldPrimer.logInfo("WorldEvent.Load - running postWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(Configs.postWorldCreationCommands);
+                WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
                 this.runCreationCommands = false;
             }
 
@@ -61,7 +61,7 @@ public class EventHandler
             if (Configs.enableDimensionLoadingCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
-                this.runDimensionLoadingCommands(dimension);
+                this.runDimensionLoadingCommands(dimension, world);
             }
         }
     }
@@ -72,7 +72,7 @@ public class EventHandler
         DimensionLoadTracker.instance().writeToDisk();
     }
 
-    private void runDimensionLoadingCommands(int dimension)
+    private void runDimensionLoadingCommands(int dimension, World world)
     {
         String[] commands = Configs.dimensionLoadingCommands;
 
@@ -87,20 +87,20 @@ public class EventHandler
 
             if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
             {
-                this.runDimLoadingCommandsRegular(dimension, command, parts);
+                this.runDimLoadingCommandsRegular(dimension, world, command, parts);
             }
             else if (Configs.enableDimensionLoadTracking && parts.length >= 4 && parts[0].equals("worldprimer-dim-command-nth"))
             {
-                this.runDimLoadingCommandsNth(dimension, command, parts);
+                this.runDimLoadingCommandsNth(dimension, world, command, parts);
             }
             else
             {
-                WorldPrimerCommandSender.instance().runCommands(command);
+                WorldPrimerCommandSender.instance().runCommands(world, command);
             }
         }
     }
 
-    private void runDimLoadingCommandsRegular(int dimension, String fullCommand, String[] cmdParts)
+    private void runDimLoadingCommandsRegular(int dimension, World world, String fullCommand, String[] cmdParts)
     {
         try
         {
@@ -109,7 +109,7 @@ public class EventHandler
             if (dimension == dim)
             {
                 cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.instance().runCommands(String.join(" ", cmdParts));
+                WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
             }
         }
         catch (NumberFormatException e)
@@ -118,7 +118,7 @@ public class EventHandler
         }
     }
 
-    private void runDimLoadingCommandsNth(int dimension, String fullCommand, String[] cmdParts)
+    private void runDimLoadingCommandsNth(int dimension, World world, String fullCommand, String[] cmdParts)
     {
         try
         {
@@ -141,7 +141,7 @@ public class EventHandler
                 if ((modulo && count != 0 && (loadCount % count) == 0) || (modulo == false && loadCount == count))
                 {
                     cmdParts = dropFirstStrings(cmdParts, 3);
-                    WorldPrimerCommandSender.instance().runCommands(String.join(" ", cmdParts));
+                    WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
                 }
             }
         }

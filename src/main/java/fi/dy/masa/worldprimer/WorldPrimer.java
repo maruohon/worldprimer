@@ -2,7 +2,9 @@ package fi.dy.masa.worldprimer;
 
 import java.io.File;
 import org.apache.logging.log4j.Logger;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilSaveConverter;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -59,14 +61,14 @@ public class WorldPrimer
             if (Configs.enableEarlyWorldCreationCommands && count == 0)
             {
                 WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldCreationCommands);
+                WorldPrimerCommandSender.instance().runCommands(null, Configs.earlyWorldCreationCommands);
             }
         }
 
         if (Configs.enableEarlyWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
-            WorldPrimerCommandSender.instance().runCommands(Configs.earlyWorldLoadingCommands);
+            WorldPrimerCommandSender.instance().runCommands(null, Configs.earlyWorldLoadingCommands);
         }
     }
 
@@ -74,13 +76,14 @@ public class WorldPrimer
     public void onServerStarted(FMLServerStartedEvent event)
     {
         logInfo("FMLServerStartedEvent");
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
 
         if (Configs.enableDimensionLoadTracking &&
             Configs.enablePostWorldCreationCommands &&
             DimensionLoadTracker.instance().getServerStartCount() == 0)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
-            WorldPrimerCommandSender.instance().runCommands(Configs.postWorldCreationCommands);
+            WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
         }
 
         // Increment the server start count
@@ -89,7 +92,7 @@ public class WorldPrimer
         if (Configs.enablePostWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
-            WorldPrimerCommandSender.instance().runCommands(Configs.postWorldLoadingCommands);
+            WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldLoadingCommands);
         }
     }
 
