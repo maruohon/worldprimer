@@ -40,6 +40,7 @@ public class WorldPrimer
     @Mod.EventHandler
     public void onServerAboutToStart(FMLServerAboutToStartEvent event)
     {
+        logInfo("FMLServerAboutToStartEvent");
         Configs.reloadConfigs();
 
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory, event.getServer().getFolderName());
@@ -50,6 +51,7 @@ public class WorldPrimer
     @Mod.EventHandler
     public void onServerStarted(FMLServerStartedEvent event)
     {
+        logInfo("FMLServerStartedEvent");
         DimensionLoadTracker.instance().serverStarted();
 
         if (Configs.enableWorldLoadingCommands)
@@ -63,6 +65,10 @@ public class WorldPrimer
         if (Configs.enableLoggingInfo)
         {
             logger.info(message, params);
+        }
+        else
+        {
+            logger.debug(message, params);
         }
     }
 }

@@ -16,6 +16,7 @@ public class EventHandler
     @SubscribeEvent
     public void onCreateSpawn(WorldEvent.CreateSpawnPosition event)
     {
+        WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition");
         World world = event.getWorld();
 
         // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist
@@ -34,10 +35,12 @@ public class EventHandler
         if (world.isRemote == false)
         {
             int dimension = world.provider.getDimension();
+            WorldPrimer.logInfo("WorldEvent.Load, DIM: {}", dimension);
 
             // The creation commands are only run via this method when not using dimension load count tracking
             if (this.runCreationCommands && dimension == 0)
             {
+                WorldPrimer.logInfo("WorldEvent.Load - running worldCreationCommands");
                 WorldPrimerCommandSender.instance().runCommands(Configs.worldCreationCommands);
                 this.runCreationCommands = false;
             }
@@ -46,8 +49,9 @@ public class EventHandler
             {
                 DimensionLoadTracker.instance().dimensionLoaded(dimension);
 
-                if (dimension == 0 && DimensionLoadTracker.instance().getLoadCountFor(dimension) == 1)
+                if (dimension == 0 && DimensionLoadTracker.instance().getLoadCountFor(0) == 1)
                 {
+                    WorldPrimer.logInfo("WorldEvent.Load - running worldCreationCommands");
                     WorldPrimerCommandSender.instance().runCommands(Configs.worldCreationCommands);
                 }
             }
@@ -67,6 +71,7 @@ public class EventHandler
 
     private void runDimensionLoadingCommands(int dimension)
     {
+        WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
         String[] commands = Configs.dimensionLoadingCommands;
 
         for (String command : commands)
