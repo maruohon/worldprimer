@@ -1,32 +1,38 @@
 package fi.dy.masa.worldprimer.config;
 
-import java.util.Set;
-import net.minecraft.client.Minecraft;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.fml.client.DefaultGuiFactory;
+import net.minecraftforge.fml.client.config.GuiConfig;
+import net.minecraftforge.fml.client.config.IConfigElement;
+import fi.dy.masa.worldprimer.reference.Reference;
 
-public class WorldPrimerGuiFactory implements IModGuiFactory
+public class WorldPrimerGuiFactory extends DefaultGuiFactory
 {
-    @Override
-    public void initialize(Minecraft minecraftInstance)
+    public WorldPrimerGuiFactory()
     {
+        super(Reference.MOD_ID, getTitle());
     }
 
     @Override
-    public boolean hasConfigGui()
+    public GuiScreen createConfigGui(GuiScreen parent)
     {
-        return true;
+        return new GuiConfig(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle());
     }
 
-    @Override
-    public GuiScreen createConfigGui(GuiScreen parentScreen)
+    private static List<IConfigElement> getConfigElements()
     {
-        return new WorldPrimerConfigGui(parentScreen);
+        List<IConfigElement> configElements = new ArrayList<IConfigElement>();
+
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)));
+
+        return configElements;
     }
 
-    @Override
-    public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
+    private static String getTitle()
     {
-        return null;
+        return GuiConfig.getAbridgedConfigPath(Configs.configurationFile.toString());
     }
 }
