@@ -1,6 +1,6 @@
 package fi.dy.masa.worldprimer.proxy;
 
-import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.config.Configs;
 
 public class ClientProxy extends CommonProxy
@@ -10,6 +10,6 @@ public class ClientProxy extends CommonProxy
     {
         super.registerEventHandlers();
 
-        MinecraftForge.EVENT_BUS.register(new Configs());
+        FMLCommonHandler.instance().bus().register(new Configs());
     }
 }

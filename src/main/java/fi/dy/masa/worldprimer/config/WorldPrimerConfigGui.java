@@ -3,12 +3,12 @@ package fi.dy.masa.worldprimer.config;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.common.config.ConfigElement;
 import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.config.IConfigElement;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.common.config.Configuration;
 import fi.dy.masa.worldprimer.reference.Reference;
 
-@SuppressWarnings("rawtypes")
 public class WorldPrimerConfigGui extends GuiConfig
 {
     public WorldPrimerConfigGui(GuiScreen parent)
@@ -16,12 +16,13 @@ public class WorldPrimerConfigGui extends GuiConfig
         super(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle(parent));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private static List<IConfigElement> getConfigElements()
     {
         List<IConfigElement> configElements = new ArrayList<IConfigElement>();
 
-        configElements.addAll(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)).getChildElements());
+        Configuration config = Configs.config;
+        configElements.add(new ConfigElement(config.getCategory(Configs.CATEGORY_GENERIC)));
 
         return configElements;
     }

@@ -17,9 +17,6 @@ buildscript {
 
 apply plugin: 'forge'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
 ext.configFile = file "build.properties"
 
 configFile.withReader {
@@ -30,6 +27,15 @@ configFile.withReader {
 
 group = config.group + config.mod_id // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = config.mod_id + '-' + config.minecraft_version_out
+
+// Need this here so eclipse task generates correctly.
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
@@ -68,10 +74,10 @@ version = project.minecraft.mod_version
 processResources
 {
     // Exclude the GIMP image files
-    //exclude '**/*.xcf'
+    exclude '**/*.xcf'
 
     // Exclude the Cubik model files
-    //exclude '**/*.bdc3D'
+    exclude '**/*.bdc3D'
 
     // this will ensure that this task is redone when the versions change.
     inputs.property "mod_version", project.minecraft.mod_version

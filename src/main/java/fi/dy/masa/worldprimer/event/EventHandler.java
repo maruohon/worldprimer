@@ -2,11 +2,12 @@ package fi.dy.masa.worldprimer.event;
 
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.world.World;
-import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
+import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
 
 public class EventHandler
 {
@@ -15,13 +16,22 @@ public class EventHandler
     @SubscribeEvent
     public void onCreateSpawn(WorldEvent.CreateSpawnPosition event)
     {
+        WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition");
         World world = event.world;
 
-        // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist
-        if (world.isRemote == false && world.provider.dimensionId == 0)
+        // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist.
+        // This is only used if the load tracking is not used.
+        if (Configs.enableDimensionLoadTracking == false &&
+            world.isRemote == false && world.provider.dimensionId == 0)
         {
+            if (Configs.enableEarlyWorldCreationCommands)
+            {
+                WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition - running earlyWorldCreationCommands");
+                WorldPrimerCommandSender.instance().runCommands(world, Configs.earlyWorldCreationCommands);
+            }
+
             // Defer running the commands until the world is actually ready to load
-            this.runCreationCommands = Configs.enableWorldCreationCommands;
+            this.runCreationCommands = Configs.enablePostWorldCreationCommands;
         }
     }
 
@@ -33,29 +43,36 @@ public class EventHandler
         if (world.isRemote == false)
         {
             int dimension = world.provider.dimensionId;
+            WorldPrimer.logInfo("WorldEvent.Load, DIM: {}", dimension);
 
-            if (dimension == 0)
+            // The creation commands are only run via this method when not using dimension load count tracking
+            if (this.runCreationCommands && dimension == 0)
             {
-                if (this.runCreationCommands)
-                {
-                    WorldPrimerCommandSender.instance().runCommands(Configs.worldCreationCommands);
-                    this.runCreationCommands = false;
-                }
+                WorldPrimer.logInfo("WorldEvent.Load - running postWorldCreationCommands");
+                WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
+                this.runCreationCommands = false;
+            }
 
-                if (Configs.enableWorldLoadingCommands)
-                {
-                    WorldPrimerCommandSender.instance().runCommands(Configs.worldLoadingCommands);
-                }
+            if (Configs.enableDimensionLoadTracking)
+            {
+                DimensionLoadTracker.instance().dimensionLoaded(dimension);
             }
 
             if (Configs.enableDimensionLoadingCommands)
             {
-                this.runDimensionLoadingCommands(dimension);
+                WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
+                this.runDimensionLoadingCommands(dimension, world);
             }
         }
     }
 
-    private void runDimensionLoadingCommands(int dimension)
+    @SubscribeEvent
+    public void onWorldSave(WorldEvent.Save event)
+    {
+        DimensionLoadTracker.instance().writeToDisk();
+    }
+
+    private void runDimensionLoadingCommands(int dimension, World world)
     {
         String[] commands = Configs.dimensionLoadingCommands;
 
@@ -70,25 +87,67 @@ public class EventHandler
 
             if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
             {
-                try
-                {
-                    int dim = Integer.parseInt(parts[1]);
-
-                    if (dimension == dim)
-                    {
-                        parts = dropFirstStrings(parts, 2);
-                        WorldPrimerCommandSender.instance().runCommands(String.join(" ", parts));
-                    }
-                }
-                catch (NumberFormatException e)
-                {
-                    WorldPrimer.logger.warn("Invalid dimension id '{}' in dimension-specific command '{}'", parts[1], command);
-                }
+                this.runDimLoadingCommandsRegular(dimension, world, command, parts);
+            }
+            else if (Configs.enableDimensionLoadTracking && parts.length >= 4 && parts[0].equals("worldprimer-dim-command-nth"))
+            {
+                this.runDimLoadingCommandsNth(dimension, world, command, parts);
             }
             else
             {
-                WorldPrimerCommandSender.instance().runCommands(command);
+                WorldPrimerCommandSender.instance().runCommands(world, command);
             }
+        }
+    }
+
+    private void runDimLoadingCommandsRegular(int dimension, World world, String fullCommand, String[] cmdParts)
+    {
+        try
+        {
+            int dim = Integer.parseInt(cmdParts[1]);
+
+            if (dimension == dim)
+            {
+                cmdParts = dropFirstStrings(cmdParts, 2);
+                WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            WorldPrimer.logger.warn("Invalid dimension id '{}' in dimension-specific command '{}'", cmdParts[1], fullCommand);
+        }
+    }
+
+    private void runDimLoadingCommandsNth(int dimension, World world, String fullCommand, String[] cmdParts)
+    {
+        try
+        {
+            int dim = Integer.parseInt(cmdParts[1]);
+
+            if (dimension == dim)
+            {
+                String countStr = cmdParts[2];
+                boolean modulo = false;
+
+                if (countStr.charAt(0) == '%')
+                {
+                    countStr = countStr.substring(1, countStr.length());
+                    modulo = true;
+                }
+
+                int count = Integer.parseInt(countStr);
+                int loadCount = DimensionLoadTracker.instance().getLoadCountFor(dimension);
+
+                if ((modulo && count != 0 && (loadCount % count) == 0) || (modulo == false && loadCount == count))
+                {
+                    cmdParts = dropFirstStrings(cmdParts, 3);
+                    WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
+                }
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            WorldPrimer.logger.warn("Invalid syntax in dimension-specific command '{}'", fullCommand);
         }
     }
 
