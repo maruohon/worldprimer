@@ -20,7 +20,7 @@ import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, certificateFingerprint = Reference.FINGERPRINT,
     guiFactory = "fi.dy.masa.worldprimer.config.WorldPrimerGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldprimer/master/update.json",
-    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.10,1.11.2]")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.11")
 public class WorldPrimer
 {
     @Mod.Instance(Reference.MOD_ID)
