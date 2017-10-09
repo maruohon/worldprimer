@@ -18,6 +18,7 @@ public class WorldPrimerCommandSender implements ICommandSender
     private static final ChunkCoordinates ORIGIN = new ChunkCoordinates(0, 0, 0);
     private static final IChatComponent DISPLAY_NAME = new ChatComponentText(Reference.MOD_NAME + " CommandSender");
     private static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
+    private World executionWorld;
 
     public static WorldPrimerCommandSender instance()
     {
@@ -27,16 +28,21 @@ public class WorldPrimerCommandSender implements ICommandSender
     public void runCommands(@Nullable World world, String... commands)
     {
         ICommandManager manager = FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager();
+        this.executionWorld = world;
 
         for (String command : commands)
         {
             if (StringUtils.isBlank(command) == false)
             {
                 String newCommand = this.doCommandSubstitutions(world, command);
-                WorldPrimer.logInfo("Running a (possibly substituted) command: '{}'", newCommand);
+                World worldTmp = this.getEntityWorld();
+                String dim = worldTmp != null ? String.valueOf(worldTmp.provider.dimensionId) : "<none>";
+                WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", newCommand, dim);
                 manager.executeCommand(this, newCommand);
             }
         }
+
+        this.executionWorld = null;
     }
 
     private String doCommandSubstitutions(@Nullable World world, String originalCommand)
@@ -134,6 +140,6 @@ public class WorldPrimerCommandSender implements ICommandSender
     @Override
     public World getEntityWorld()
     {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
+        return this.executionWorld != null ? this.executionWorld : FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
     }
 }
