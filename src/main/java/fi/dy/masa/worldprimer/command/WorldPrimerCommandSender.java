@@ -188,7 +188,7 @@ public class WorldPrimerCommandSender implements ICommandSender
             for (ChunkPos pos : this.loadedChunks)
             {
                 if (worldServer.getPlayerChunkMap().contains(pos.x, pos.z) == false &&
-                    worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.x << 4)))
+                    worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.z << 4)))
                 {
                     WorldPrimer.logInfo("Queueing chunk [{},{}] for unloading in dimension {}", pos.x, pos.z, world.provider.getDimension());
                     worldServer.getChunkProvider().queueUnload(worldServer.getChunkFromChunkCoords(pos.x, pos.z));
