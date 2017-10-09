@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandResultStats.Type;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
@@ -19,6 +20,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.reference.Reference;
+import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender
 {
@@ -50,6 +52,22 @@ public class WorldPrimerCommandSender implements ICommandSender
                     WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
                     this.executeChunkLoadingCommand(newCommand, worldTmp);
                 }
+                // Execute our own commands directly, because the commands haven't been registered
+                // yet when the dimensions first load during server start.
+                else if (this.isWorldPrimerCommand(newCommand))
+                {
+                    WorldPrimer.logInfo("Attempting to directly execute a (possibly substituted) worldprimer command '{}' in dimension {}", newCommand, dim);
+
+                    try
+                    {
+                        newCommand = newCommand.substring(12, newCommand.length()); // remove "worldprimer " from the beginning
+                        WorldPrimer.commandWorldPrimer.execute(worldTmp.getMinecraftServer(), this, newCommand.trim().split(" "));
+                    }
+                    catch (CommandException e)
+                    {
+                        WorldPrimer.logger.warn("Failed to execute the command '{}'", newCommand, e);
+                    }
+                }
                 else
                 {
                     WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", newCommand, dim);
@@ -58,7 +76,7 @@ public class WorldPrimerCommandSender implements ICommandSender
             }
         }
 
-        this.unloadLoadedChunks(world);
+        WorldUtils.unloadLoadedChunks(world, this.loadedChunks);
 
         this.executionWorld = null;
     }
@@ -131,6 +149,12 @@ public class WorldPrimerCommandSender implements ICommandSender
         return parts.length > 0 && parts[0].equals("worldprimer-load-chunks");
     }
 
+    private boolean isWorldPrimerCommand(String command)
+    {
+        String[] parts = command.split(" ");
+        return parts.length > 0 && parts[0].equals("worldprimer");
+    }
+
     private boolean executeChunkLoadingCommand(String command, @Nullable World world)
     {
         if (world == null)
@@ -149,23 +173,7 @@ public class WorldPrimerCommandSender implements ICommandSender
                 final int z1 = Integer.parseInt(parts[2]);
                 final int x2 = Integer.parseInt(parts[3]);
                 final int z2 = Integer.parseInt(parts[4]);
-                final int xStart = Math.min(x1, x2);
-                final int zStart = Math.min(z1, z2);
-                final int xEnd = Math.max(x1, x2);
-                final int zEnd = Math.max(z1, z2);
-                int dimension = world.provider.getDimension();
-
-                WorldPrimer.logInfo("Attempting to load chunks [{},{}] to [{},{}] in dimension {}", xStart, zStart, xEnd, zEnd, dimension);
-
-                for (int x = xStart; x <= xEnd; x++)
-                {
-                    for (int z = zStart; z <= zEnd; z++)
-                    {
-                        WorldPrimer.logInfo("Loading chunk [{},{}] in dimension {}", x, z, dimension);
-                        this.loadedChunks.add(new ChunkPos(x, z));
-                        world.getChunkFromChunkCoords(x, z);
-                    }
-                }
+                WorldUtils.loadChunks(world, x1, z1, x2, z2, this.loadedChunks);
 
                 return true;
             }
@@ -177,26 +185,6 @@ public class WorldPrimerCommandSender implements ICommandSender
         WorldPrimer.logger.warn("Invalid chunk loading command '{}'", command);
 
         return false;
-    }
-
-    private void unloadLoadedChunks(World world)
-    {
-        if (world instanceof WorldServer)
-        {
-            WorldServer worldServer = (WorldServer) world;
-
-            for (ChunkPos pos : this.loadedChunks)
-            {
-                if (worldServer.getPlayerChunkMap().contains(pos.x, pos.z) == false &&
-                    worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.z << 4)))
-                {
-                    WorldPrimer.logInfo("Queueing chunk [{},{}] for unloading in dimension {}", pos.x, pos.z, world.provider.getDimension());
-                    worldServer.getChunkProvider().queueUnload(worldServer.getChunkFromChunkCoords(pos.x, pos.z));
-                }
-            }
-        }
-
-        this.loadedChunks.clear();
     }
 
     @Override

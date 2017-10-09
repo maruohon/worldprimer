@@ -1,16 +1,20 @@
 package fi.dy.masa.worldprimer;
 
 import java.io.File;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import fi.dy.masa.worldprimer.command.CommandWorldPrimer;
 import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
@@ -29,14 +33,16 @@ public class WorldPrimer
     @SidedProxy(clientSide = Reference.PROXY_CLIENT, serverSide = Reference.PROXY_SERVER)
     public static IProxy proxy;
 
-    public static Logger logger;
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+    public static String configDirPath;
+    public static CommandWorldPrimer commandWorldPrimer;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-        logger = event.getModLog();
-
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
+        configDirPath = new File(event.getModConfigurationDirectory(), Reference.MOD_ID).getAbsolutePath();
+        commandWorldPrimer = new CommandWorldPrimer();
         proxy.registerEventHandlers();
     }
 
@@ -71,6 +77,12 @@ public class WorldPrimer
             WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
             WorldPrimerCommandSender.instance().runCommands(null, Configs.earlyWorldLoadingCommands);
         }
+    }
+
+    @EventHandler
+    public void serverStarting(FMLServerStartingEvent event)
+    {
+        event.registerServerCommand(commandWorldPrimer);
     }
 
     @Mod.EventHandler
