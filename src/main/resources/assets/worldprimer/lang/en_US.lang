@@ -13,6 +13,8 @@ worldprimer.commands.error.invalid.argument.rotation=Invalid rotation argument '
 worldprimer.commands.error.unknowncommandargument=Unknown command argument: '%s'
 worldprimer.commands.error.unknowncommandvariant=Unknown command variant: '%s'
 
+worldprimer.commands.info.configs.realoded=Configs reloaded from file
+
 worldprimer.commands.help.generic.availablevariants=Available command variants: %s
 worldprimer.commands.help.generic.runhelpforallcommands=Run '%s' to see all the commands
 worldprimer.commands.help.generic.usage=Usage: %s

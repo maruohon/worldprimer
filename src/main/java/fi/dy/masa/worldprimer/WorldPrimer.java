@@ -50,7 +50,7 @@ public class WorldPrimer
     public void onServerAboutToStart(FMLServerAboutToStartEvent event)
     {
         logInfo("FMLServerAboutToStartEvent");
-        Configs.reloadConfigs();
+        Configs.loadConfigsFromFile();
 
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory,
                 event.getServer().getFolderName());

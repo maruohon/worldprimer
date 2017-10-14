@@ -33,21 +33,21 @@ public class Configs
     {
         if (Reference.MOD_ID.equals(event.getModID()))
         {
-            reloadConfigs();
+            loadConfigs(config);
         }
     }
 
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
+        loadConfigsFromFile();
+    }
+
+    public static void loadConfigsFromFile()
+    {
         config = new Configuration(configurationFile, null, true);
         config.load();
 
-        reloadConfigs();
-    }
-
-    public static void reloadConfigs()
-    {
         loadConfigs(config);
     }
 
