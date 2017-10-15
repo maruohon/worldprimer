@@ -1,7 +1,5 @@
 package fi.dy.masa.worldprimer.command;
 
-import java.util.HashSet;
-import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandException;
@@ -11,15 +9,14 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.reference.Reference;
+import fi.dy.masa.worldprimer.util.CommandSubstitutions;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender
@@ -27,7 +24,6 @@ public class WorldPrimerCommandSender implements ICommandSender
     private static final ITextComponent DISPLAY_NAME = new TextComponentString(Reference.MOD_NAME + " CommandSender");
     private static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
     private World executionWorld;
-    private final Set<ChunkPos> loadedChunks = new HashSet<>();
 
     public static WorldPrimerCommandSender instance()
     {
@@ -43,14 +39,14 @@ public class WorldPrimerCommandSender implements ICommandSender
         {
             if (StringUtils.isBlank(command) == false)
             {
-                String newCommand = this.doCommandSubstitutions(world, command);
+                String newCommand = CommandSubstitutions.doCommandSubstitutions(world, command);
                 World worldTmp = this.getEntityWorld();
                 String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
 
                 if (this.isChunkLoadingCommand(newCommand))
                 {
                     WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
-                    this.executeChunkLoadingCommand(newCommand, worldTmp);
+                    WorldUtils.executeChunkLoadingCommand(newCommand, worldTmp);
                 }
                 // Execute our own commands directly, because the commands haven't been registered
                 // yet when the dimensions first load during server start.
@@ -76,71 +72,9 @@ public class WorldPrimerCommandSender implements ICommandSender
             }
         }
 
-        WorldUtils.unloadLoadedChunks(world, this.loadedChunks);
+        WorldUtils.unloadLoadedChunks(world);
 
         this.executionWorld = null;
-    }
-
-    private String doCommandSubstitutions(@Nullable World world, String originalCommand)
-    {
-        if (world == null)
-        {
-            return originalCommand;
-        }
-
-        BlockPos spawn = null;
-
-        if (world instanceof WorldServer)
-        {
-            spawn = ((WorldServer) world).getSpawnCoordinate();
-        }
-
-        if (spawn == null)
-        {
-            spawn = world.getSpawnPoint();
-        }
-
-        int dim = world.provider.getDimension();
-        String[] parts = originalCommand.split(" ");
-
-        for (int i = 0; i < parts.length; i++)
-        {
-            parts[i] = this.substituteNumber(parts[i], "{DIMENSION}", dim);
-            parts[i] = this.substituteNumber(parts[i], "{SPAWNX}", spawn.getX());
-            parts[i] = this.substituteNumber(parts[i], "{SPAWNY}", spawn.getY());
-            parts[i] = this.substituteNumber(parts[i], "{SPAWNZ}", spawn.getZ());
-        }
-
-        return String.join(" ", parts);
-    }
-
-    private String substituteNumber(String argument, String placeHolder, int value)
-    {
-        if (argument.equals(placeHolder))
-        {
-            return String.valueOf(value);
-        }
-        else if (argument.startsWith(placeHolder))
-        {
-            String relative = argument.substring(placeHolder.length(), argument.length());
-
-            if (relative.length() > 1 && (relative.charAt(0) == '-' || relative.charAt(0) == '+'))
-            {
-                try
-                {
-                    double relVal = Double.parseDouble(relative);
-                    relVal += value;
-
-                    return String.valueOf(relVal);
-                }
-                catch (NumberFormatException e)
-                {
-                    WorldPrimer.logger.warn("Failed to parse relative argument '{}'", argument, e);
-                }
-            }
-        }
-
-        return argument;
     }
 
     private boolean isChunkLoadingCommand(String command)
@@ -153,38 +87,6 @@ public class WorldPrimerCommandSender implements ICommandSender
     {
         String[] parts = command.split(" ");
         return parts.length > 0 && parts[0].equals("worldprimer");
-    }
-
-    private boolean executeChunkLoadingCommand(String command, @Nullable World world)
-    {
-        if (world == null)
-        {
-            WorldPrimer.logger.warn("Failed to run the chunk loading command '{}', because the world wasn't loaded", command);
-            return false;
-        }
-
-        String[] parts = command.split(" ");
-
-        if (parts.length == 5 && parts[0].equals("worldprimer-load-chunks"))
-        {
-            try
-            {
-                final int x1 = Integer.parseInt(parts[1]);
-                final int z1 = Integer.parseInt(parts[2]);
-                final int x2 = Integer.parseInt(parts[3]);
-                final int z2 = Integer.parseInt(parts[4]);
-                WorldUtils.loadChunks(world, x1, z1, x2, z2, this.loadedChunks);
-
-                return true;
-            }
-            catch (NumberFormatException e)
-            {
-            }
-        }
-
-        WorldPrimer.logger.warn("Invalid chunk loading command '{}'", command);
-
-        return false;
     }
 
     @Override

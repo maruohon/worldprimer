@@ -14,11 +14,13 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import fi.dy.masa.worldprimer.command.CommandWorldPrimer;
 import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
+import fi.dy.masa.worldprimer.util.CommandSubstitutions;
 import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, certificateFingerprint = Reference.FINGERPRINT,
@@ -107,6 +109,12 @@ public class WorldPrimer
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
             WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldLoadingCommands);
         }
+    }
+
+    @Mod.EventHandler
+    public void onServerStopped(FMLServerStoppingEvent event)
+    {
+        CommandSubstitutions.clearTopYCache();
     }
 
     public static void logInfo(String message, Object... params)

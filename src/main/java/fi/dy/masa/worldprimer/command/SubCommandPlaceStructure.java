@@ -3,9 +3,7 @@ package fi.dy.masa.worldprimer.command;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -15,7 +13,6 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
@@ -27,7 +24,6 @@ import fi.dy.masa.worldprimer.util.WorldUtils;
 public class SubCommandPlaceStructure extends SubCommand
 {
     private TemplateManager templateManager;
-    private final Set<ChunkPos> loadedChunks = new HashSet<>();
 
     public SubCommandPlaceStructure(CommandWorldPrimer baseCommand)
     {
@@ -115,7 +111,7 @@ public class SubCommandPlaceStructure extends SubCommand
 
             this.loadChunks(world, pos, template.getSize());
             template.addBlocksToWorld(world, pos, placement);
-            WorldUtils.unloadLoadedChunks(world, this.loadedChunks);
+            WorldUtils.unloadLoadedChunks(world);
 
             return true;
         }
@@ -206,6 +202,6 @@ public class SubCommandPlaceStructure extends SubCommand
     private void loadChunks(World world, BlockPos pos, BlockPos size)
     {
         WorldUtils.loadChunks(world, pos.getX() >> 4, pos.getZ() >> 4,
-                              (pos.getX() + size.getX()) >> 4, (pos.getZ() + size.getZ()) >> 4, this.loadedChunks);
+                              (pos.getX() + size.getX()) >> 4, (pos.getZ() + size.getZ()) >> 4);
     }
 }
