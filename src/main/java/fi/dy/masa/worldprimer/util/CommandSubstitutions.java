@@ -14,9 +14,10 @@ import fi.dy.masa.worldprimer.WorldPrimer;
 public class CommandSubstitutions
 {
     private static final Random RAND = new Random();
-    private static final Pattern PATTERN_RAND_DOUBLE  = Pattern.compile(".*(\\{RAND:(?<min>[0-9]+\\.[0-9]+),(?<max>[0-9]+\\.[0-9]+)\\}).*");
-    private static final Pattern PATTERN_RAND_INT     = Pattern.compile(".*(\\{RAND:(?<min>[0-9]+),(?<max>[0-9]+)\\}).*");
-    private static final Pattern PATTERN_TOP_Y        = Pattern.compile(".*(\\{TOP_Y:(?<x>[0-9]+),(?<z>[0-9]+)\\}).*");
+    private static final Pattern PATTERN_RAND_DOUBLE  = Pattern.compile(".*(\\{RAND:(?<min>-?[0-9]+\\.[0-9]+),(?<max>-?[0-9]+\\.[0-9]+)\\}).*");
+    private static final Pattern PATTERN_RAND_INT     = Pattern.compile(".*(\\{RAND:(?<min>-?[0-9]+),(?<max>-?[0-9]+)\\}).*");
+    private static final Pattern PATTERN_TOP_Y        = Pattern.compile(".*(\\{TOP_Y:(?<x>-?[0-9]+),(?<z>-?[0-9]+)\\}).*");
+    private static final Pattern PATTERN_TOP_Y_RAND   = Pattern.compile(".*(\\{TOP_Y_RAND:(?<x>-?[0-9]+),(?<z>-?[0-9]+);(?<rx>[0-9]+),(?<rz>[0-9]+)\\}).*");
     private static final Pattern PATTERN_NUMBER_START = Pattern.compile("([0-9]+)(.*)");
     private static final Map<Pair<Integer, BlockPos>, Integer> TOP_Y_CACHE = new HashMap<>();
 
@@ -92,23 +93,13 @@ public class CommandSubstitutions
         final int dim = world.provider.getDimension();
         final BlockPos spawn = WorldUtils.getWorldSpawn(world);
 
-        if (substituteNumber(world, wrapper, "{DIMENSION}", dim))
-            return wrapper[0];
-
-        if (substituteNumber(world, wrapper, "{SPAWNX}", spawn.getX()))
-            return wrapper[0];
-
-        if (substituteNumber(world, wrapper, "{SPAWNY}", spawn.getY()))
-            return wrapper[0];
-
-        if (substituteNumber(world, wrapper, "{SPAWNZ}", spawn.getZ()))
-            return wrapper[0];
-
-        if (substituteRandom(world, wrapper))
-            return wrapper[0];
-
-        if (substituteTopBlockY(world, wrapper))
-            return wrapper[0];
+        if (substituteNumber(world, wrapper, "{DIMENSION}", dim))           { return wrapper[0]; }
+        if (substituteNumber(world, wrapper, "{SPAWNX}", spawn.getX()))     { return wrapper[0]; }
+        if (substituteNumber(world, wrapper, "{SPAWNY}", spawn.getY()))     { return wrapper[0]; }
+        if (substituteNumber(world, wrapper, "{SPAWNZ}", spawn.getZ()))     { return wrapper[0]; }
+        if (substituteRandom(world, wrapper))                               { return wrapper[0]; }
+        if (substituteTopBlockY(world, wrapper))                            { return wrapper[0]; }
+        if (substituteTopBlockYRand(world, wrapper))                        { return wrapper[0]; }
 
         return argument;
     }
@@ -210,14 +201,15 @@ public class CommandSubstitutions
                 final double min = Double.parseDouble(matcher.group("min"));
                 final double max = Double.parseDouble(matcher.group("max"));
                 final double value = min + RAND.nextDouble() * (max - min);
+
                 substituteNumber(world, wrapper, matcher.group(1), value);
+
+                return true;
             }
             catch (NumberFormatException e)
             {
                 WorldPrimer.logger.warn("Failed to parse random min or max value for argument: {}", argument);
             }
-
-            return true;
         }
 
         matcher = PATTERN_RAND_INT.matcher(argument);
@@ -229,14 +221,15 @@ public class CommandSubstitutions
                 final int min = Integer.parseInt(matcher.group("min"));
                 final int max = Integer.parseInt(matcher.group("max"));
                 final int value = min + RAND.nextInt(max - min);
+
                 substituteNumber(world, wrapper, matcher.group(1), value);
+
+                return true;
             }
             catch (NumberFormatException e)
             {
                 WorldPrimer.logger.warn("Failed to parse random min or max value for argument: {}", argument);
             }
-
-            return true;
         }
 
         return false;
@@ -256,13 +249,51 @@ public class CommandSubstitutions
                 final int value = getTopYAt(world, x, z);
 
                 substituteNumber(world, wrapper, matcher.group(1), value);
+
+                return true;
             }
             catch (NumberFormatException e)
             {
-                WorldPrimer.logger.warn("Failed to parse block x or z coordinate for TOP_Y argument: {}", argument);
+                WorldPrimer.logger.warn("Failed to parse arguments for TOP_Y substitution '{}'", argument);
             }
+        }
 
-            return true;
+        return false;
+    }
+
+    private static boolean substituteTopBlockYRand(World world, String[] wrapper)
+    {
+        final String argument = wrapper[0];
+        final Matcher matcher = PATTERN_TOP_Y_RAND.matcher(argument);
+
+        if (matcher.matches())
+        {
+            try
+            {
+                final int rx = Integer.parseInt(matcher.group("rx"));
+                final int rz = Integer.parseInt(matcher.group("rz"));
+                final int x = Integer.parseInt(matcher.group("x")) + - rx + RAND.nextInt(rx * 2);
+                final int z = Integer.parseInt(matcher.group("z")) + - rz + RAND.nextInt(rz * 2);
+                final int y = getTopYAt(world, x, z);
+                String placeHolder = matcher.group(1);
+                String result = String.format("%d %d %d", x, y, z);
+
+                if (argument.equals(placeHolder))
+                {
+                    wrapper[0] = result;
+                    return true;
+                }
+                else if (argument.startsWith(placeHolder))
+                {
+                    String tail = argument.substring(placeHolder.length(), argument.length());
+                    wrapper[0] = result + tail;
+                    return true;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                WorldPrimer.logger.warn("Failed to parse arguments for TOP_Y_RAND substitution '{}'", argument);
+            }
         }
 
         return false;
@@ -281,7 +312,8 @@ public class CommandSubstitutions
         // Load an area of 3x3 chunks around the target location, to generate the world and structures
         WorldUtils.loadChunks(world, (x >> 4) - 1, (z >> 4) - 1, (x >> 4) + 1, (z >> 4) + 1);
 
-        final int top = world.getTopSolidOrLiquidBlock(new BlockPos(x, 0, z)).getY();
+        // world.getTopSolidOrLiquidBlock() will return -1 over void
+        final int top = Math.max(0, world.getTopSolidOrLiquidBlock(new BlockPos(x, 0, z)).getY());
         TOP_Y_CACHE.put(pair, Integer.valueOf(top));
 
         WorldUtils.unloadLoadedChunks(world);
