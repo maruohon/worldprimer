@@ -7,7 +7,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
-import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
+import fi.dy.masa.worldprimer.util.DataTracker;
 
 public class EventHandler
 {
@@ -55,7 +55,7 @@ public class EventHandler
 
             if (Configs.enableDimensionLoadTracking)
             {
-                DimensionLoadTracker.instance().dimensionLoaded(dimension);
+                DataTracker.instance().dimensionLoaded(dimension);
             }
 
             if (Configs.enableDimensionLoadingCommands)
@@ -69,7 +69,7 @@ public class EventHandler
     @SubscribeEvent
     public void onWorldSave(WorldEvent.Save event)
     {
-        DimensionLoadTracker.instance().writeToDisk();
+        DataTracker.instance().writeToDisk();
     }
 
     private void runDimensionLoadingCommands(int dimension, World world)
@@ -136,7 +136,7 @@ public class EventHandler
                 }
 
                 int count = Integer.parseInt(countStr);
-                int loadCount = DimensionLoadTracker.instance().getLoadCountFor(dimension);
+                int loadCount = DataTracker.instance().getDimensionLoadCount(dimension);
 
                 if ((modulo && count != 0 && (loadCount % count) == 0) || (modulo == false && loadCount == count))
                 {

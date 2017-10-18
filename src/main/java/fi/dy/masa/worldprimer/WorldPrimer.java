@@ -21,7 +21,7 @@ import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
 import fi.dy.masa.worldprimer.util.CommandSubstitutions;
-import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
+import fi.dy.masa.worldprimer.util.DataTracker;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, certificateFingerprint = Reference.FINGERPRINT,
     guiFactory = "fi.dy.masa.worldprimer.config.WorldPrimerGuiFactory",
@@ -60,9 +60,9 @@ public class WorldPrimer
         if (Configs.enableDimensionLoadTracking)
         {
             // We need to read the data before any dimension loads
-            DimensionLoadTracker.instance().readFromDisk(worldDir);
+            DataTracker.instance().readFromDisk(worldDir);
 
-            int count = DimensionLoadTracker.instance().getServerStartCount();
+            int count = DataTracker.instance().getServerStartCount();
             logInfo("FMLServerAboutToStartEvent - server starting, previous start count: {}", count);
 
             // The server start count is incremented in the FMLServerStartedEvent,
@@ -95,14 +95,14 @@ public class WorldPrimer
 
         if (Configs.enableDimensionLoadTracking &&
             Configs.enablePostWorldCreationCommands &&
-            DimensionLoadTracker.instance().getServerStartCount() == 0)
+            DataTracker.instance().getServerStartCount() == 0)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
             WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
         }
 
         // Increment the server start count
-        DimensionLoadTracker.instance().serverStarted();
+        DataTracker.instance().serverStarted();
 
         if (Configs.enablePostWorldLoadingCommands)
         {

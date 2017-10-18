@@ -15,15 +15,15 @@ import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.reference.Reference;
 
-public class DimensionLoadTracker
+public class DataTracker
 {
-    private static final DimensionLoadTracker INSTANCE = new DimensionLoadTracker();
+    private static final DataTracker INSTANCE = new DataTracker();
     private File worldDir = new File(".");
-    private final Map<Integer, Integer> loadCounts = new HashMap<Integer, Integer>();
+    private final Map<Integer, Integer> dimensionLoadCounts = new HashMap<Integer, Integer>();
     private int serverStarts;
     private boolean dirty;
 
-    public static DimensionLoadTracker instance()
+    public static DataTracker instance()
     {
         return INSTANCE;
     }
@@ -36,7 +36,7 @@ public class DimensionLoadTracker
 
     public void dimensionLoaded(int dimension)
     {
-        Integer count = this.loadCounts.get(dimension);
+        Integer count = this.dimensionLoadCounts.get(dimension);
 
         if (count == null)
         {
@@ -47,14 +47,14 @@ public class DimensionLoadTracker
             count = count + 1;
         }
 
-        this.loadCounts.put(dimension, count);
+        this.dimensionLoadCounts.put(dimension, count);
 
         this.dirty = true;
     }
 
-    public int getLoadCountFor(int dimension)
+    public int getDimensionLoadCount(int dimension)
     {
-        Integer count = this.loadCounts.get(dimension);
+        Integer count = this.dimensionLoadCounts.get(dimension);
         return count != null ? count.intValue() : 0;
     }
 
@@ -70,7 +70,7 @@ public class DimensionLoadTracker
             return;
         }
 
-        this.loadCounts.clear();
+        this.dimensionLoadCounts.clear();
 
         NBTTagList tagList = nbt.getTagList("DimLoadCounts", Constants.NBT.TAG_COMPOUND);
         int tagCount = tagList.tagCount();
@@ -78,7 +78,7 @@ public class DimensionLoadTracker
         for (int i = 0; i < tagCount; i++)
         {
             NBTTagCompound tag = tagList.getCompoundTagAt(i);
-            this.loadCounts.put(tag.getInteger("Dim"), tag.getInteger("Count"));
+            this.dimensionLoadCounts.put(tag.getInteger("Dim"), tag.getInteger("Count"));
         }
 
         this.serverStarts = nbt.getInteger("ServerStarts");
@@ -88,7 +88,7 @@ public class DimensionLoadTracker
     {
         NBTTagList tagList = new NBTTagList();
 
-        for (Map.Entry<Integer, Integer> entry : this.loadCounts.entrySet())
+        for (Map.Entry<Integer, Integer> entry : this.dimensionLoadCounts.entrySet())
         {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("Dim", entry.getKey());
@@ -115,7 +115,7 @@ public class DimensionLoadTracker
             {
                 if (createDirs)
                 {
-                    WorldPrimer.logger.warn("Failed to create a directory for storing the dimension load counts file '{}'", saveDir.getPath());
+                    WorldPrimer.logger.warn("Failed to create a directory for storing the data tracker file '{}'", saveDir.getPath());
                 }
 
                 return null;
@@ -135,7 +135,7 @@ public class DimensionLoadTracker
         }
 
         // Clear old data regardless of whether there is a data file
-        this.loadCounts.clear();
+        this.dimensionLoadCounts.clear();
         this.serverStarts = 0;
 
         this.worldDir = worldDir;
@@ -150,7 +150,7 @@ public class DimensionLoadTracker
         }
         catch (Exception e)
         {
-            WorldPrimer.logger.warn("Failed to read dimension load counts from file '{}'", file.getPath());
+            WorldPrimer.logger.warn("Failed to read tracker data from file '{}'", file.getPath());
         }
     }
 
@@ -182,7 +182,7 @@ public class DimensionLoadTracker
         }
         catch (Exception e)
         {
-            WorldPrimer.logger.warn("Failed to write dimension load counts to file");
+            WorldPrimer.logger.warn("Failed to write tracker data to file");
         }
     }
 }
