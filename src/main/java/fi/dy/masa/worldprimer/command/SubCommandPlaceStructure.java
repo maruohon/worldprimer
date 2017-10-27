@@ -45,7 +45,7 @@ public class SubCommandPlaceStructure extends SubCommand
     @Override
     protected String getUsageStringCommon()
     {
-        return super.getUsageStringCommon() + " <x> <y> <z> <structurename> [rotation: cw_90 | cw_180 | ccw_90 | none] [mirror: left_right | front_back | none]";
+        return super.getUsageStringCommon() + " <x> <y> <z> <structurename> [rotation: cw_90 | cw_180 | ccw_90 | none] [mirror: left_right | front_back | none] [centered]";
     }
 
     @Override
@@ -66,10 +66,15 @@ public class SubCommandPlaceStructure extends SubCommand
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "front_back", "left_right", "none");
         }
+        // Centered argument
+        else if (args.length == 7)
+        {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "centered");
+        }
         // Position arguments
         else if (args.length <= 3)
         {
-            return CommandBase.getTabCompletionCoordinateXZ(args, 0, targetPos);
+            return CommandBase.getTabCompletionCoordinate(args, 0, targetPos);
         }
 
         return Collections.emptyList();
@@ -78,15 +83,16 @@ public class SubCommandPlaceStructure extends SubCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        if (args.length >= 4 && args.length <= 6)
+        if (args.length >= 4 && args.length <= 7)
         {
             try
             {
                 BlockPos pos = CommandBase.parseBlockPos(sender, args, 0, false);
                 Rotation rotation = args.length >= 5 ? this.getRotation(args[4]) : Rotation.NONE;
                 Mirror mirror     = args.length >= 6 ? this.getMirror(args[5]) : Mirror.NONE;
+                boolean centered = args.length == 7 && args[6].equals("centered");
 
-                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, args[3]);
+                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3]);
             }
             catch (NumberFormatException e)
             {
@@ -99,7 +105,7 @@ public class SubCommandPlaceStructure extends SubCommand
         }
     }
 
-    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror, String structureFile)
+    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror, boolean centered, String structureFile)
     {
         Template template = this.getTemplateManager().getTemplate(server, new ResourceLocation(structureFile));
 
@@ -108,6 +114,12 @@ public class SubCommandPlaceStructure extends SubCommand
             PlacementSettings placement = new PlacementSettings();
             placement.setRotation(rotation);
             placement.setMirror(mirror);
+
+            if (centered)
+            {
+                BlockPos size = Template.transformedBlockPos(placement, template.getSize());
+                pos = pos.add(-(size.getX() / 2), 0, -(size.getZ() / 2));
+            }
 
             this.loadChunks(world, pos, template.getSize());
             template.addBlocksToWorld(world, pos, placement);
