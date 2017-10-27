@@ -88,10 +88,25 @@ public class Configs
                             "for example: {TOP_Y_RAND:-37,538;32,32} would be the top block at a random location within\n" +
                             "32 blocks of x = -37, z = 538. That substitution will be replaced with a string like '-49 72 544' (without the quotes)\n\n" +
 
+                            "For the player-specific commands, the following substitutions are available:\n" +
+                            "{PLAYER_X}, {PLAYER_Y}, {PLAYER_Z} and {PLAYER_NAME}\n\n" +
+
                             "The substitutions also support very basic arithmetic operations [+-*/].\nSo you can do for example:\n" +
                             "fill {SPAWN_X}-2 {SPAWN_Y}+3 {SPAWN_Z}-2 {SPAWN_X}+2 {SPAWN_Y}+7 {SPAWN_Z}+2 minecraft:emerald_block\n\n" +
 
-                            "Note however, that the earlyWorldCreationCommands and the earlyWorldLoadingCommands\n" +
+                            "Note however that there is no actual order of operations/priorities/grouping.\n" +
+                            "The commands are parsed/substituted from the left, and if there is an arithmetic\n" +
+                            "operation immediately following the closing curly brace of a substitution, then the value\n" +
+                            "of the following string interpreted as a number is added to the substituted value.\n" +
+                            "That string following the arithmetic operation is first substituted recursively though,\n" +
+                            "which means that the order of operations is actually starting from the right.\n\n" +
+
+                            "Both the substitutions and the arithmetic operations following them can be escaped by a preceding backslash '\\',\n" +
+                            "if it should actually appear in the command as-is and not be substituted.\n" +
+                            "For example: 'say Foo bar \\{SPANW_X}' would become 'say Foo bar {SPANW_X}' in the final command.\n" +
+                            "Or 'say Foo bar {SPAWN_X}\\+16' would become 'say Foo bar 34+16', assuming the spawn x-coordinate is 34.\n\n" +
+
+                            "Note, that the earlyWorldCreationCommands and the earlyWorldLoadingCommands\n" +
                             "DO NOT have a world available yet, so the substitutions will NOT happen for those commands.\n" +
                             "Thus, those commands also can't do anything that would require a world.\n" +
                             "An example of this is setting the game rules - those are kept in the WorldInfo object,\n" +
