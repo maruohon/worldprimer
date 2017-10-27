@@ -26,7 +26,9 @@ public class WorldPrimerGuiFactory extends DefaultGuiFactory
     {
         List<IConfigElement> configElements = new ArrayList<IConfigElement>();
 
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_COMMANDS)));
         configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)));
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_TOGGLES)));
 
         return configElements;
     }

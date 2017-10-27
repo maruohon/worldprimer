@@ -57,7 +57,7 @@ public class WorldPrimer
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory,
                 event.getServer().getFolderName());
 
-        if (Configs.enableDimensionLoadTracking)
+        if (Configs.enableDataTracking)
         {
             // We need to read the data before any dimension loads
             DataTracker.instance().readFromDisk(worldDir);
@@ -93,7 +93,7 @@ public class WorldPrimer
         logInfo("FMLServerStartedEvent");
         World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
 
-        if (Configs.enableDimensionLoadTracking &&
+        if (Configs.enableDataTracking &&
             Configs.enablePostWorldCreationCommands &&
             DataTracker.instance().getServerStartCount() == 0)
         {

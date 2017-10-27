@@ -13,20 +13,37 @@ public class Configs
     static File configurationFile;
     static Configuration config;
 
+    public static final String CATEGORY_COMMANDS = "Commands";
     public static final String CATEGORY_GENERIC = "Generic";
+    public static final String CATEGORY_TOGGLES = "Toggles";
 
     public static boolean enableLoggingInfo;
+    public static boolean enableDataTracking;
     public static boolean enableDimensionLoadingCommands;
-    public static boolean enableDimensionLoadTracking;
     public static boolean enableEarlyWorldCreationCommands;
     public static boolean enableEarlyWorldLoadingCommands;
     public static boolean enablePostWorldCreationCommands;
     public static boolean enablePostWorldLoadingCommands;
+
+    public static boolean enablePlayerDeathCommands;
+    public static boolean enablePlayerChangedDimensionEnterCommands;
+    public static boolean enablePlayerChangedDimensionLeaveCommands;
+    public static boolean enablePlayerJoinCommands;
+    public static boolean enablePlayerQuitCommands;
+    public static boolean enablePlayerRespawnCommands;
+
     public static String[] dimensionLoadingCommands;
     public static String[] earlyWorldCreationCommands;
     public static String[] earlyWorldLoadingCommands;
     public static String[] postWorldCreationCommands;
     public static String[] postWorldLoadingCommands;
+
+    public static String[] playerDeathCommands;
+    public static String[] playerChangedDimensionEnterCommands;
+    public static String[] playerChangedDimensionLeaveCommands;
+    public static String[] playerJoinCommands;
+    public static String[] playerQuitCommands;
+    public static String[] playerRespawnCommands;
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
@@ -53,22 +70,38 @@ public class Configs
 
     private static void loadConfigs(Configuration conf)
     {
-        ConfigCategory category = conf.getCategory(CATEGORY_GENERIC);
+        ConfigCategory category = conf.getCategory(CATEGORY_COMMANDS);
         category.setComment("Generic tips:\n" +
-                            "There are a few substitutions available to use in the commands.\n" +
-                            "They are: {DIMENSION}, {SPAWNX}, {SPAWNY} and {SPAWNZ}\n" +
+                            "There are a few substitutions available to use in the commands:\n" +
+                            "Basic number substitutions from world data: {DIMENSION}, {SPAWN_X}, {SPAWN_Y} and {SPAWN_Z}.\n" +
                             "Any occurences of those strings will be replaced by the current dimension ID,\n" +
-                            "or the coordinates of the spawn point, respectively. They also support\n" +
-                            "adding or subtracting a value from them. So you can do for example:\n" +
-                            "fill {SPAWNX}-2 {SPAWNY}+3 {SPAWNZ}-2 {SPAWNX}+2 {SPAWNY}+7 {SPAWNZ}+2 minecraft:emerald_block" +
+                            "or the coordinates of the spawn point respectively.\n\n" +
+
+                            "Random numbers, integer and double type: {RAND:min,max},\n" +
+                            "for example {RAND:5,15} or {RAND:1.2,3.9} (the max value is exclusive)\n\n" +
+
+                            "The y-coordinate of the top-most block in the world in the given coordinates\n" +
+                            "(actually the air block above it): {TOP_Y:x,z} for example: {TOP_Y:-37,538}\n\n" +
+
+                            "The x y z coordinates of the top-most block in the world in a random location around a given x,z location\n" +
+                            "(again, actually the air block above it): {TOP_Y_RAND:x,z;x-range,z-range}\n" +
+                            "for example: {TOP_Y_RAND:-37,538;32,32} would be the top block at a random location within\n" +
+                            "32 blocks of x = -37, z = 538. That substitution will be replaced with a string like '-49 72 544' (without the quotes)\n\n" +
+
+                            "The substitutions also support very basic arithmetic operations [+-*/].\nSo you can do for example:\n" +
+                            "fill {SPAWN_X}-2 {SPAWN_Y}+3 {SPAWN_Z}-2 {SPAWN_X}+2 {SPAWN_Y}+7 {SPAWN_Z}+2 minecraft:emerald_block\n\n" +
+
                             "Note however, that the earlyWorldCreationCommands and the earlyWorldLoadingCommands\n" +
                             "DO NOT have a world available yet, so the substitutions will NOT happen for those commands.\n" +
                             "Thus, those commands also can't do anything that would require a world.\n" +
                             "An example of this is setting the game rules - those are kept in the WorldInfo object,\n" +
-                            "which is stored in the World, so the overworld specifically needs to be loaded for changing any game rules.\n" +
+                            "which is stored in the World, so the overworld specifically needs to be loaded for changing any game rules.\n\n" +
+
                             "Additionally, the postWorldCreationCommands and the postWorldLoadingCommands will use\n" +
-                            "the Overworld (or whichever world is dimension 0) for the substitutions.\n" +
-                            "So it's mostly the dimension loading commands that benefit from the {DIMENSION} substitution.\n" +
+                            "the Overworld (or whichever world is dimension 0) for the substitutions.\n\n" +
+
+                            "So it's mostly the dimension loading commands that benefit from the {DIMENSION} substitution.\n\n" +
+
                             "Note also, that by default in vanilla/Forge, ALL dimensions use the WorldInfo from the overworld,\n" +
                             "which means that they will have the exact same spawn coordinates and game rules etc. as the overworld.\n" +
                             "Some mods may change this so that dimensions can have separate spawn points, game rules etc.\n" +
@@ -80,34 +113,64 @@ public class Configs
         prop.setComment("Enables verbose logging for debug purposes");
         enableLoggingInfo = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "enableDimensionLoadingCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_GENERIC, "enableDataTracking", true).setRequiresMcRestart(false);
+        prop.setComment("Enables tracking of dimension load counts, player join counts etc. by storing the counts in a file in worlddir/worldprimer/data_tracker.nbt");
+        enableDataTracking = prop.getBoolean();
+
+
+        /*** COMMAND TOGGLES ***/
+
+        prop = conf.get(CATEGORY_TOGGLES, "enableDimensionLoadingCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables the dimension loading commands");
         enableDimensionLoadingCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "enableDimensionLoadTracking", true).setRequiresMcRestart(false);
-        prop.setComment("Enables tracking dimension load counts, by storing the counts in a file in worlddir/worldprimer/dim_loads.nbt");
-        enableDimensionLoadTracking = prop.getBoolean();
-
-        prop = conf.get(CATEGORY_GENERIC, "enableEarlyWorldCreationCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enableEarlyWorldCreationCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables early world creation commands, which are executed before any dimensions\n" +
                         "have been loaded and thus before any chunks have been generated or loaded.");
         enableEarlyWorldCreationCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "enableEarlyWorldLoadingCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enableEarlyWorldLoadingCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables early world loading commands, which are executed once at each server start,\n"+
                         "before the overworld spawn chunks have been loaded.");
         enableEarlyWorldLoadingCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "enablePostWorldCreationCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enablePostWorldCreationCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables late world creation commands, which are executed after the overworld spawn chunks have been generated");
         enablePostWorldCreationCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "enablePostWorldLoadingCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enablePostWorldLoadingCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables late world loading commands, which are executed once at each server start,\n"+
                         "after the overworld spawn chunks have been loaded.");
         enablePostWorldLoadingCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_GENERIC, "dimensionLoadingCommands", new String[0]).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerJoinCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables player join commands");
+        enablePlayerJoinCommands = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerQuitCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running the playerQuitCommands");
+        enablePlayerQuitCommands = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerDeathCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running the playerDeathCommands");
+        enablePlayerDeathCommands = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerJoinCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running the playerRespawnCommands");
+        enablePlayerRespawnCommands = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerChangedDimensionEnterCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running the playerChangedDimensionEnterCommands");
+        enablePlayerChangedDimensionEnterCommands = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerChangedDimensionLeaveCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running the playerChangedDimensionLeaveCommands");
+        enablePlayerChangedDimensionLeaveCommands = prop.getBoolean();
+
+
+        /*** COMMANDS ***/
+
+        prop = conf.get(CATEGORY_COMMANDS, "dimensionLoadingCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run when a dimension gets loaded.\n" +
                         "You can target these to only be run when a specific dimension loads\n" +
                         "by specifying the command as 'worldprimer-dim-command <dim id> <command>'.\n" +
@@ -120,24 +183,53 @@ public class Configs
                         "worldprimer-dim-command-nth 1 %5 say The End has loaded some multiple of 5 times!");
         dimensionLoadingCommands = prop.getStringList();
 
-        prop = conf.get(CATEGORY_GENERIC, "earlyWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_COMMANDS, "earlyWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run on initial world creation, before the spawn chunks have been generated or loaded.\n" +
                         "If dimension load tracking is enabled, then this happens even before any dimensions have been loaded/initialized yet.");
         earlyWorldCreationCommands = prop.getStringList();
 
-        prop = conf.get(CATEGORY_GENERIC, "earlyWorldLoadingCommands", new String[0]).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_COMMANDS, "earlyWorldLoadingCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run every time the world gets loaded.\n" +
                         "These are run when the server is starting, before any worlds have been loaded.");
         earlyWorldLoadingCommands = prop.getStringList();
 
-        prop = conf.get(CATEGORY_GENERIC, "postWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_COMMANDS, "postWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run on initial world creation, after the spawn chunks have been generated and loaded.");
         postWorldCreationCommands = prop.getStringList();
 
-        prop = conf.get(CATEGORY_GENERIC, "postWorldLoadingCommands", new String[0]).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_COMMANDS, "postWorldLoadingCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run every time the world gets loaded.\n" +
                         "These are run when the server has started and the overworld spawn chunks have been loaded.");
         postWorldLoadingCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerJoinCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player joins (connects to) the server");
+        playerJoinCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerQuitCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player disconnects from the server");
+        playerQuitCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerDeathCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player dies");
+        playerDeathCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerRespawnCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player respawns after dying");
+        playerRespawnCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerChangedDimensionEnterCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player enters a dimension while changing dimensions.\n" +
+                        "Note that these will NOT run when a player joins the game or respawns after dying.\n" +
+                        "You can use the 'worldprimer-dim-command DIMID' (or the -nth variant) prefix to target entering a specific dimension.");
+        playerChangedDimensionEnterCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "playerChangedDimensionLeaveCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a player leaves a dimension while changing dimensions.\n" +
+                        "Note that these will NOT run when a player leaves the game/server.\n" +
+                        "You can use the 'worldprimer-dim-command DIMID' (or the -nth variant) prefix to target leaving a specific dimension.\n" +
+                        "NOTE: These commands will run AFTER the player is already in the new dimension!!");
+        playerChangedDimensionLeaveCommands = prop.getStringList();
 
         if (conf.hasChanged())
         {

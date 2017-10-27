@@ -1,7 +1,10 @@
 package fi.dy.masa.worldprimer.util;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -11,7 +14,7 @@ import fi.dy.masa.worldprimer.WorldPrimer;
 
 public class WorldUtils
 {
-    private static final Set<ChunkPos> LOADED_CHUNKS = new HashSet<>();
+    private static final Map<Integer, Set<ChunkPos>> LOADED_CHUNKS = new HashMap<>();
 
     public static BlockPos getWorldSpawn(World world)
     {
@@ -62,13 +65,21 @@ public class WorldUtils
         return false;
     }
 
-    public static void loadChunks(World world, int chunkX1, int chunkZ1, int chunkX2, int chunkZ2)
+    public static void loadChunks(@Nonnull World world, int chunkX1, int chunkZ1, int chunkX2, int chunkZ2)
     {
         final int xStart = Math.min(chunkX1, chunkX2);
         final int zStart = Math.min(chunkZ1, chunkZ2);
         final int xEnd = Math.max(chunkX1, chunkX2);
         final int zEnd = Math.max(chunkZ1, chunkZ2);
         final int dimension = world.provider.getDimension();
+
+        Set<ChunkPos> loadedChunks = LOADED_CHUNKS.get(world.provider.getDimension());
+
+        if (loadedChunks == null)
+        {
+            loadedChunks = new HashSet<ChunkPos>();
+            LOADED_CHUNKS.put(world.provider.getDimension(), loadedChunks);
+        }
 
         WorldPrimer.logInfo("Attempting to load chunks [{},{}] to [{},{}] in dimension {}", xStart, zStart, xEnd, zEnd, dimension);
 
@@ -79,30 +90,34 @@ public class WorldUtils
                 if (world.isBlockLoaded(new BlockPos(x << 4, 0, z << 4)) == false)
                 {
                     WorldPrimer.logInfo("Loading chunk [{},{}] in dimension {}", x, z, dimension);
-                    LOADED_CHUNKS.add(new ChunkPos(x, z));
+                    loadedChunks.add(new ChunkPos(x, z));
                     world.getChunkFromChunkCoords(x, z);
                 }
             }
         }
     }
 
-    public static void unloadLoadedChunks(World world)
+    public static void unloadLoadedChunks(@Nullable World world)
     {
         if (world instanceof WorldServer)
         {
             WorldServer worldServer = (WorldServer) world;
+            Set<ChunkPos> loadedChunks = LOADED_CHUNKS.get(world.provider.getDimension());
 
-            for (ChunkPos pos : LOADED_CHUNKS)
+            if (loadedChunks != null)
             {
-                if (worldServer.getPlayerChunkMap().contains(pos.x, pos.z) == false &&
-                    worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.z << 4)))
+                for (ChunkPos pos : loadedChunks)
                 {
-                    WorldPrimer.logInfo("Queueing chunk [{},{}] for unloading in dimension {}", pos.x, pos.z, world.provider.getDimension());
-                    worldServer.getChunkProvider().queueUnload(worldServer.getChunkFromChunkCoords(pos.x, pos.z));
+                    if (worldServer.getPlayerChunkMap().contains(pos.x, pos.z) == false &&
+                        worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.z << 4)))
+                    {
+                        WorldPrimer.logInfo("Queueing chunk [{},{}] for unloading in dimension {}", pos.x, pos.z, world.provider.getDimension());
+                        worldServer.getChunkProvider().queueUnload(worldServer.getChunkFromChunkCoords(pos.x, pos.z));
+                    }
                 }
+
+                LOADED_CHUNKS.remove(world.provider.getDimension());
             }
         }
-
-        LOADED_CHUNKS.clear();
     }
 }

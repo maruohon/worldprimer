@@ -7,6 +7,7 @@ import net.minecraft.command.CommandResultStats.Type;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -32,6 +33,11 @@ public class WorldPrimerCommandSender implements ICommandSender
 
     public void runCommands(@Nullable World world, String... commands)
     {
+        this.runCommands(null, world, commands);
+    }
+
+    public void runCommands(@Nullable EntityPlayer player, @Nullable World world, String... commands)
+    {
         ICommandManager manager = this.getServer().getCommandManager();
         this.executionWorld = world;
 
@@ -39,7 +45,7 @@ public class WorldPrimerCommandSender implements ICommandSender
         {
             if (StringUtils.isBlank(command) == false)
             {
-                String newCommand = CommandSubstitutions.doCommandSubstitutions(world, command);
+                String newCommand = CommandSubstitutions.doCommandSubstitutions(player, world, command);
                 World worldTmp = this.getEntityWorld();
                 String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
 
