@@ -1,5 +1,7 @@
 package fi.dy.masa.worldprimer.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -94,6 +96,14 @@ public class CommandSubstitutions
         final int dim = world.provider.getDimension();
         final BlockPos spawn = WorldUtils.getWorldSpawn(world);
 
+        if (substituteString(player, world, wrapper, "{TIME_Y}", getTimeStringFor("yyyy")))     { return wrapper[0]; }
+        if (substituteString(player, world, wrapper, "{TIME_M}", getTimeStringFor("MM")))       { return wrapper[0]; }
+        if (substituteString(player, world, wrapper, "{TIME_D}", getTimeStringFor("dd")))       { return wrapper[0]; }
+        if (substituteString(player, world, wrapper, "{TIME_H}", getTimeStringFor("HH")))       { return wrapper[0]; }
+        if (substituteString(player, world, wrapper, "{TIME_I}", getTimeStringFor("mm")))       { return wrapper[0]; }
+        if (substituteString(player, world, wrapper, "{TIME_S}", getTimeStringFor("ss")))       { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{TIME_TICK}", world.getTotalWorldTime())) { return wrapper[0]; }
+
         if (substituteNumber(player, world, wrapper, "{DIMENSION}", dim))           { return wrapper[0]; }
         if (substituteNumber(player, world, wrapper, "{SPAWN_X}", spawn.getX()))    { return wrapper[0]; }
         if (substituteNumber(player, world, wrapper, "{SPAWN_Y}", spawn.getY()))    { return wrapper[0]; }
@@ -113,6 +123,21 @@ public class CommandSubstitutions
         return argument;
     }
 
+    private static String getTimeStringFor(String placeHolder)
+    {
+        try
+        {
+            // yyyy-MM-dd HH:mm:ss
+            SimpleDateFormat sdf = new SimpleDateFormat(placeHolder);
+            return sdf.format(new Date());
+        }
+        catch (Exception e)
+        {
+        }
+
+        return "ERROR";
+    }
+
     private static boolean substituteString(@Nullable EntityPlayer player, World world, String[] wrapper, String placeHolder, String value)
     {
         final String argument = wrapper[0];
@@ -125,7 +150,7 @@ public class CommandSubstitutions
         else if (argument.startsWith(placeHolder))
         {
             String tail = argument.substring(placeHolder.length(), argument.length());
-            wrapper[0] = value + tail;
+            wrapper[0] = value + substituteIn(player, world, tail);
             return true;
         }
 

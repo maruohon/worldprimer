@@ -120,7 +120,7 @@ public class EventHandler
         {
             final EntityPlayer player = event.player;
             final int dimension = 1;
-            WorldPrimer.logInfo("PlayerRespawnEvent player: {}", player);
+            WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End) player: {}", player);
             DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
             final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 

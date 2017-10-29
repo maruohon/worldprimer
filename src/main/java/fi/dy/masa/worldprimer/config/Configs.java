@@ -71,7 +71,7 @@ public class Configs
     private static void loadConfigs(Configuration conf)
     {
         ConfigCategory category = conf.getCategory(CATEGORY_COMMANDS);
-        category.setComment("Generic tips:\n" +
+        category.setComment("Command documentation:\n" +
                             "There are a few substitutions available to use in the commands:\n" +
                             "Basic number substitutions from world data: {DIMENSION}, {SPAWN_X}, {SPAWN_Y} and {SPAWN_Z}.\n" +
                             "Any occurences of those strings will be replaced by the current dimension ID,\n" +
@@ -79,6 +79,15 @@ public class Configs
 
                             "Random numbers, integer and double type: {RAND:min,max},\n" +
                             "for example {RAND:5,15} or {RAND:1.2,3.9} (the max value is exclusive)\n\n" +
+
+                            "Real time/clock values:\n" +
+                            "\t{TIME_Y} => year   (4 digits: 2017)\n" +
+                            "\t{TIME_M} => month  (2 digits: 03)\n" +
+                            "\t{TIME_D} => day    (2 digits: 04)\n" +
+                            "\t{TIME_H} => hour   (2 digits: 09)\n" +
+                            "\t{TIME_I} => minute (2 digits: 05)\n" +
+                            "\t{TIME_S} => second (2 digits: 07)\n" +
+                            "\t{TIME_TICK} => current world total time in ticks\n\n" +
 
                             "The y-coordinate of the top-most block in the world in the given coordinates\n" +
                             "(actually the air block above it): {TOP_Y:x,z} for example: {TOP_Y:-37,538}\n\n" +
@@ -90,6 +99,17 @@ public class Configs
 
                             "For the player-specific commands, the following substitutions are available:\n" +
                             "{PLAYER_X}, {PLAYER_Y}, {PLAYER_Z} and {PLAYER_NAME}\n\n" +
+
+                            "The player-specific commands can be targeted to specific counts (like the 6th respawn for example)\n" +
+                            "or a multiple of a count (similarly to the dim-loading-command prefix)\n" +
+                            "by prefixing the command like so: 'worldprimer-tracked-nth <count> <actual command>'\n" +
+                            "For example in the playerRespawnCommands:\n" +
+                            "worldprimer-tracked-nth 3 say The player {PLAYER_NAME} has respawned for the third time at {PLAYER_X}, {PLAYER_Y}, {PLAYER_Z}\n" +
+                            "worldprimer-tracked-nth %5 say The player {PLAYER_NAME} has respawned for some multiple of 5 times\n\n" +
+
+                            "Note that the above only applies to the other player-specific commands, but not the playerChangedDimension commands.\n" +
+                            "For the playerChangedDimension commands, the same format works instead as for the dimension loading commands:\n" +
+                            "worldprimer-dim-command-nth 1 3 say The player {PLAYER_NAME} has entered The End (dimension {DIMENSION}) for the third time\n\n" +
 
                             "The substitutions also support very basic arithmetic operations [+-*/].\nSo you can do for example:\n" +
                             "fill {SPAWN_X}-2 {SPAWN_Y}+3 {SPAWN_Z}-2 {SPAWN_X}+2 {SPAWN_Y}+7 {SPAWN_Z}+2 minecraft:emerald_block\n\n" +

@@ -22,7 +22,7 @@ import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender
 {
-    private static final ITextComponent DISPLAY_NAME = new TextComponentString(Reference.MOD_NAME + " CommandSender");
+    private static final ITextComponent DISPLAY_NAME = new TextComponentString(Reference.MOD_NAME);
     private static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
     private World executionWorld;
 
