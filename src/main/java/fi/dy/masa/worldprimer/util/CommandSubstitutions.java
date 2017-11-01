@@ -54,19 +54,25 @@ public class CommandSubstitutions
 
         if (start != -1)
         {
-            String substituted = substitutePlaceholder(player, world, argument.substring(start, argument.length()));
+            String original = argument.substring(start, argument.length());
+            String substituted = substitutePlaceholder(player, world, original);
 
+            // There is something before the substitution
             if (start > 0)
             {
-                return argument.substring(0, start) + substituted;
+                // Remove a possible preceding escape character
+                return argument.substring(0, (argument.charAt(start - 1) == '\\') ? start - 1 : start) + substituted;
             }
             else
             {
                 return substituted;
             }
         }
-
-        return argument;
+        // No substitutions, replace any escaped ones with a non-escaped version
+        else
+        {
+            return argument.replace("\\{", "{");
+        }
     }
 
     private static int getFirstPlaceholderPosition(String argument)
