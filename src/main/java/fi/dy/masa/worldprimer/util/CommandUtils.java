@@ -140,7 +140,7 @@ public class CommandUtils
                 continue;
             }
 
-            String[] parts = command.split(" ");
+            String[] parts = command.split("\\s+", 4);
 
             if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
             {
@@ -181,11 +181,11 @@ public class CommandUtils
     {
         try
         {
-            final int parsedDim = Integer.parseInt(cmdParts[1]);
+            final int parsedDim = Integer.parseInt(cmdParts[2]);
 
             if (dimension == parsedDim)
             {
-                String countStr = cmdParts[2];
+                String countStr = cmdParts[1];
                 boolean modulo = false;
 
                 if (countStr.charAt(0) == '%')
@@ -228,9 +228,9 @@ public class CommandUtils
                 continue;
             }
 
-            String[] parts = command.split(" ");
+            String[] parts = command.split("\\s+", 3);
 
-            if (Configs.enableDataTracking && parts.length >= 3 && parts[0].equals("worldprimer-tracked-nth"))
+            if (Configs.enableDataTracking && parts.length >= 3 && parts[0].equals("worldprimer-tracked-command-nth"))
             {
                 runTrackedCommandsNth(player, command, parts, currentCount);
             }

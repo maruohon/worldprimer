@@ -112,7 +112,7 @@ public class Configs
 
                             "Note that the above only applies to the other player-specific commands, but not the playerChangedDimension commands.\n" +
                             "For the playerChangedDimension commands, the same format works instead as for the dimension loading commands:\n" +
-                            "worldprimer-dim-command-nth 1 3 say The player {PLAYER_NAME} has entered The End (dimension {DIMENSION}) for the third time\n\n" +
+                            "worldprimer-dim-command-nth 3 1 say The player {PLAYER_NAME} has entered The End (dimension {DIMENSION}) for the third time\n\n" +
 
                             "The substitutions also support very basic arithmetic operations [+-*/].\nSo you can do for example:\n" +
                             "fill {SPAWN_X}-2 {SPAWN_Y}+3 {SPAWN_Z}-2 {SPAWN_X}+2 {SPAWN_Y}+7 {SPAWN_Z}+2 minecraft:emerald_block\n\n" +
@@ -217,14 +217,14 @@ public class Configs
         prop = conf.get(CATEGORY_COMMANDS, "dimensionLoadingCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run when a dimension gets loaded.\n" +
                         "You can target these to only be run when a specific dimension loads\n" +
-                        "by specifying the command as 'worldprimer-dim-command <dim id> <command>'.\n" +
+                        "by specifying the command as 'worldprimer-dim-command <dimId> <command>'.\n" +
                         "So for example: 'worldprimer-dim-command 1 say The End has loaded!'.\n" +
                         "You can also run a command only when a dimension loads for specific number of times:\n" +
-                        "'worldprimer-dim-command-nth <dim id> <load count> <command>'.\n" +
+                        "'worldprimer-dim-command-nth <load count> <dim id> <command>'.\n" +
                         "This would run the command only when the dimension loads for the 'load count'-th time.\n" +
                         "The count is incremented before the commands are parsed, so in other words the first load is 1, not 0.\n" +
                         "You can also run the command every count-th time the dimension loads, by prefixing the count with a '%', so for example\n" +
-                        "worldprimer-dim-command-nth 1 %5 say The End has loaded some multiple of 5 times!");
+                        "worldprimer-dim-command-nth %5 1 say The End has loaded some multiple of 5 times!");
         dimensionLoadingCommands = prop.getStringList();
 
         prop = conf.get(CATEGORY_COMMANDS, "earlyWorldCreationCommands", new String[0]).setRequiresMcRestart(false);

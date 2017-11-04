@@ -41,7 +41,7 @@ public class WorldUtils
             return false;
         }
 
-        String[] parts = command.split(" ");
+        String[] parts = command.split("\\s+");
 
         if (parts.length == 5 && parts[0].equals("worldprimer-load-chunks"))
         {
