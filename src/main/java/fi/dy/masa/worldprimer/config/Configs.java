@@ -7,6 +7,7 @@ import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.worldprimer.reference.Reference;
+import fi.dy.masa.worldprimer.util.TimedCommands;
 
 public class Configs
 {
@@ -24,6 +25,7 @@ public class Configs
     public static boolean enableEarlyWorldLoadingCommands;
     public static boolean enablePostWorldCreationCommands;
     public static boolean enablePostWorldLoadingCommands;
+    public static boolean enableTimedCommands;
 
     public static boolean enablePlayerDeathCommands;
     public static boolean enablePlayerChangedDimensionEnterCommands;
@@ -37,6 +39,7 @@ public class Configs
     public static String[] earlyWorldLoadingCommands;
     public static String[] postWorldCreationCommands;
     public static String[] postWorldLoadingCommands;
+    public static String[] timedCommands;
 
     public static String[] playerDeathCommands;
     public static String[] playerChangedDimensionEnterCommands;
@@ -178,6 +181,12 @@ public class Configs
                         "after the overworld spawn chunks have been loaded.");
         enablePostWorldLoadingCommands = prop.getBoolean();
 
+        prop = conf.get(CATEGORY_TOGGLES, "enableTimedCommands", false).setRequiresMcRestart(false);
+        prop.setComment("Enables running commands tied to the world time");
+        enableTimedCommands = prop.getBoolean();
+
+        /**** player commands ****/
+
         prop = conf.get(CATEGORY_TOGGLES, "enablePlayerJoinCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables player join commands");
         enablePlayerJoinCommands = prop.getBoolean();
@@ -236,6 +245,21 @@ public class Configs
         prop.setComment("Commands to run every time the world gets loaded.\n" +
                         "These are run when the server has started and the overworld spawn chunks have been loaded.");
         postWorldLoadingCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "timedCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run based on the world time.\n" +
+                        "Must be in the format: 'worldprimer-timed-command <time> <dimension> <command>',\n" +
+                        "where <time> is the total world time in ticks when the command should run.\n" +
+                        "The time can be prefixed with a '%' to make it run periodically, with that interval (basically a modulo).\n" +
+                        "With the periodic time, you can also use offsets, like so:\n" +
+                        "worldprimer-timed-command %1200-80 0 say Something happens in 4 seconds!\n" +
+                        "worldprimer-timed-command %1200 0 say Something happens now!\n" +
+                        "worldprimer-timed-command %1200+80 0 Say something happened 4 seconds ago!");
+        timedCommands = prop.getStringList();
+        TimedCommands.setTimedCommands(timedCommands);
+        TimedCommands.updateAllTimedCommands(false);
+
+        /**** player commands ****/
 
         prop = conf.get(CATEGORY_COMMANDS, "playerJoinCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run when a player joins (connects to) the server");
