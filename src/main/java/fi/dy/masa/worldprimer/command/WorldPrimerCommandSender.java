@@ -86,7 +86,7 @@ public class WorldPrimerCommandSender implements ICommandSender
     private boolean isChunkLoadingCommand(String command)
     {
         String[] parts = command.split(" ");
-        return parts.length > 0 && parts[0].equals("worldprimer-load-chunks");
+        return parts.length > 0 && (parts[0].equals("worldprimer-load-chunks") || parts[0].equals("worldprimer-load-blocks"));
     }
 
     private boolean isWorldPrimerCommand(String command)

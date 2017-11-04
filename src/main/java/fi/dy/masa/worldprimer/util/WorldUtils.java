@@ -43,7 +43,7 @@ public class WorldUtils
 
         String[] parts = command.split("\\s+");
 
-        if (parts.length == 5 && parts[0].equals("worldprimer-load-chunks"))
+        if (parts.length == 5 && (parts[0].equals("worldprimer-load-chunks") || parts[0].equals("worldprimer-load-blocks")))
         {
             try
             {
@@ -51,7 +51,15 @@ public class WorldUtils
                 final int z1 = Integer.parseInt(parts[2]);
                 final int x2 = Integer.parseInt(parts[3]);
                 final int z2 = Integer.parseInt(parts[4]);
-                loadChunks(world, x1, z1, x2, z2);
+
+                if (parts[0].equals("worldprimer-load-blocks"))
+                {
+                    loadChunks(world, x1 >> 4, z1 >> 4, x2 >> 4, z2 >> 4);
+                }
+                else
+                {
+                    loadChunks(world, x1, z1, x2, z2);
+                }
 
                 return true;
             }
