@@ -21,7 +21,7 @@ public class CommandSubstitutions
     private static final Pattern PATTERN_RAND_INT     = Pattern.compile(".*(\\{RAND:(?<min>-?[0-9]+),(?<max>-?[0-9]+)\\}).*");
     private static final Pattern PATTERN_TOP_Y        = Pattern.compile(".*(\\{TOP_Y:(?<x>-?[0-9]+),(?<z>-?[0-9]+)\\}).*");
     private static final Pattern PATTERN_TOP_Y_RAND   = Pattern.compile(".*(\\{TOP_Y_RAND:(?<x>-?[0-9]+),(?<z>-?[0-9]+);(?<rx>[0-9]+),(?<rz>[0-9]+)\\}).*");
-    private static final Pattern PATTERN_NUMBER_START = Pattern.compile("([0-9]+)(.*)");
+    private static final Pattern PATTERN_NUMBER_START = Pattern.compile("([\\+-][0-9]+)(.*)");
     private static final Map<Pair<Integer, BlockPos>, Integer> TOP_Y_CACHE = new HashMap<>();
 
     public static String doCommandSubstitutions(@Nullable EntityPlayer player, @Nullable World world, String originalCommand)
@@ -102,6 +102,14 @@ public class CommandSubstitutions
         final int dim = world.provider.getDimension();
         final BlockPos spawn = WorldUtils.getWorldSpawn(world);
 
+        if (player != null)
+        {
+            if (substituteNumber(player, world, wrapper, "{PLAYER_X}", player.posX)) { return wrapper[0]; }
+            if (substituteNumber(player, world, wrapper, "{PLAYER_Y}", player.posY)) { return wrapper[0]; }
+            if (substituteNumber(player, world, wrapper, "{PLAYER_Z}", player.posZ)) { return wrapper[0]; }
+            if (substituteString(player, world, wrapper, "{PLAYER_NAME}", player.getName())) { return wrapper[0]; }
+        }
+
         if (substituteString(player, world, wrapper, "{TIME_Y}", getTimeStringFor("yyyy")))     { return wrapper[0]; }
         if (substituteString(player, world, wrapper, "{TIME_M}", getTimeStringFor("MM")))       { return wrapper[0]; }
         if (substituteString(player, world, wrapper, "{TIME_D}", getTimeStringFor("dd")))       { return wrapper[0]; }
@@ -117,14 +125,6 @@ public class CommandSubstitutions
         if (substituteRandom(player, world, wrapper))                               { return wrapper[0]; }
         if (substituteTopBlockY(player, world, wrapper))                            { return wrapper[0]; }
         if (substituteTopBlockYRand(world, wrapper))                                { return wrapper[0]; }
-
-        if (player != null)
-        {
-            if (substituteNumber(player, world, wrapper, "{PLAYER_X}", player.posX)) { return wrapper[0]; }
-            if (substituteNumber(player, world, wrapper, "{PLAYER_Y}", player.posY)) { return wrapper[0]; }
-            if (substituteNumber(player, world, wrapper, "{PLAYER_Z}", player.posZ)) { return wrapper[0]; }
-            if (substituteString(player, world, wrapper, "{PLAYER_NAME}", player.getName())) { return wrapper[0]; }
-        }
 
         return argument;
     }
@@ -186,7 +186,7 @@ public class CommandSubstitutions
                 if (supportedOperations.indexOf(op) != -1)
                 {
                     // Do any remaining substitutions to the rest of the argument recursively
-                    tail = substituteIn(player, world, tail.substring(1, tail.length()));
+                    tail = substituteIn(player, world, tail);
 
                     Matcher matcher = PATTERN_NUMBER_START.matcher(tail);
 
@@ -197,6 +197,7 @@ public class CommandSubstitutions
                         try
                         {
                             double operandValue = Double.parseDouble(operandValueStr);
+                            //System.out.printf("ph: %s | op: %c | v: %.3f\n", placeHolder, op, operandValue);
 
                             switch (op)
                             {
