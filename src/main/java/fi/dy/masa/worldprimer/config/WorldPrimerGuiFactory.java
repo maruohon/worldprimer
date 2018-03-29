@@ -1,45 +1,40 @@
 package fi.dy.masa.worldprimer.config;
 
-import java.util.Set;
-import net.minecraft.client.Minecraft;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.fml.client.DefaultGuiFactory;
+import net.minecraftforge.fml.client.config.GuiConfig;
+import net.minecraftforge.fml.client.config.IConfigElement;
+import fi.dy.masa.worldprimer.reference.Reference;
 
-public class WorldPrimerGuiFactory implements IModGuiFactory
+public class WorldPrimerGuiFactory extends DefaultGuiFactory
 {
-    @Override
-    public void initialize(Minecraft minecraftInstance)
+    public WorldPrimerGuiFactory()
     {
+        super(Reference.MOD_ID, getTitle());
     }
 
     @Override
-    public Class<? extends GuiScreen> mainConfigGuiClass()
+    public GuiScreen createConfigGui(GuiScreen parent)
     {
-        return WorldPrimerConfigGui.class;
+        return new GuiConfig(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle());
     }
 
-    @Override
-    public boolean hasConfigGui()
+    private static List<IConfigElement> getConfigElements()
     {
-        return true;
+        List<IConfigElement> configElements = new ArrayList<IConfigElement>();
+
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_COMMANDS)));
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)));
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_TOGGLES)));
+
+        return configElements;
     }
 
-    @Override
-    public GuiScreen createConfigGui(GuiScreen parentScreen)
+    private static String getTitle()
     {
-        return new WorldPrimerConfigGui(parentScreen);
-    }
-
-    @Override
-    public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
-    {
-        return null;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
-    {
-        return null;
+        return GuiConfig.getAbridgedConfigPath(Configs.configurationFile.toString());
     }
 }

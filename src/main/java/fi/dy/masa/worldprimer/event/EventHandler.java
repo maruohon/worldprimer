@@ -1,165 +1,80 @@
 package fi.dy.masa.worldprimer.event;
 
-import org.apache.commons.lang3.StringUtils;
-import net.minecraft.world.World;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import fi.dy.masa.worldprimer.WorldPrimer;
-import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldprimer.config.Configs;
-import fi.dy.masa.worldprimer.util.DimensionLoadTracker;
+import fi.dy.masa.worldprimer.util.CommandUtils;
+import fi.dy.masa.worldprimer.util.DataTracker;
+import fi.dy.masa.worldprimer.util.TimedCommands;
 
 public class EventHandler
 {
-    private boolean runCreationCommands;
-
     @SubscribeEvent
     public void onCreateSpawn(WorldEvent.CreateSpawnPosition event)
     {
-        WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition");
-        World world = event.getWorld();
-
-        // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist.
-        // This is only used if the load tracking is not used.
-        if (Configs.enableDimensionLoadTracking == false &&
-            world.isRemote == false && world.provider.getDimension() == 0)
-        {
-            if (Configs.enableEarlyWorldCreationCommands)
-            {
-                WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition - running earlyWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(world, Configs.earlyWorldCreationCommands);
-            }
-
-            // Defer running the commands until the world is actually ready to load
-            this.runCreationCommands = Configs.enablePostWorldCreationCommands;
-        }
+        CommandUtils.onCreateSpawn(event.getWorld());
     }
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        World world = event.getWorld();
-
-        if (world.isRemote == false)
-        {
-            int dimension = world.provider.getDimension();
-            WorldPrimer.logInfo("WorldEvent.Load, DIM: {}", dimension);
-
-            // The creation commands are only run via this method when not using dimension load count tracking
-            if (this.runCreationCommands && dimension == 0)
-            {
-                WorldPrimer.logInfo("WorldEvent.Load - running postWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
-                this.runCreationCommands = false;
-            }
-
-            if (Configs.enableDimensionLoadTracking)
-            {
-                DimensionLoadTracker.instance().dimensionLoaded(dimension);
-            }
-
-            if (Configs.enableDimensionLoadingCommands)
-            {
-                WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
-                this.runDimensionLoadingCommands(dimension, world);
-            }
-        }
+        CommandUtils.onWorldLoad(event.getWorld());
     }
 
     @SubscribeEvent
     public void onWorldSave(WorldEvent.Save event)
     {
-        DimensionLoadTracker.instance().writeToDisk();
+        DataTracker.instance().writeToDisk();
     }
 
-    private void runDimensionLoadingCommands(int dimension, World world)
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent event)
     {
-        String[] commands = Configs.dimensionLoadingCommands;
-
-        for (String command : commands)
+        if (Configs.enableTimedCommands && event.side == Side.SERVER && event.phase == TickEvent.Phase.END)
         {
-            if (StringUtils.isBlank(command))
-            {
-                continue;
-            }
-
-            String[] parts = command.split(" ");
-
-            if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
-            {
-                this.runDimLoadingCommandsRegular(dimension, world, command, parts);
-            }
-            else if (Configs.enableDimensionLoadTracking && parts.length >= 4 && parts[0].equals("worldprimer-dim-command-nth"))
-            {
-                this.runDimLoadingCommandsNth(dimension, world, command, parts);
-            }
-            else
-            {
-                WorldPrimerCommandSender.instance().runCommands(world, command);
-            }
+            TimedCommands.runTimedCommands();
         }
     }
 
-    private void runDimLoadingCommandsRegular(int dimension, World world, String fullCommand, String[] cmdParts)
+    @SubscribeEvent
+    public void onPlayerJoin(PlayerLoggedInEvent event)
     {
-        try
-        {
-            int dim = Integer.parseInt(cmdParts[1]);
+        CommandUtils.onPlayerJoin(event.player);
+    }
 
-            if (dimension == dim)
-            {
-                cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
-            }
-        }
-        catch (NumberFormatException e)
+    @SubscribeEvent
+    public void onPlayerQuit(PlayerLoggedOutEvent event)
+    {
+        CommandUtils.onPlayerQuit(event.player);
+    }
+
+    @SubscribeEvent
+    public void onPlayerDeath(LivingDeathEvent event)
+    {
+        if (event.getEntityLiving() instanceof EntityPlayer)
         {
-            WorldPrimer.logger.warn("Invalid dimension id '{}' in dimension-specific command '{}'", cmdParts[1], fullCommand);
+            CommandUtils.onPlayerDeath((EntityPlayer) event.getEntityLiving());
         }
     }
 
-    private void runDimLoadingCommandsNth(int dimension, World world, String fullCommand, String[] cmdParts)
+    @SubscribeEvent
+    public void onPlayerRespawn(PlayerRespawnEvent event)
     {
-        try
-        {
-            int dim = Integer.parseInt(cmdParts[1]);
-
-            if (dimension == dim)
-            {
-                String countStr = cmdParts[2];
-                boolean modulo = false;
-
-                if (countStr.charAt(0) == '%')
-                {
-                    countStr = countStr.substring(1, countStr.length());
-                    modulo = true;
-                }
-
-                int count = Integer.parseInt(countStr);
-                int loadCount = DimensionLoadTracker.instance().getLoadCountFor(dimension);
-
-                if ((modulo && count != 0 && (loadCount % count) == 0) || (modulo == false && loadCount == count))
-                {
-                    cmdParts = dropFirstStrings(cmdParts, 3);
-                    WorldPrimerCommandSender.instance().runCommands(world, String.join(" ", cmdParts));
-                }
-            }
-        }
-        catch (NumberFormatException e)
-        {
-            WorldPrimer.logger.warn("Invalid syntax in dimension-specific command '{}'", fullCommand);
-        }
+        CommandUtils.onPlayerRespawn(event.player, event.isEndConquered());
     }
 
-    public static String[] dropFirstStrings(String[] input, int toDrop)
+    @SubscribeEvent
+    public void onPlayerChangedDimension(PlayerChangedDimensionEvent event)
     {
-        if (toDrop >= input.length)
-        {
-            return new String[0];
-        }
-
-        String[] arr = new String[input.length - toDrop];
-        System.arraycopy(input, toDrop, arr, 0, input.length - toDrop);
-        return arr;
+        CommandUtils.onPlayerChangedDimension(event.player, event.fromDim, event.toDim);
     }
 }
