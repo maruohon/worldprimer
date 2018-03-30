@@ -16,16 +16,16 @@ public class CommandUtils
 
     public static void onCreateSpawn(final World world)
     {
-        WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition");
+        final int dimension = world.provider.getDimension();
+        WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition, DIM: {}", dimension);
 
         // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist.
         // This is only used if the load tracking is not used.
-        if (Configs.enableDataTracking == false &&
-            world.isRemote == false && world.provider.getDimension() == 0)
+        if (Configs.enableDataTracking == false && world.isRemote == false && dimension == 0)
         {
             if (Configs.enableEarlyWorldCreationCommands)
             {
-                WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition - running earlyWorldCreationCommands");
+                WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition: Running earlyWorldCreationCommands for DIM: {}", dimension);
                 WorldPrimerCommandSender.instance().runCommands(world, Configs.earlyWorldCreationCommands);
             }
 
@@ -38,7 +38,7 @@ public class CommandUtils
     {
         if (world.isRemote == false)
         {
-            int dimension = world.provider.getDimension();
+            final int dimension = world.provider.getDimension();
             WorldPrimer.logInfo("WorldEvent.Load, DIM: {}", dimension);
 
             if (Configs.enableTimedCommands)
@@ -49,7 +49,7 @@ public class CommandUtils
             // The creation commands are only run via this method when not using dimension load count tracking
             if (runCreationCommands && dimension == 0)
             {
-                WorldPrimer.logInfo("WorldEvent.Load - running postWorldCreationCommands");
+                WorldPrimer.logInfo("WorldEvent.Load: Running postWorldCreationCommands for DIM: {}", dimension);
                 WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
                 runCreationCommands = false;
             }
