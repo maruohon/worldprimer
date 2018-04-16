@@ -6,9 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.annotation.Nullable;
-
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandSenderWrapper;
@@ -130,29 +128,27 @@ public class SubCommandPlaceStructure extends SubCommand
 
             this.loadChunks(world, pos, template.getSize());
             template.addBlocksToWorld(world, pos, placement);
-            
+
             Map<BlockPos, String> map = template.getDataBlocks(pos, placement);
 
             for (Entry<BlockPos, String> entry : map.entrySet())
             {
-            	BlockPos blockpos2 = entry.getKey();
-                world.setBlockState(blockpos2, Blocks.AIR.getDefaultState(), 3);
-                
-                String s = entry.getValue();
-                
-                ResourceLocation resourcelocation = new ResourceLocation(s);
-                FunctionObject functionobject = server.getFunctionManager().getFunction(resourcelocation);
+                BlockPos posDataBlock = entry.getKey();
+                world.setBlockState(posDataBlock, Blocks.AIR.getDefaultState());
 
-                if (functionobject == null)
+                ResourceLocation functionName = new ResourceLocation(entry.getValue());
+                FunctionObject function = server.getFunctionManager().getFunction(functionName);
+
+                if (function == null)
                 {
-                    throw new CommandException("worldprimer.commands.placestructure.function.unknown", new Object[] {resourcelocation});
+                    throw new CommandException("worldprimer.commands.error.placestructure.function.unknown", functionName);
                 }
                 else
                 {
-                    server.getFunctionManager().execute(functionobject, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
+                    server.getFunctionManager().execute(function, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
                 }
-            }            
-            
+            }
+
             WorldUtils.unloadLoadedChunks(world);
 
             return true;

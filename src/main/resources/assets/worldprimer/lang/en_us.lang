@@ -10,6 +10,7 @@ worldprimer.commands.error.filenotfound=File '%s' was not found
 worldprimer.commands.error.invaliddimension=Dimension %d could not be loaded or does not exist!
 worldprimer.commands.error.invalid.argument.mirror=Invalid mirror argument '%s'
 worldprimer.commands.error.invalid.argument.rotation=Invalid rotation argument '%s'
+worldprimer.commands.error.placestructure.function.unknown=Unknown function name '%s' in a Data block
 worldprimer.commands.error.unknowncommandargument=Unknown command argument: '%s'
 worldprimer.commands.error.unknowncommandvariant=Unknown command variant: '%s'
 
