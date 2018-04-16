@@ -50,7 +50,7 @@ public class SubCommandPlaceStructure extends SubCommand
     @Override
     protected String getUsageStringCommon()
     {
-        return super.getUsageStringCommon() + " <x> <y> <z> <structurename> [rotation: cw_90 | cw_180 | ccw_90 | none] [mirror: left_right | front_back | none] [centered]";
+        return super.getUsageStringCommon() + " <x> <y> <z> <structurename> [rotation: cw_90 | cw_180 | ccw_90 | none] [mirror: left_right | front_back | none] [centered] [data-functions]";
     }
 
     @Override
@@ -76,6 +76,11 @@ public class SubCommandPlaceStructure extends SubCommand
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "centered");
         }
+        // data-functions argument
+        else if (args.length == 8)
+        {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "data-functions");
+        }
         // Position arguments
         else if (args.length <= 3)
         {
@@ -88,7 +93,7 @@ public class SubCommandPlaceStructure extends SubCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        if (args.length >= 4 && args.length <= 7)
+        if (args.length >= 4 && args.length <= 8)
         {
             try
             {
@@ -96,8 +101,9 @@ public class SubCommandPlaceStructure extends SubCommand
                 Rotation rotation = args.length >= 5 ? this.getRotation(args[4]) : Rotation.NONE;
                 Mirror mirror     = args.length >= 6 ? this.getMirror(args[5]) : Mirror.NONE;
                 boolean centered = args.length == 7 && args[6].equals("centered");
+                boolean dataFunctions = args.length == 8 && args[7].equals("data-functions");
 
-                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3], sender);
+                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3], sender, dataFunctions);
             }
             catch (NumberFormatException e)
             {
@@ -110,7 +116,8 @@ public class SubCommandPlaceStructure extends SubCommand
         }
     }
 
-    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror, boolean centered, String structureFile, ICommandSender sender) throws CommandException
+    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
+            boolean centered, String structureFile, ICommandSender sender, boolean dataFunctions) throws CommandException
     {
         Template template = this.getTemplateManager().getTemplate(server, new ResourceLocation(structureFile));
 
@@ -128,28 +135,30 @@ public class SubCommandPlaceStructure extends SubCommand
 
             this.loadChunks(world, pos, template.getSize());
             template.addBlocksToWorld(world, pos, placement);
+            WorldUtils.unloadLoadedChunks(world);
 
-            Map<BlockPos, String> map = template.getDataBlocks(pos, placement);
-
-            for (Entry<BlockPos, String> entry : map.entrySet())
+            if (dataFunctions)
             {
-                BlockPos posDataBlock = entry.getKey();
-                world.setBlockState(posDataBlock, Blocks.AIR.getDefaultState());
+                Map<BlockPos, String> map = template.getDataBlocks(pos, placement);
 
-                ResourceLocation functionName = new ResourceLocation(entry.getValue());
-                FunctionObject function = server.getFunctionManager().getFunction(functionName);
+                for (Entry<BlockPos, String> entry : map.entrySet())
+                {
+                    BlockPos posDataBlock = entry.getKey();
+                    world.setBlockState(posDataBlock, Blocks.AIR.getDefaultState());
 
-                if (function == null)
-                {
-                    throw new CommandException("worldprimer.commands.error.placestructure.function.unknown", functionName);
-                }
-                else
-                {
-                    server.getFunctionManager().execute(function, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
+                    ResourceLocation functionName = new ResourceLocation(entry.getValue());
+                    FunctionObject function = server.getFunctionManager().getFunction(functionName);
+
+                    if (function == null)
+                    {
+                        throw new CommandException("worldprimer.commands.error.placestructure.function.unknown", functionName);
+                    }
+                    else
+                    {
+                        server.getFunctionManager().execute(function, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
+                    }
                 }
             }
-
-            WorldUtils.unloadLoadedChunks(world);
 
             return true;
         }
