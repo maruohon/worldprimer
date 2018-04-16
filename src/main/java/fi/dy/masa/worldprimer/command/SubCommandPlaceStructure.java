@@ -4,10 +4,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.annotation.Nullable;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.CommandSenderWrapper;
+import net.minecraft.command.FunctionObject;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.ResourceLocation;
@@ -92,7 +99,7 @@ public class SubCommandPlaceStructure extends SubCommand
                 Mirror mirror     = args.length >= 6 ? this.getMirror(args[5]) : Mirror.NONE;
                 boolean centered = args.length == 7 && args[6].equals("centered");
 
-                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3]);
+                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3], sender);
             }
             catch (NumberFormatException e)
             {
@@ -105,7 +112,7 @@ public class SubCommandPlaceStructure extends SubCommand
         }
     }
 
-    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror, boolean centered, String structureFile)
+    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror, boolean centered, String structureFile, ICommandSender sender) throws CommandException
     {
         Template template = this.getTemplateManager().getTemplate(server, new ResourceLocation(structureFile));
 
@@ -123,6 +130,29 @@ public class SubCommandPlaceStructure extends SubCommand
 
             this.loadChunks(world, pos, template.getSize());
             template.addBlocksToWorld(world, pos, placement);
+            
+            Map<BlockPos, String> map = template.getDataBlocks(pos, placement);
+
+            for (Entry<BlockPos, String> entry : map.entrySet())
+            {
+            	BlockPos blockpos2 = entry.getKey();
+                world.setBlockState(blockpos2, Blocks.AIR.getDefaultState(), 3);
+                
+                String s = entry.getValue();
+                
+                ResourceLocation resourcelocation = new ResourceLocation(s);
+                FunctionObject functionobject = server.getFunctionManager().getFunction(resourcelocation);
+
+                if (functionobject == null)
+                {
+                    throw new CommandException("worldprimer.commands.placestructure.function.unknown", new Object[] {resourcelocation});
+                }
+                else
+                {
+                    server.getFunctionManager().execute(functionobject, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
+                }
+            }            
+            
             WorldUtils.unloadLoadedChunks(world);
 
             return true;
