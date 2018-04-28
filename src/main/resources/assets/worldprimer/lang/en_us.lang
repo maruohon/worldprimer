@@ -11,6 +11,7 @@ worldprimer.commands.error.invaliddimension=Dimension %d could not be loaded or 
 worldprimer.commands.error.invalid.argument.mirror=Invalid mirror argument '%s'
 worldprimer.commands.error.invalid.argument.rotation=Invalid rotation argument '%s'
 worldprimer.commands.error.placestructure.function.unknown=Unknown function name '%s' in a Data block
+worldprimer.commands.error.placestructure.unknown_format=Unknown structure format (file name extension) for '%s'
 worldprimer.commands.error.unknowncommandargument=Unknown command argument: '%s'
 worldprimer.commands.error.unknowncommandvariant=Unknown command variant: '%s'
 

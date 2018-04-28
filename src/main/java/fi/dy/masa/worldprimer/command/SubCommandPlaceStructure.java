@@ -24,6 +24,7 @@ import net.minecraft.world.gen.structure.template.Template;
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.util.Schematic;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class SubCommandPlaceStructure extends SubCommand
@@ -103,7 +104,7 @@ public class SubCommandPlaceStructure extends SubCommand
                 boolean centered = args.length == 7 && args[6].equals("centered");
                 boolean dataFunctions = args.length == 8 && args[7].equals("data-functions");
 
-                this.tryPlaceStructure(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3], sender, dataFunctions);
+                this.tryPlaceStructureWrapper(server, sender.getEntityWorld(), pos, rotation, mirror, centered, args[3], sender, dataFunctions);
             }
             catch (NumberFormatException e)
             {
@@ -116,16 +117,37 @@ public class SubCommandPlaceStructure extends SubCommand
         }
     }
 
-    private boolean tryPlaceStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
-            boolean centered, String structureFile, ICommandSender sender, boolean dataFunctions) throws CommandException
+    private boolean tryPlaceStructureWrapper(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
+            boolean centered, String structureName, ICommandSender sender, boolean dataFunctions) throws CommandException
     {
-        Template template = this.getTemplateManager().getTemplate(server, new ResourceLocation(structureFile));
+        StructureType type = this.getExistingStructureTypeForName(structureName);
+
+        if (type == StructureType.STRUCTURE)
+        {
+            return this.tryPlaceVanillaStructure(server, world, pos, rotation, mirror, centered, structureName, sender, dataFunctions);
+        }
+        else if (type == StructureType.SCHEMATIC)
+        {
+            return this.tryPlaceSchematic(server, world, pos, rotation, mirror, centered, structureName, sender, dataFunctions);
+        }
+        else
+        {
+            throwCommand("worldprimer.commands.error.placestructure.unknown_format", structureName);
+            return false;
+        }
+    }
+
+    private boolean tryPlaceVanillaStructure(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
+            boolean centered, String structureName, ICommandSender sender, boolean dataFunctions) throws CommandException
+    {
+        Template template = this.getTemplateManager().getTemplate(server, new ResourceLocation(structureName));
 
         if (template != null)
         {
             PlacementSettings placement = new PlacementSettings();
             placement.setRotation(rotation);
             placement.setMirror(mirror);
+            placement.setReplacedBlock(Blocks.STRUCTURE_VOID);
 
             if (centered)
             {
@@ -139,31 +161,89 @@ public class SubCommandPlaceStructure extends SubCommand
 
             if (dataFunctions)
             {
-                Map<BlockPos, String> map = template.getDataBlocks(pos, placement);
-
-                for (Entry<BlockPos, String> entry : map.entrySet())
-                {
-                    BlockPos posDataBlock = entry.getKey();
-                    world.setBlockState(posDataBlock, Blocks.AIR.getDefaultState());
-
-                    ResourceLocation functionName = new ResourceLocation(entry.getValue());
-                    FunctionObject function = server.getFunctionManager().getFunction(functionName);
-
-                    if (function == null)
-                    {
-                        throw new CommandException("worldprimer.commands.error.placestructure.function.unknown", functionName);
-                    }
-                    else
-                    {
-                        server.getFunctionManager().execute(function, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
-                    }
-                }
+                this.executeDataFunctions(world, template.getDataBlocks(pos, placement), server, sender);
             }
 
             return true;
         }
 
         return false;
+    }
+
+    private boolean tryPlaceSchematic(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
+            boolean centered, String structureName, ICommandSender sender, boolean dataFunctions) throws CommandException
+    {
+        File file = new File(this.getStructureDirectory(), structureName + ".schematic");
+        Schematic schematic = Schematic.createFromFile(file);
+
+        if (schematic != null)
+        {
+            PlacementSettings placement = new PlacementSettings();
+            placement.setRotation(rotation);
+            placement.setMirror(mirror);
+            placement.setReplacedBlock(Blocks.STRUCTURE_VOID);
+            placement.setIgnoreEntities(false);
+
+            if (centered)
+            {
+                BlockPos size = Template.transformedBlockPos(placement, schematic.getSize());
+                pos = pos.add(-(size.getX() / 2), 0, -(size.getZ() / 2));
+            }
+
+            this.loadChunks(world, pos, schematic.getSize());
+            schematic.placeSchematicToWorld(world, pos, placement, 2);
+            WorldUtils.unloadLoadedChunks(world);
+
+            if (dataFunctions)
+            {
+                this.executeDataFunctions(world, schematic.getDataStructureBlocks(pos, placement), server, sender);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void executeDataFunctions(World world, Map<BlockPos, String> dataStructureBlocks, MinecraftServer server, ICommandSender sender) throws CommandException
+    {
+        for (Entry<BlockPos, String> entry : dataStructureBlocks.entrySet())
+        {
+            BlockPos posDataBlock = entry.getKey();
+            world.setBlockState(posDataBlock, Blocks.AIR.getDefaultState());
+
+            ResourceLocation functionName = new ResourceLocation(entry.getValue());
+            FunctionObject function = server.getFunctionManager().getFunction(functionName);
+
+            if (function == null)
+            {
+                throw new CommandException("worldprimer.commands.error.placestructure.function.unknown", functionName);
+            }
+            else
+            {
+                server.getFunctionManager().execute(function, CommandSenderWrapper.create(sender).computePositionVector().withSendCommandFeedback(false));
+            }
+        }
+    }
+    @Nullable
+    private StructureType getExistingStructureTypeForName(String structureName)
+    {
+        File dir = this.getStructureDirectory();
+        File file = new File(dir, structureName + ".nbt");
+
+        if (file.exists() && file.isFile() && file.canRead())
+        {
+            return StructureType.STRUCTURE;
+        }
+
+        file = new File(dir, structureName + ".schematic");
+
+        if (file.exists() && file.isFile() && file.canRead())
+        {
+            return StructureType.SCHEMATIC;
+        }
+
+        return null;
     }
 
     private TemplateManager getTemplateManager()
@@ -193,7 +273,18 @@ public class SubCommandPlaceStructure extends SubCommand
 
             for (String name : names)
             {
-                list.add(name.endsWith(".nbt") ? name.substring(0, name.length() - 4) : name);
+                if (name.endsWith(".nbt"))
+                {
+                    list.add(name.substring(0, name.length() - ".nbt".length()));
+                }
+                else if (name.endsWith(".schematic"))
+                {
+                    list.add(name.substring(0, name.length() - ".schematic".length()));
+                }
+                else
+                {
+                    list.add(name);
+                }
             }
 
             return list;
@@ -250,5 +341,11 @@ public class SubCommandPlaceStructure extends SubCommand
     {
         WorldUtils.loadChunks(world, pos.getX() >> 4, pos.getZ() >> 4,
                               (pos.getX() + size.getX()) >> 4, (pos.getZ() + size.getZ()) >> 4);
+    }
+
+    public enum StructureType
+    {
+        STRUCTURE,
+        SCHEMATIC;
     }
 }
