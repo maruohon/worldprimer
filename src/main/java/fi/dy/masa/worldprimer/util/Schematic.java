@@ -42,7 +42,7 @@ public class Schematic
 {
     private BlockPos size = BlockPos.ORIGIN;
     private IBlockState[] blocks;
-    private IBlockState[] palette;
+    private Block[] palette;
     private Map<BlockPos, NBTTagCompound> tiles = new HashMap<>();
     private List<NBTTagCompound> entities = new ArrayList<>();
     private String fileName;
@@ -271,20 +271,20 @@ public class Schematic
 
             if (numBlocks != (width * height * length))
             {
-                WorldPrimer.logger.error("SchematicaSchematic: Mismatched block array size compared to the width/height/length, blocks: {}, W x H x L: {} x {} x {}",
+                WorldPrimer.logger.error("Schematic: Mismatched block array size compared to the width/height/length, blocks: {}, W x H x L: {} x {} x {}",
                         numBlocks, width, height, length);
                 return false;
             }
 
             if (numBlocks != metaArr.length)
             {
-                WorldPrimer.logger.error("SchematicaSchematic: Mismatched block ID and metadata array sizes, blocks: {}, meta: {}", numBlocks, metaArr.length);
+                WorldPrimer.logger.error("Schematic: Mismatched block ID and metadata array sizes, blocks: {}, meta: {}", numBlocks, metaArr.length);
                 return false;
             }
 
             if (this.readPalette(nbt) == false)
             {
-                WorldPrimer.logger.error("SchematicaSchematic: Failed to read the block palette");
+                WorldPrimer.logger.error("Schematic: Failed to read the block palette");
                 return false;
             }
 
@@ -293,17 +293,18 @@ public class Schematic
             if (nbt.hasKey("AddBlocks", Constants.NBT.TAG_BYTE_ARRAY))
             {
                 byte[] add = nbt.getByteArray("AddBlocks");
+                final int expectedAddLength = (int) Math.ceil((double) blockIdsByte.length / 2D);
 
-                if (add.length != (blockIdsByte.length / 2))
+                if (add.length != expectedAddLength)
                 {
-                    WorldPrimer.logger.error("SchematicaSchematic: Add array size mismatch, blocks: {}, add: {}, expected add: {}",
-                            numBlocks, add.length, numBlocks / 2);
+                    WorldPrimer.logger.error("Schematic: Add array size mismatch, blocks: {}, add: {}, expected add: {}",
+                            numBlocks, add.length, expectedAddLength);
                     return false;
                 }
 
                 final int loopMax;
 
-                // Even number of blocks, we can 
+                // Even number of blocks, we can handle two position (meaning one full add byte) at a time
                 if ((numBlocks % 2) == 0)
                 {
                     loopMax = numBlocks - 1;
@@ -313,43 +314,47 @@ public class Schematic
                     loopMax = numBlocks - 2;
                 }
 
-                // Handle two positions per iteration, ie. one full byte of the add array
-                for (int bi = 0, ai = 0; bi < loopMax; bi += 2, ai++)
-                {
-                    byte addValue = add[ai];
-                    IBlockState state;
-                    state = this.palette[((addValue & 0xF0) << 4) | (((int) blockIdsByte[bi]) & 0xFF)];
-                    state = state.getBlock().getStateFromMeta(metaArr[bi]);
-                    this.blocks[bi    ] = state;
+                Block block;
+                int byteId;
+                int bi, ai;
 
-                    state = this.palette[((addValue & 0x0F) << 8) | (((int) blockIdsByte[bi]) & 0xFF)];
-                    state = state.getBlock().getStateFromMeta(metaArr[bi + 1]);
-                    this.blocks[bi + 1] = state;
+                // Handle two positions per iteration, ie. one full byte of the add array
+                for (bi = 0, ai = 0; bi < loopMax; bi += 2, ai++)
+                {
+                    final int addValue = ((int) add[ai]) & 0xFF;
+
+                    byteId = ((int) blockIdsByte[bi    ]) & 0xFF;
+                    block = this.palette[(addValue & 0xF0) << 4 | byteId];
+                    this.blocks[bi    ] = block.getStateFromMeta(metaArr[bi    ]);
+
+                    byteId = ((int) blockIdsByte[bi + 1]) & 0xFF;
+                    block = this.palette[(addValue & 0x0F) << 8 | byteId];
+                    this.blocks[bi + 1] = block.getStateFromMeta(metaArr[bi + 1]);
                 }
 
                 // Odd number of blocks, handle the last position
                 if ((numBlocks % 2) != 0)
                 {
-                    IBlockState state;
-                    state = this.palette[((add[numBlocks / 2] & 0xF0) << 4) | (((int) blockIdsByte[numBlocks - 1]) & 0xFF)];
-                    state = state.getBlock().getStateFromMeta(metaArr[numBlocks - 1]);
-                    this.blocks[numBlocks - 1] = state;
+                    final int addValue = ((int) add[ai]) & 0xFF;
+                    byteId = ((int) blockIdsByte[bi    ]) & 0xFF;
+                    block = this.palette[(addValue & 0xF0) << 4 | byteId];
+                    this.blocks[bi    ] = block.getStateFromMeta(metaArr[bi    ]);
                 }
             }
             // Old Schematica format
             else if (nbt.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
             {
                 // FIXME is this array 4 or 8 bits per block?
-                WorldPrimer.logger.error("SchematicaSchematic: Old Schematica format detected, not currently implemented...");
+                WorldPrimer.logger.error("Schematic: Old Schematica format detected, not currently implemented...");
                 return false;
             }
+            // No palette, use the registry IDs directly
             else
             {
                 for (int i = 0; i < numBlocks; i++)
                 {
-                    IBlockState state = this.palette[((int) blockIdsByte[i]) & 0xFF];
-                    state = state.getBlock().getStateFromMeta(metaArr[i]);
-                    this.blocks[i] = state;
+                    Block block = this.palette[((int) blockIdsByte[i]) & 0xFF];
+                    this.blocks[i] = block.getStateFromMeta(metaArr[i]);
                 }
             }
 
@@ -360,7 +365,7 @@ public class Schematic
         }
         else
         {
-            WorldPrimer.logger.error("SchematicaSchematic: Missing block data in the schematic '{}'", this.fileName);
+            WorldPrimer.logger.error("Schematic: Missing block data in the schematic '{}'", this.fileName);
         }
 
         return false;
@@ -368,8 +373,8 @@ public class Schematic
 
     private boolean readPalette(NBTTagCompound nbt)
     {
-        final IBlockState air = Blocks.AIR.getDefaultState();
-        this.palette = new IBlockState[4096];
+        final Block air = Blocks.AIR;
+        this.palette = new Block[4096];
         Arrays.fill(this.palette, air);
 
         // Schematica palette
@@ -392,7 +397,7 @@ public class Schematic
 
                 if (block != null)
                 {
-                    this.palette[id] = block.getDefaultState();
+                    this.palette[id] = block;
                 }
                 else
                 {
@@ -431,7 +436,7 @@ public class Schematic
 
                 if (block != null)
                 {
-                    this.palette[id] = block.getDefaultState();
+                    this.palette[id] = block;
                 }
                 else
                 {
@@ -450,7 +455,7 @@ public class Schematic
 
                     if (id >= 0 && id < this.palette.length)
                     {
-                        this.palette[id] = block.getDefaultState();
+                        this.palette[id] = block;
                     }
                     else
                     {
