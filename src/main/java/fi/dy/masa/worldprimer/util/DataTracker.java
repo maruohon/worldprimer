@@ -61,6 +61,18 @@ public class DataTracker
         return count != null ? count.intValue() : 0;
     }
 
+    public void resetDimensionLoadCountFor(int dimension)
+    {
+        this.dimensionLoadCounts.remove(dimension);
+
+        for (PlayerData data : this.playerData.values())
+        {
+            data.resetDimensionEventCountsFor(dimension);
+        }
+
+        this.dirty = true;
+    }
+
     public int getServerStartCount()
     {
         return this.serverStarts;
@@ -313,6 +325,18 @@ public class DataTracker
             Integer countOld = map.get(dimension);
             int countNew = countOld != null ? countOld + 1 : 1;
             map.put(dimension, countNew);
+        }
+
+        public void resetDimensionEventCountsFor(int dimension)
+        {
+            this.resetDimensionEventCountFor(dimension, PlayerDimensionDataType.ENTER);
+            this.resetDimensionEventCountFor(dimension, PlayerDimensionDataType.LEAVE);
+        }
+
+        public void resetDimensionEventCountFor(int dimension, PlayerDimensionDataType type)
+        {
+            Map<Integer, Integer> map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
+            map.remove(dimension);
         }
 
         public void readFromNBT(NBTTagCompound nbt)
