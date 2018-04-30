@@ -72,12 +72,30 @@ public class CommandUtils
     {
         WorldPrimer.logInfo("PlayerLoggedInEvent player: {}", player);
         handlePlayerEvent(player, PlayerDataType.JOIN, Configs.enablePlayerJoinCommands, Configs.playerJoinCommands);
+
+        if (Configs.enablePlayerChangedDimensionEnterCommands)
+        {
+            int dimension = player.getEntityWorld().provider.getDimension();
+            DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+
+            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+            runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionEnterCommands);
+        }
     }
 
     public static void onPlayerQuit(final EntityPlayer player)
     {
         WorldPrimer.logInfo("PlayerLoggedOutEvent player: {}", player);
         handlePlayerEvent(player, PlayerDataType.QUIT, Configs.enablePlayerQuitCommands, Configs.playerQuitCommands);
+
+        if (Configs.enablePlayerChangedDimensionLeaveCommands)
+        {
+            int dimension = player.getEntityWorld().provider.getDimension();
+            DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+
+            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+            runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionLeaveCommands);
+        }
     }
 
     public static void onPlayerDeath(final EntityPlayer player)
@@ -95,16 +113,28 @@ public class CommandUtils
             handlePlayerEvent(player, PlayerDataType.RESPAWN, Configs.enablePlayerRespawnCommands, Configs.playerRespawnCommands);
         }
         // The PlayerChangedDimensionEvent doesn't seem to fire when leaving the End, so run the leave commands also here
-        else if (Configs.enablePlayerChangedDimensionLeaveCommands)
+        else
         {
-            final int dimension = 1;
-            WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End) player: {}", player);
-            DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
-            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+            if (Configs.enablePlayerChangedDimensionLeaveCommands)
+            {
+                final int dimension = 1;
+                WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End) player: {}", player);
+                DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+                final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 
-            // Note: the dimension MUST be passed from here instead of getting it from the WorldProvider,
-            // because the player is in the target dimension already at this point
-            runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionLeaveCommands);
+                // Note: the dimension MUST be passed from here instead of getting it from the WorldProvider,
+                // because the player is in the target dimension already at this point
+                runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionLeaveCommands);
+            }
+
+            if (Configs.enablePlayerChangedDimensionEnterCommands)
+            {
+                int dimension = player.getEntityWorld().provider.getDimension();
+                DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+
+                final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+                runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionEnterCommands);
+            }
         }
     }
 
