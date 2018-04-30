@@ -108,6 +108,7 @@ public class DataTracker
         {
             data = new PlayerData();
             this.playerData.put(player.getUniqueID(), data);
+            this.dirty = true;
         }
 
         return data;
@@ -115,12 +116,10 @@ public class DataTracker
 
     private void readFromNBT(NBTTagCompound nbt)
     {
-        if (nbt == null || nbt.hasKey("DimLoadCounts", Constants.NBT.TAG_LIST) == false)
+        if (nbt == null)
         {
             return;
         }
-
-        this.dimensionLoadCounts.clear();
 
         NBTTagList tagList = nbt.getTagList("DimLoadCounts", Constants.NBT.TAG_COMPOUND);
         int tagCount = tagList.tagCount();
@@ -131,7 +130,6 @@ public class DataTracker
             this.dimensionLoadCounts.put(tag.getInteger("Dim"), tag.getInteger("Count"));
         }
 
-        this.playerData.clear();
         tagList = nbt.getTagList("PlayerData", Constants.NBT.TAG_COMPOUND);
         tagCount = tagList.tagCount();
 
@@ -211,6 +209,7 @@ public class DataTracker
 
         // Clear old data regardless of whether there is a data file
         this.dimensionLoadCounts.clear();
+        this.playerData.clear();
         this.serverStarts = 0;
 
         this.worldDir = worldDir;
@@ -224,9 +223,11 @@ public class DataTracker
 
         try
         {
-            if (file.exists() && file.isFile())
+            if (file.exists() && file.isFile() && file.canRead())
             {
-                this.readFromNBT(CompressedStreamTools.readCompressed(new FileInputStream(file)));
+                FileInputStream is = new FileInputStream(file);
+                this.readFromNBT(CompressedStreamTools.readCompressed(is));
+                is.close();
             }
         }
         catch (Exception e)
@@ -250,7 +251,9 @@ public class DataTracker
             {
                 File fileTmp  = new File(saveDir, "data_tracker.nbt.tmp");
                 File fileReal = new File(saveDir, "data_tracker.nbt");
-                CompressedStreamTools.writeCompressed(this.writeToNBT(new NBTTagCompound()), new FileOutputStream(fileTmp));
+                FileOutputStream os = new FileOutputStream(fileTmp);
+                CompressedStreamTools.writeCompressed(this.writeToNBT(new NBTTagCompound()), os);
+                os.close();
 
                 if (fileReal.exists())
                 {
