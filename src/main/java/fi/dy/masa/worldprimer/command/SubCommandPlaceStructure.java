@@ -173,7 +173,7 @@ public class SubCommandPlaceStructure extends SubCommand
     private boolean tryPlaceSchematic(MinecraftServer server, World world, BlockPos pos, Rotation rotation, Mirror mirror,
             boolean centered, String structureName, ICommandSender sender, boolean dataFunctions) throws CommandException
     {
-        File file = new File(this.getStructureDirectory(), structureName + ".schematic");
+        File file = new File(this.getStructureDirectory(), structureName + StructureType.SCHEMATIC.getExtension());
         Schematic schematic = Schematic.createFromFile(file);
 
         if (schematic != null)
@@ -225,18 +225,19 @@ public class SubCommandPlaceStructure extends SubCommand
             }
         }
     }
+
     @Nullable
     private StructureType getExistingStructureTypeForName(String structureName)
     {
         File dir = this.getStructureDirectory();
-        File file = new File(dir, structureName + ".nbt");
+        File file = new File(dir, structureName + StructureType.STRUCTURE.getExtension());
 
         if (file.exists() && file.isFile() && file.canRead())
         {
             return StructureType.STRUCTURE;
         }
 
-        file = new File(dir, structureName + ".schematic");
+        file = new File(dir, structureName + StructureType.SCHEMATIC.getExtension());
 
         if (file.exists() && file.isFile() && file.canRead())
         {
@@ -246,7 +247,7 @@ public class SubCommandPlaceStructure extends SubCommand
         return null;
     }
 
-    private TemplateManager getTemplateManager()
+    protected TemplateManager getTemplateManager()
     {
         // Lazy load/create the TemplateManager, so that the MinecraftServer is actually running at this point
         if (this.templateManager == null)
@@ -257,12 +258,12 @@ public class SubCommandPlaceStructure extends SubCommand
         return this.templateManager;
     }
 
-    private File getStructureDirectory()
+    protected File getStructureDirectory()
     {
         return new File(new File(WorldPrimer.configDirPath), "structures");
     }
 
-    private List<String> getExistingStructureFileNames()
+    protected List<String> getExistingStructureFileNames()
     {
         File dir = this.getStructureDirectory();
 
@@ -270,16 +271,18 @@ public class SubCommandPlaceStructure extends SubCommand
         {
             String[] names = dir.list();
             List<String> list = new ArrayList<>();
+            final String extensionVanilla = StructureType.STRUCTURE.getExtension();
+            final String extensionSchematic = StructureType.SCHEMATIC.getExtension();
 
             for (String name : names)
             {
-                if (name.endsWith(".nbt"))
+                if (name.endsWith(extensionVanilla))
                 {
-                    list.add(name.substring(0, name.length() - ".nbt".length()));
+                    list.add(name.substring(0, name.length() - extensionVanilla.length()));
                 }
-                else if (name.endsWith(".schematic"))
+                else if (name.endsWith(extensionSchematic))
                 {
-                    list.add(name.substring(0, name.length() - ".schematic".length()));
+                    list.add(name.substring(0, name.length() - extensionSchematic.length()));
                 }
                 else
                 {
@@ -337,7 +340,7 @@ public class SubCommandPlaceStructure extends SubCommand
         return Mirror.NONE; // dummy
     }
 
-    private void loadChunks(World world, BlockPos pos, BlockPos size)
+    protected void loadChunks(World world, BlockPos pos, BlockPos size)
     {
         WorldUtils.loadChunks(world, pos.getX() >> 4, pos.getZ() >> 4,
                               (pos.getX() + size.getX()) >> 4, (pos.getZ() + size.getZ()) >> 4);
@@ -345,7 +348,19 @@ public class SubCommandPlaceStructure extends SubCommand
 
     public enum StructureType
     {
-        STRUCTURE,
-        SCHEMATIC;
+        STRUCTURE   (".nbt"),
+        SCHEMATIC   (".schematic");
+
+        private final String extension;
+
+        private StructureType(String extension)
+        {
+            this.extension = extension;
+        }
+
+        public String getExtension()
+        {
+            return this.extension;
+        }
     }
 }

@@ -73,6 +73,11 @@ public class WorldUtils
         return false;
     }
 
+    public static void loadBlocks(@Nonnull World world, int blockX1, int blockZ1, int blockX2, int blockZ2)
+    {
+        loadChunks(world, blockX1 >> 4, blockZ1 >> 4, blockX2 >> 4, blockZ2 >> 4);
+    }
+
     public static void loadChunks(@Nonnull World world, int chunkX1, int chunkZ1, int chunkX2, int chunkZ2)
     {
         final int xStart = Math.min(chunkX1, chunkX2);

@@ -2,6 +2,7 @@ package fi.dy.masa.worldprimer.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -236,6 +237,93 @@ public class Schematic
         }
 
         return map;
+    }
+
+    private void readBlocksFromWorld(World world, BlockPos posStart, BlockPos size)
+    {
+        this.size = size;
+        final int width = size.getX();
+        final int height = size.getY();
+        final int length = size.getZ();
+        final int numBlocks = width * height * length;
+        final int startX = posStart.getX();
+        final int startY = posStart.getY();
+        final int startZ = posStart.getZ();
+        final int endX = startX + size.getX();
+        final int endY = startY + size.getY();
+        final int endZ = startZ + size.getZ();
+        int index = 0;
+        this.blocks = new IBlockState[numBlocks];
+        BlockPos.MutableBlockPos posMutable = new BlockPos.MutableBlockPos(0, 0, 0);
+        this.tiles.clear();
+
+        for (int y = startY; y < endY; ++y)
+        {
+            for (int z = startZ; z < endZ; ++z)
+            {
+                for (int x = startX; x < endX; ++x, ++index)
+                {
+                    posMutable.setPos(x, y, z);
+                    this.blocks[index] = world.getBlockState(posMutable);
+
+                    TileEntity te = world.getTileEntity(posMutable);
+
+                    if (te != null)
+                    {
+                        try
+                        {
+                            NBTTagCompound nbt = te.writeToNBT(new NBTTagCompound());
+                            int relX = x - startX;
+                            int relY = y - startY;
+                            int relZ = z - startZ;
+
+                            nbt.setInteger("x", relX);
+                            nbt.setInteger("y", relY);
+                            nbt.setInteger("z", relZ);
+
+                            this.tiles.put(new BlockPos(relX, relY, relZ), nbt);
+                        }
+                        catch (Exception e)
+                        {
+                            WorldPrimer.logger.warn("Exception while trying to store TileEntity data for block '{}' at {}",
+                                    this.blocks[index], posMutable.toString(), e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void readEntitiesFromWorld(World world, BlockPos posStart, BlockPos size)
+    {
+        this.entities.clear();
+        List<Entity> entities = world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(posStart, posStart.add(size)));
+
+        for (Entity entity : entities)
+        {
+            NBTTagCompound tag = new NBTTagCompound();
+
+            if (entity.writeToNBTOptional(tag))
+            {
+                NBTTagList posList = new NBTTagList();
+                posList.appendTag(new NBTTagDouble(entity.posX - posStart.getX()));
+                posList.appendTag(new NBTTagDouble(entity.posY - posStart.getY()));
+                posList.appendTag(new NBTTagDouble(entity.posZ - posStart.getZ()));
+                tag.setTag("Pos", posList);
+
+                this.entities.add(tag);
+            }
+        }
+    }
+
+    public static Schematic createFromWorld(World world, BlockPos posStart, BlockPos size)
+    {
+        Schematic schematic = new Schematic();
+
+        schematic.readBlocksFromWorld(world, posStart, size);
+        schematic.readEntitiesFromWorld(world, posStart, size);
+
+        return schematic;
     }
 
     @Nullable
@@ -510,6 +598,157 @@ public class Schematic
             {
                 WorldPrimer.logger.error("Schematic: Failed to read Schematic data from file '{}'", file.getAbsolutePath());
             }
+        }
+
+        return false;
+    }
+
+    private void createPalette()
+    {
+        if (this.palette == null)
+        {
+            this.palette = new Block[4096];
+            final int numBlocks = this.blocks.length;
+
+            for (int i = 0; i < numBlocks; ++i)
+            {
+                Block block = this.blocks[i].getBlock();
+                int id = Block.getIdFromBlock(block);
+
+                if (id >= this.palette.length)
+                {
+                    throw new IllegalArgumentException(String.format("Block id %d for block '%s' is out of range, max allowed = %d!",
+                            id, this.blocks[i].toString(), this.palette.length - 1));
+                }
+
+                this.palette[id] = block;
+            }
+        }
+    }
+
+    private void writePaletteToNBT(NBTTagCompound nbt)
+    {
+        NBTTagCompound tag = new NBTTagCompound();
+
+        for (int i = 0; i < this.palette.length; ++i)
+        {
+            Block block = this.palette[i];
+
+            if (block != null)
+            {
+                ResourceLocation rl = ForgeRegistries.BLOCKS.getKey(block);
+
+                if (rl != null)
+                {
+                    tag.setShort(rl.toString(), (short) (i & 0xFFF));
+                }
+            }
+        }
+
+        nbt.setTag("SchematicaMapping", tag);
+    }
+
+    private void writeBlocksToNBT(NBTTagCompound nbt)
+    {
+        nbt.setShort("Width", (short) this.size.getX());
+        nbt.setShort("Height", (short) this.size.getY());
+        nbt.setShort("Length", (short) this.size.getZ());
+
+        final int numBlocks = this.blocks.length;
+        final int loopMax = (int) Math.floor((double) numBlocks / 2D);
+        final int addSize = (int) Math.ceil((double) numBlocks / 2D);
+        final byte[] blockIdsArr = new byte[numBlocks];
+        final byte[] metaArr = new byte[numBlocks];
+        final byte[] addArr = new byte[addSize];
+        int numAdd = 0;
+        int bi, ai;
+
+        for (bi = 0, ai = 0; ai < loopMax; ++ai, bi += 2)
+        {
+            IBlockState state1 = this.blocks[bi    ];
+            IBlockState state2 = this.blocks[bi + 1];
+            int id1 = Block.getIdFromBlock(state1.getBlock());
+            int id2 = Block.getIdFromBlock(state2.getBlock());
+            int add = ((id1 >>> 4) & 0xF0) | ((id2 >>> 8) & 0x0F);
+            blockIdsArr[bi    ] = (byte) (id1 & 0xFF);
+            blockIdsArr[bi + 1] = (byte) (id2 & 0xFF);
+
+            if (add != 0)
+            {
+                addArr[ai] = (byte) add;
+                numAdd++;
+            }
+
+            metaArr[bi    ] = (byte) state1.getBlock().getMetaFromState(state1);
+            metaArr[bi + 1] = (byte) state2.getBlock().getMetaFromState(state2);
+        }
+
+        // Odd number of blocks, handle the last position
+        if ((numBlocks % 2) != 0)
+        {
+            IBlockState state = this.blocks[bi];
+            int id = Block.getIdFromBlock(state.getBlock());
+            int add = (id >>> 4) & 0xF0;
+            blockIdsArr[bi] = (byte) (id & 0xFF);
+
+            if (add != 0)
+            {
+                addArr[ai] = (byte) add;
+                numAdd++;
+            }
+
+            metaArr[bi] = (byte) state.getBlock().getMetaFromState(state);
+        }
+
+        nbt.setByteArray("Blocks", blockIdsArr);
+        nbt.setByteArray("Data", metaArr);
+
+        if (numAdd > 0)
+        {
+            nbt.setByteArray("AddBlocks", addArr);
+        }
+    }
+
+    private NBTTagCompound writeToNBT()
+    {
+        NBTTagCompound nbt = new NBTTagCompound();
+
+        this.createPalette();
+        this.writeBlocksToNBT(nbt);
+        this.writePaletteToNBT(nbt);
+
+        NBTTagList tagListTiles = new NBTTagList();
+        NBTTagList tagListEntities = new NBTTagList();
+
+        for (NBTTagCompound tag : this.entities)
+        {
+            tagListEntities.appendTag(tag);
+        }
+
+        for (NBTTagCompound tag : this.tiles.values())
+        {
+            tagListTiles.appendTag(tag);
+        }
+
+        nbt.setTag("TileEntities", tagListTiles);
+        nbt.setTag("Entities", tagListEntities);
+
+        return nbt;
+    }
+
+    public boolean writeToFile(File file)
+    {
+        try
+        {
+            FileOutputStream os = new FileOutputStream(file);
+            CompressedStreamTools.writeCompressed(this.writeToNBT(), os);
+            os.close();
+
+            return true;
+        }
+        catch (IOException e)
+        {
+            WorldPrimer.logger.error("Schematic: Failed to write Schematic data to file '{}'", file.getAbsolutePath());
         }
 
         return false;
