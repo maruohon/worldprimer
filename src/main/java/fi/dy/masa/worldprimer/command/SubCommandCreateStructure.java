@@ -19,9 +19,9 @@ import fi.dy.masa.worldprimer.util.PositionUtils;
 import fi.dy.masa.worldprimer.util.Schematic;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
-public class SubCommandReadStructure extends SubCommandPlaceStructure
+public class SubCommandCreateStructure extends SubCommandPlaceStructure
 {
-    public SubCommandReadStructure(CommandWorldPrimer baseCommand)
+    public SubCommandCreateStructure(CommandWorldPrimer baseCommand)
     {
         super(baseCommand);
     }
@@ -29,7 +29,7 @@ public class SubCommandReadStructure extends SubCommandPlaceStructure
     @Override
     public String getName()
     {
-        return "read-structure";
+        return "create-structure";
     }
 
     @Override
@@ -93,7 +93,7 @@ public class SubCommandReadStructure extends SubCommandPlaceStructure
 
             if (override == false && file.exists())
             {
-                throwCommand("worldprimer.commands.error.file_exists_no_override", file.getAbsolutePath());
+                throwCommand("worldprimer.commands.error.create_schematic.file_exists_no_override", file.getAbsolutePath());
             }
 
             try
@@ -107,13 +107,13 @@ public class SubCommandReadStructure extends SubCommandPlaceStructure
 
                 WorldUtils.loadBlocks(world, posStart.getX(), posStart.getZ(), posEnd.getX(), posEnd.getZ());
 
-                if (this.tryReadStructureWrapper(server, world, posStart, size, type, fileName, sender))
+                if (this.tryCreateSchematicWrapper(server, world, posStart, size, type, fileName, sender))
                 {
-                    CommandBase.notifyCommandListener(sender, this.getBaseCommand(), "worldprimer.commands.info.read_schematic_success", fileName);
+                    CommandBase.notifyCommandListener(sender, this.getBaseCommand(), "worldprimer.commands.info.create_schematic.success", fileName);
                 }
                 else
                 {
-                    throwCommand("worldprimer.commands.error.read_schematic_failed");
+                    throwCommand("worldprimer.commands.error.create_schematic.failed");
                 }
 
                 WorldUtils.unloadLoadedChunks(world);
@@ -129,25 +129,24 @@ public class SubCommandReadStructure extends SubCommandPlaceStructure
         }
     }
 
-    private boolean tryReadStructureWrapper(MinecraftServer server, World world, BlockPos posStart, BlockPos size, StructureType type,
+    private boolean tryCreateSchematicWrapper(MinecraftServer server, World world, BlockPos posStart, BlockPos size, StructureType type,
             String structureName, ICommandSender sender) throws CommandException
     {
         if (type == StructureType.STRUCTURE)
         {
-            return this.tryReadVanillaStructure(server, world, posStart, size, structureName, sender);
+            return this.tryCreateVanillaStructure(server, world, posStart, size, structureName, sender);
         }
         else if (type == StructureType.SCHEMATIC)
         {
-            return this.tryReadSchematic(server, world, posStart, size, structureName, sender);
+            return this.tryCreateSchematic(server, world, posStart, size, structureName, sender);
         }
         else
         {
-            throwCommand("worldprimer.commands.error.placestructure.unknown_format", structureName);
             return false;
         }
     }
 
-    private boolean tryReadVanillaStructure(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
+    private boolean tryCreateVanillaStructure(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
             String fileName, ICommandSender sender) throws CommandException
     {
         ResourceLocation id = new ResourceLocation(fileName);
@@ -166,10 +165,10 @@ public class SubCommandReadStructure extends SubCommandPlaceStructure
         return false;
     }
 
-    private boolean tryReadSchematic(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
+    private boolean tryCreateSchematic(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
             String structureName, ICommandSender sender) throws CommandException
     {
-        File file = new File(this.getStructureDirectory(), structureName + ".schematic");
+        File file = new File(this.getStructureDirectory(), structureName + StructureType.SCHEMATIC.getExtension());
         Schematic schematic = Schematic.createFromWorld(world, posStart, size);
         return schematic.writeToFile(file);
     }

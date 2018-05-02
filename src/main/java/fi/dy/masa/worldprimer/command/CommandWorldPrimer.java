@@ -23,7 +23,7 @@ public class CommandWorldPrimer extends CommandBase
     public CommandWorldPrimer()
     {
         this.registerSubCommand(new SubCommandPlaceStructure(this));
-        this.registerSubCommand(new SubCommandReadStructure(this));
+        this.registerSubCommand(new SubCommandCreateStructure(this));
         this.registerSubCommand(new SubCommandReloadConfigs(this));
     }
 
