@@ -45,11 +45,10 @@ public class SubCommandPlaceStructure extends SubCommand
     @Override
     public void printHelpGeneric(ICommandSender sender)
     {
-        this.sendMessage(sender, this.getUsageStringCommon());
+        this.sendMessage(sender, this.getUsage());
     }
 
-    @Override
-    protected String getUsageStringCommon()
+    private String getUsage()
     {
         return super.getUsageStringCommon() + " <x> <y> <z> <structurename> [rotation: cw_90 | cw_180 | ccw_90 | none] [mirror: left_right | front_back | none] [centered] [data-functions]";
     }
@@ -108,12 +107,12 @@ public class SubCommandPlaceStructure extends SubCommand
             }
             catch (NumberFormatException e)
             {
-                throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+                throwUsage(this.getUsage());
             }
         }
         else
         {
-            throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+            throwUsage(this.getUsage());
         }
     }
 

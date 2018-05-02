@@ -40,11 +40,11 @@ public class SubCommandReloadConfigs extends SubCommand
         if (args.length == 0)
         {
             Configs.loadConfigsFromFile();
-            sendMessage(sender, "worldprimer.commands.info.configs.realoded");
+            this.sendMessage(sender, "worldprimer.commands.info.configs.reloaded");
         }
         else
         {
-            throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+            throwUsage(this.getUsageStringCommon());
         }
     }
 }

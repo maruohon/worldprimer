@@ -17,7 +17,7 @@ worldprimer.commands.error.placestructure.unknown_format=Unknown structure forma
 worldprimer.commands.error.unknowncommandargument=Unknown command argument: '%s'
 worldprimer.commands.error.unknowncommandvariant=Unknown command variant: '%s'
 
-worldprimer.commands.info.configs.realoded=Configs reloaded from file
+worldprimer.commands.info.configs.reloaded=Configs reloaded from file
 worldprimer.commands.info.create_schematic.success=Successfully created a new schematic or structure file '%s'
 
 worldprimer.commands.help.generic.availablevariants=Available command variants: %s

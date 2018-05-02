@@ -35,13 +35,12 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
     @Override
     public void printHelpGeneric(ICommandSender sender)
     {
-        this.sendMessage(sender, this.getUsageStringCommon());
+        this.sendMessage(sender, this.getUsage());
     }
 
-    @Override
-    protected String getUsageStringCommon()
+    private String getUsage()
     {
-        return "/" + this.getBaseCommand().getName() + " " + this.getName() + " <x1> <y1> <z1> <x2> <y2> <z2> <vanilla | schematic> <structurename> [override]";
+        return this.getUsageStringCommon() + " <x1> <y1> <z1> <x2> <y2> <z2> <vanilla | schematic> <structurename> [override]";
     }
 
     @Override
@@ -83,7 +82,7 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
         {
             if (args[6].equals("schematic") == false && args[6].equals("vanilla") == false)
             {
-                throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+                throwUsage(this.getUsage());
             }
 
             StructureType type = args[6].equals("schematic") ? StructureType.SCHEMATIC : StructureType.STRUCTURE;
@@ -120,12 +119,12 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
             }
             catch (NumberInvalidException e)
             {
-                throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+                throwUsage(this.getUsage());
             }
         }
         else
         {
-            throwCommand("worldprimer.commands.help.generic.usage", this.getUsageStringCommon());
+            throwUsage(this.getUsage());
         }
     }
 

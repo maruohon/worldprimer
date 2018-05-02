@@ -62,7 +62,7 @@ public abstract class SubCommand implements ISubCommand
         this.printHelpGeneric(sender);
     }
 
-    protected String getUsageStringCommon()
+    protected final String getUsageStringCommon()
     {
         return "/" + this.getBaseCommand().getName() + " " + this.getName();
     }
