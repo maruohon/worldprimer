@@ -41,7 +41,7 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
     @Override
     protected String getUsageStringCommon()
     {
-        return super.getUsageStringCommon() + " <x1> <y1> <z1> <x2> <y2> <z2> <vanilla | schematic> <structurename> [override]";
+        return "/" + this.getBaseCommand().getName() + " " + this.getName() + " <x1> <y1> <z1> <x2> <y2> <z2> <vanilla | schematic> <structurename> [override]";
     }
 
     @Override
