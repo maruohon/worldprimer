@@ -653,6 +653,7 @@ public class Schematic
         nbt.setShort("Width", (short) this.size.getX());
         nbt.setShort("Height", (short) this.size.getY());
         nbt.setShort("Length", (short) this.size.getZ());
+        nbt.setString("Materials", "Alpha");
 
         final int numBlocks = this.blocks.length;
         final int loopMax = (int) Math.floor((double) numBlocks / 2D);
