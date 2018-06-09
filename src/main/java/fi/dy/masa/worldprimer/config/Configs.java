@@ -199,7 +199,7 @@ public class Configs
         prop.setComment("Enables running the playerDeathCommands");
         enablePlayerDeathCommands = prop.getBoolean();
 
-        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerJoinCommands", false).setRequiresMcRestart(false);
+        prop = conf.get(CATEGORY_TOGGLES, "enablePlayerRespawnCommands", false).setRequiresMcRestart(false);
         prop.setComment("Enables running the playerRespawnCommands");
         enablePlayerRespawnCommands = prop.getBoolean();
 
@@ -280,13 +280,13 @@ public class Configs
         prop = conf.get(CATEGORY_COMMANDS, "playerChangedDimensionEnterCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run when a player enters a dimension while changing dimensions.\n" +
                         "Note that these will NOT run when a player joins the game or respawns after dying.\n" +
-                        "You can use the 'worldprimer-dim-command DIMID' (or the -nth variant) prefix to target entering a specific dimension.");
+                        "You can use the 'worldprimer-dim-command <dimId>' (or the -nth variant) prefix to target entering a specific dimension.");
         playerChangedDimensionEnterCommands = prop.getStringList();
 
         prop = conf.get(CATEGORY_COMMANDS, "playerChangedDimensionLeaveCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run when a player leaves a dimension while changing dimensions.\n" +
                         "Note that these will NOT run when a player leaves the game/server.\n" +
-                        "You can use the 'worldprimer-dim-command DIMID' (or the -nth variant) prefix to target leaving a specific dimension.\n" +
+                        "You can use the 'worldprimer-dim-command <dimId>' (or the -nth variant) prefix to target leaving a specific dimension.\n" +
                         "NOTE: These commands will run AFTER the player is already in the new dimension!!");
         playerChangedDimensionLeaveCommands = prop.getStringList();
 
