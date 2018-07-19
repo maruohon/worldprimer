@@ -104,7 +104,7 @@ public class WorldUtils
                 {
                     WorldPrimer.logInfo("Loading chunk [{},{}] in dimension {}", x, z, dimension);
                     loadedChunks.add(new ChunkPos(x, z));
-                    world.getChunkFromChunkCoords(x, z);
+                    world.getChunk(x, z);
                 }
             }
         }
@@ -125,7 +125,7 @@ public class WorldUtils
                         worldServer.isBlockLoaded(new BlockPos(pos.x << 4, 0, pos.z << 4)))
                     {
                         WorldPrimer.logInfo("Queueing chunk [{},{}] for unloading in dimension {}", pos.x, pos.z, world.provider.getDimension());
-                        worldServer.getChunkProvider().queueUnload(worldServer.getChunkFromChunkCoords(pos.x, pos.z));
+                        worldServer.getChunkProvider().queueUnload(worldServer.getChunk(pos.x, pos.z));
                     }
                 }
 

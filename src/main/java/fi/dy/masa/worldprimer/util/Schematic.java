@@ -171,7 +171,7 @@ public class Schematic
             NBTTagList posList = tag.getTagList("Pos", Constants.NBT.TAG_DOUBLE);
             Vec3d relativePos = new Vec3d(posList.getDoubleAt(0), posList.getDoubleAt(1), posList.getDoubleAt(2));
             Vec3d transformedRelativePos = PositionUtils.getTransformedPosition(relativePos, mirror, rotation);
-            Vec3d realPos = transformedRelativePos.addVector(posStart.getX(), posStart.getY(), posStart.getZ());
+            Vec3d realPos = transformedRelativePos.add(posStart.getX(), posStart.getY(), posStart.getZ());
 
             posList = new NBTTagList();
             posList.appendTag(new NBTTagDouble(realPos.x));
