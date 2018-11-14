@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldprimer.WorldPrimer;
@@ -99,6 +100,11 @@ public class TimedCommands
 
         for (String cmd : rawCommands)
         {
+            if (StringUtils.isBlank(cmd) || (cmd.length() > 0 && cmd.charAt(0) == '#'))
+            {
+                continue;
+            }
+
             String[] parts = cmd.split("\\s+", 4);
 
             if (parts.length >= 4 && parts[0].equals("worldprimer-timed-command"))

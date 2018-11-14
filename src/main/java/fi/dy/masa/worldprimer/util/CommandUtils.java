@@ -165,7 +165,7 @@ public class CommandUtils
     {
         for (String command : commands)
         {
-            if (StringUtils.isBlank(command))
+            if (StringUtils.isBlank(command) || (command.length() > 0 && command.charAt(0) == '#'))
             {
                 continue;
             }
@@ -253,7 +253,7 @@ public class CommandUtils
     {
         for (String command : commands)
         {
-            if (StringUtils.isBlank(command))
+            if (StringUtils.isBlank(command) || (command.length() > 0 && command.charAt(0) == '#'))
             {
                 continue;
             }
