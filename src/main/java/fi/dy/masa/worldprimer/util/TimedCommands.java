@@ -61,13 +61,13 @@ public class TimedCommands
             {
                 if (this.nextExecution <= currentTime)
                 {
-                    // The next time the command should run - basically the next time the module is 0, plus the offset
+                    // The next time the command should run - basically the next time the modulo is 0, plus the offset
                     this.nextExecution = (((currentTime - this.offset) / this.time) + 1) * this.time + this.offset;
                 }
             }
             else
             {
-                this.nextExecution = this.time;
+                this.nextExecution = this.time + this.offset;
             }
         }
 
@@ -120,19 +120,20 @@ public class TimedCommands
                     {
                         isPeriodic = true;
                         timeStr = timeStr.substring(1, timeStr.length());
-                        int index = timeStr.indexOf('-');
+                    }
 
-                        if (index == -1)
-                        {
-                            index = timeStr.indexOf('+');
-                        }
+                    int index = timeStr.indexOf('-');
 
-                        // Offset value present (<time><+|-><offset>), ie. in the format 54321-15 
-                        if (index != -1)
-                        {
-                            offset = Long.parseLong(timeStr.substring(index, timeStr.length()));
-                            timeStr = timeStr.substring(0, index);
-                        }
+                    if (index == -1)
+                    {
+                        index = timeStr.indexOf('+');
+                    }
+
+                    // Offset value present (<time><+|-><offset>), ie. in the format 54321-15
+                    if (index != -1)
+                    {
+                        offset = Long.parseLong(timeStr.substring(index, timeStr.length()));
+                        timeStr = timeStr.substring(0, index);
                     }
 
                     final long time = Long.parseLong(timeStr);
