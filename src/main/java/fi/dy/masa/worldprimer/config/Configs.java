@@ -20,6 +20,7 @@ public class Configs
 
     public static boolean enableLoggingInfo;
     public static boolean enableDataTracking;
+    public static boolean enableChiselsAndBitsCrossWorldFormat;
     public static boolean enableDimensionLoadingCommands;
     public static boolean enableEarlyWorldCreationCommands;
     public static boolean enableEarlyWorldLoadingCommands;
@@ -146,6 +147,10 @@ public class Configs
                             "One such mod is Just Enough Dimensions.");
 
         Property prop;
+
+        prop = conf.get(CATEGORY_GENERIC, "enableChiselsAndBitsCrossWorldFormat", true).setRequiresMcRestart(false);
+        prop.setComment("Enables saving any Chisels & Bits blocks in the cross-world compatible format\nin the 'create-structure' command when using the Schematic format");
+        enableChiselsAndBitsCrossWorldFormat = prop.getBoolean();
 
         prop = conf.get(CATEGORY_GENERIC, "enableDebugLogging", false).setRequiresMcRestart(false);
         prop.setComment("Enables verbose logging for debug purposes");

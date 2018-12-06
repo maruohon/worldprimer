@@ -1,22 +1,28 @@
 package fi.dy.masa.worldprimer.command;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.commons.io.IOUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.NumberInvalidException;
 import net.minecraft.init.Blocks;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.Template;
-import net.minecraft.world.gen.structure.template.TemplateManager;
+import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.util.PositionUtils;
 import fi.dy.masa.worldprimer.util.Schematic;
+import fi.dy.masa.worldprimer.util.TemplateWorldPrimer;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class SubCommandCreateStructure extends SubCommandPlaceStructure
@@ -103,10 +109,16 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
                 BlockPos posEnd = PositionUtils.getMaxCorner(pos1, pos2);
                 BlockPos size = posEnd.subtract(posStart).add(1, 1, 1);
                 World world = sender.getEntityWorld();
+                boolean cbCrossWorld = Configs.enableChiselsAndBitsCrossWorldFormat;
 
                 WorldUtils.loadBlocks(world, posStart.getX(), posStart.getZ(), posEnd.getX(), posEnd.getZ());
 
-                if (this.tryCreateSchematicWrapper(server, world, posStart, size, type, fileName, sender))
+                if (cbCrossWorld)
+                {
+                    WorldPrimer.logger.info("Using a cross-world compatible format for any Chisels & Bits blocks");
+                }
+
+                if (this.tryCreateSchematicWrapper(server, world, posStart, size, type, fileName, cbCrossWorld, sender))
                 {
                     CommandBase.notifyCommandListener(sender, this.getBaseCommand(), "worldprimer.commands.info.create_schematic.success", fileName);
                 }
@@ -129,15 +141,15 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
     }
 
     private boolean tryCreateSchematicWrapper(MinecraftServer server, World world, BlockPos posStart, BlockPos size, StructureType type,
-            String structureName, ICommandSender sender) throws CommandException
+            String structureName, boolean cbCrossWorld, ICommandSender sender) throws CommandException
     {
         if (type == StructureType.STRUCTURE)
         {
-            return this.tryCreateVanillaStructure(server, world, posStart, size, structureName, sender);
+            return this.tryCreateVanillaStructure(server, world, posStart, size, structureName, cbCrossWorld, sender);
         }
         else if (type == StructureType.SCHEMATIC)
         {
-            return this.tryCreateSchematic(server, world, posStart, size, structureName, sender);
+            return this.tryCreateSchematic(server, world, posStart, size, structureName, cbCrossWorld, sender);
         }
         else
         {
@@ -146,29 +158,61 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
     }
 
     private boolean tryCreateVanillaStructure(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
-            String fileName, ICommandSender sender) throws CommandException
+            String fileName, boolean cbCrossWorld, ICommandSender sender) throws CommandException
     {
-        ResourceLocation id = new ResourceLocation(fileName);
-        TemplateManager manager = this.getTemplateManager();
-        Template template = manager.getTemplate(server, id);
+        Template template = cbCrossWorld ? new TemplateWorldPrimer() : new Template();
 
-        if (template != null)
-        {
-            template.takeBlocksFromWorld(world, posStart, size, true, Blocks.STRUCTURE_VOID);
-            template.setAuthor(sender.getName());
-            manager.writeTemplate(server, id);
+        template.takeBlocksFromWorld(world, posStart, size, true, Blocks.STRUCTURE_VOID);
+        template.setAuthor(sender.getName());
 
-            return true;
-        }
-
-        return false;
+        return this.writeTemplateToFile(template, fileName);
     }
 
     private boolean tryCreateSchematic(MinecraftServer server, World world, BlockPos posStart, BlockPos size,
-            String structureName, ICommandSender sender) throws CommandException
+            String structureName, boolean cbCrossWorld, ICommandSender sender) throws CommandException
     {
-        File file = new File(this.getStructureDirectory(), structureName + StructureType.SCHEMATIC.getExtension());
-        Schematic schematic = Schematic.createFromWorld(world, posStart, size);
+        File dir = this.getStructureDirectory();
+
+        if (dir.exists() == false && dir.mkdirs() == false)
+        {
+            return false;
+        }
+
+        File file = new File(dir, structureName + StructureType.SCHEMATIC.getExtension());
+        Schematic schematic = Schematic.createFromWorld(world, posStart, size, cbCrossWorld);
+
         return schematic.writeToFile(file);
+    }
+
+    private boolean writeTemplateToFile(Template template, String structureName)
+    {
+        File dir = this.getStructureDirectory();
+
+        if (dir.exists() == false && dir.mkdirs() == false)
+        {
+            WorldPrimer.logger.warn("Failed to create structure directory '{}'", dir.getAbsolutePath());
+            return false;
+        }
+
+        File file = new File(dir, structureName + StructureType.STRUCTURE.getExtension());
+        OutputStream os = null;
+
+        try
+        {
+            NBTTagCompound nbt = template.writeToNBT(new NBTTagCompound());
+            os = new FileOutputStream(file);
+            CompressedStreamTools.writeCompressed(nbt, os);
+            return true;
+        }
+        catch (Throwable t)
+        {
+            WorldPrimer.logger.warn("Failed to write structure data to file '{}'", file.getAbsolutePath(), t);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(os);
+        }
+
+        return false;
     }
 }

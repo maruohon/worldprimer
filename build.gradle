@@ -13,6 +13,14 @@ buildscript {
 
 apply plugin: 'net.minecraftforge.gradle.forge'
 
+repositories {
+    // ModMaven for Baubles
+    maven {
+        name "ModMaven"
+        url "https://modmaven.k-4u.nl"
+    }
+}
+
 ext.configFile = file "build.properties"
 
 configFile.withReader {
@@ -64,7 +72,9 @@ dependencies {
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
-      
+
+    deobfCompile "mod.chiselsandbits:chiselsandbits:${config.cb_api_version}:api"
+
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html

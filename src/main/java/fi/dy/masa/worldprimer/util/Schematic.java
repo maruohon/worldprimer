@@ -41,6 +41,7 @@ import fi.dy.masa.worldprimer.WorldPrimer;
 
 public class Schematic
 {
+    public static ChiselsAndBitsHandler chiselsAndBitsHandler = new ChiselsAndBitsHandler();
     private BlockPos size = BlockPos.ORIGIN;
     private IBlockState[] blocks;
     private Block[] palette;
@@ -239,7 +240,7 @@ public class Schematic
         return map;
     }
 
-    private void readBlocksFromWorld(World world, BlockPos posStart, BlockPos size)
+    private void readBlocksFromWorld(World world, BlockPos posStart, BlockPos size, boolean cbCrossWorld)
     {
         this.size = size;
         final int width = size.getX();
@@ -272,7 +273,17 @@ public class Schematic
                     {
                         try
                         {
-                            NBTTagCompound nbt = te.writeToNBT(new NBTTagCompound());
+                            NBTTagCompound nbt = new NBTTagCompound();
+
+                            if (cbCrossWorld)
+                            {
+                                nbt = chiselsAndBitsHandler.writeChiselsAndBitsTileToNBT(nbt, te);
+                            }
+                            else
+                            {
+                                nbt = te.writeToNBT(nbt);
+                            }
+
                             int relX = x - startX;
                             int relY = y - startY;
                             int relZ = z - startZ;
@@ -316,11 +327,11 @@ public class Schematic
         }
     }
 
-    public static Schematic createFromWorld(World world, BlockPos posStart, BlockPos size)
+    public static Schematic createFromWorld(World world, BlockPos posStart, BlockPos size, boolean cbCrossWorld)
     {
         Schematic schematic = new Schematic();
 
-        schematic.readBlocksFromWorld(world, posStart, size);
+        schematic.readBlocksFromWorld(world, posStart, size, cbCrossWorld);
         schematic.readEntitiesFromWorld(world, posStart, size);
 
         return schematic;
@@ -753,5 +764,18 @@ public class Schematic
         }
 
         return false;
+    }
+
+    public static class ChiselsAndBitsHandler
+    {
+        public boolean isChiselsAndBitsTile(TileEntity te)
+        {
+            return false;
+        }
+
+        public NBTTagCompound writeChiselsAndBitsTileToNBT(NBTTagCompound tag, TileEntity te)
+        {
+            return te.writeToNBT(tag);
+        }
     }
 }
