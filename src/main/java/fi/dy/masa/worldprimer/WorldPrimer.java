@@ -84,6 +84,7 @@ public class WorldPrimer
     @EventHandler
     public void serverStarting(FMLServerStartingEvent event)
     {
+        logInfo("FMLServerStartingEvent");
         event.registerServerCommand(commandWorldPrimer);
     }
 
@@ -114,6 +115,7 @@ public class WorldPrimer
     @Mod.EventHandler
     public void onServerStopped(FMLServerStoppingEvent event)
     {
+        logInfo("FMLServerStoppingEvent");
         CommandSubstitutions.clearTopYCache();
     }
 
