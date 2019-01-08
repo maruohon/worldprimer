@@ -192,9 +192,7 @@ public class CommandUtils
     {
         try
         {
-            int dim = Integer.parseInt(cmdParts[1]);
-
-            if (dimension == dim)
+            if (cmdParts[1].equals("*") || dimension == Integer.parseInt(cmdParts[1]))
             {
                 cmdParts = dropFirstStrings(cmdParts, 2);
                 WorldPrimerCommandSender.instance().runCommands(player, world, String.join(" ", cmdParts));
@@ -211,9 +209,7 @@ public class CommandUtils
     {
         try
         {
-            final int parsedDim = Integer.parseInt(cmdParts[2]);
-
-            if (dimension == parsedDim)
+            if (cmdParts[2].equals("*") || dimension == Integer.parseInt(cmdParts[2]))
             {
                 String countStr = cmdParts[1];
                 boolean modulo = false;
