@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -31,6 +32,20 @@ public class WorldUtils
         }
 
         return spawn;
+    }
+
+    @Nullable
+    public static BlockPos getPlayerBedSpawnLocation(EntityPlayer player)
+    {
+        int dimension = player.dimension;
+        BlockPos bedPos = player.getBedLocation(dimension);
+
+        if (bedPos != null)
+        {
+            return EntityPlayer.getBedSpawnLocation(player.getEntityWorld(), bedPos, player.isSpawnForced(dimension));
+        }
+
+        return null;
     }
 
     public static boolean executeChunkLoadingCommand(String command, @Nullable World world)

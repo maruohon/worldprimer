@@ -101,9 +101,32 @@ public class CommandSubstitutions
 
         final int dim = world.provider.getDimension();
         final BlockPos spawn = WorldUtils.getWorldSpawn(world);
+        final BlockPos spawnPoint = world.getSpawnPoint();
 
         if (player != null)
         {
+            // Check that this type of substitution exists before querying the location, as it will load that chunk
+            if (argument.indexOf("{PLAYER_BED_SPAWN_") != -1)
+            {
+                BlockPos bedSpawnPos = WorldUtils.getPlayerBedSpawnLocation(player);
+
+                if (bedSpawnPos != null)
+                {
+                    if (substituteNumber(player, world, wrapper, "{PLAYER_BED_SPAWN_X}", bedSpawnPos.getX())) { return wrapper[0]; }
+                    if (substituteNumber(player, world, wrapper, "{PLAYER_BED_SPAWN_Y}", bedSpawnPos.getY())) { return wrapper[0]; }
+                    if (substituteNumber(player, world, wrapper, "{PLAYER_BED_SPAWN_Z}", bedSpawnPos.getZ())) { return wrapper[0]; }
+                }
+            }
+
+            BlockPos bedPos = player.getBedLocation(player.dimension);
+
+            if (bedPos != null)
+            {
+                if (substituteNumber(player, world, wrapper, "{PLAYER_BED_X}", bedPos.getX())) { return wrapper[0]; }
+                if (substituteNumber(player, world, wrapper, "{PLAYER_BED_Y}", bedPos.getY())) { return wrapper[0]; }
+                if (substituteNumber(player, world, wrapper, "{PLAYER_BED_Z}", bedPos.getZ())) { return wrapper[0]; }
+            }
+
             if (substituteNumber(player, world, wrapper, "{PLAYER_X}", player.posX)) { return wrapper[0]; }
             if (substituteNumber(player, world, wrapper, "{PLAYER_Y}", player.posY)) { return wrapper[0]; }
             if (substituteNumber(player, world, wrapper, "{PLAYER_Z}", player.posZ)) { return wrapper[0]; }
@@ -117,14 +140,18 @@ public class CommandSubstitutions
         if (substituteString(player, world, wrapper, "{TIME_I}", getTimeStringFor("mm")))       { return wrapper[0]; }
         if (substituteString(player, world, wrapper, "{TIME_S}", getTimeStringFor("ss")))       { return wrapper[0]; }
         if (substituteNumber(player, world, wrapper, "{TIME_TICK}", world.getTotalWorldTime())) { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{TIME_TICK_DAY}", world.getWorldTime()))  { return wrapper[0]; }
 
-        if (substituteNumber(player, world, wrapper, "{DIMENSION}", dim))           { return wrapper[0]; }
-        if (substituteNumber(player, world, wrapper, "{SPAWN_X}", spawn.getX()))    { return wrapper[0]; }
-        if (substituteNumber(player, world, wrapper, "{SPAWN_Y}", spawn.getY()))    { return wrapper[0]; }
-        if (substituteNumber(player, world, wrapper, "{SPAWN_Z}", spawn.getZ()))    { return wrapper[0]; }
-        if (substituteRandom(player, world, wrapper))                               { return wrapper[0]; }
-        if (substituteTopBlockY(player, world, wrapper))                            { return wrapper[0]; }
-        if (substituteTopBlockYRand(world, wrapper))                                { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{DIMENSION}", dim))                   { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_X}", spawn.getX()))            { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_Y}", spawn.getY()))            { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_Z}", spawn.getZ()))            { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_POINT_X}", spawnPoint.getX())) { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_POINT_Y}", spawnPoint.getY())) { return wrapper[0]; }
+        if (substituteNumber(player, world, wrapper, "{SPAWN_POINT_Z}", spawnPoint.getZ())) { return wrapper[0]; }
+        if (substituteRandom(player, world, wrapper))                                       { return wrapper[0]; }
+        if (substituteTopBlockY(player, world, wrapper))                                    { return wrapper[0]; }
+        if (substituteTopBlockYRand(world, wrapper))                                        { return wrapper[0]; }
 
         return argument;
     }

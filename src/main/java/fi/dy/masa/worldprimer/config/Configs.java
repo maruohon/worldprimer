@@ -77,7 +77,8 @@ public class Configs
         ConfigCategory category = conf.getCategory(CATEGORY_COMMANDS);
         category.setComment("Command documentation:\n" +
                             "There are a few substitutions available to use in the commands:\n" +
-                            "Basic number substitutions from world data: {DIMENSION}, {SPAWN_X}, {SPAWN_Y} and {SPAWN_Z}.\n" +
+                            "Basic number substitutions from world data:\n{DIMENSION}\n{SPAWN_X}\n{SPAWN_Y}\n{SPAWN_Z}.\n\n" +
+                            "Also {SPAWN_POINT_X} etc. that return the spawn point instead of the possible spawn coordinate (like in the End).\n" +
                             "Any occurences of those strings will be replaced by the current dimension ID,\n" +
                             "or the coordinates of the spawn point respectively.\n\n" +
 
@@ -91,7 +92,8 @@ public class Configs
                             "\t{TIME_H} => hour   (2 digits: 09)\n" +
                             "\t{TIME_I} => minute (2 digits: 05)\n" +
                             "\t{TIME_S} => second (2 digits: 07)\n" +
-                            "\t{TIME_TICK} => current world total time in ticks\n\n" +
+                            "\t{TIME_TICK} => current world total time in ticks\n" +
+                            "\t{TIME_TICK_DAY} => current world/day time in ticks\n\n" +
 
                             "The y-coordinate of the top-most block in the world in the given coordinates\n" +
                             "(actually the air block above it): {TOP_Y:x,z} for example: {TOP_Y:-37,538}\n\n" +
@@ -103,6 +105,10 @@ public class Configs
 
                             "For the player-specific commands, the following substitutions are available:\n" +
                             "{PLAYER_X}, {PLAYER_Y}, {PLAYER_Z} and {PLAYER_NAME}\n\n" +
+                            "Also {PLAYER_BED_X}, {PLAYER_BED_Y} and {PLAYER_BED_Z} for the last set (bed) spawn point.\n" +
+                            "There are also {PLAYER_BED_SPAWN_X}, {PLAYER_BED_SPAWN_Y} and {PLAYER_BED_SPAWN_Z} that also check that the bed exists,\n" +
+                            "or otherwise they will revert to the fallback world spawn point.\n" +
+                            "Note that these will thus load that one chunk to check for the bed.\n\n" +
 
                             "The player-specific commands can be targeted to specific counts (like the 6th respawn for example)\n" +
                             "or a multiple of a count (similarly to the dim-loading-command prefix)\n" +
