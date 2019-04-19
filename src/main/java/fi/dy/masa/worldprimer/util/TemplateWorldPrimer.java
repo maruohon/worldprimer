@@ -17,7 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.Template;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import fi.dy.masa.worldprimer.WorldPrimer;
 
 public class TemplateWorldPrimer extends Template
@@ -32,8 +32,8 @@ public class TemplateWorldPrimer extends Template
 
         try
         {
-            this.blocks = (List<Template.BlockInfo>) (ReflectionHelper.findField(Template.class, "field_186270_a", "blocks").get(this));
-            this.entities = (List<Template.EntityInfo>) (ReflectionHelper.findField(Template.class, "field_186271_b", "entities").get(this));
+            this.blocks = (List<Template.BlockInfo>) (ObfuscationReflectionHelper.findField(Template.class, "field_186270_a").get(this)); // blocks
+            this.entities = (List<Template.EntityInfo>) (ObfuscationReflectionHelper.findField(Template.class, "field_186271_b").get(this)); // entities
         }
         catch (Exception e)
         {
@@ -53,7 +53,7 @@ public class TemplateWorldPrimer extends Template
             BlockPos posMin = new BlockPos(Math.min(startPos.getX(), posEnd.getX()), Math.min(startPos.getY(), posEnd.getY()), Math.min(startPos.getZ(), posEnd.getZ()));
             BlockPos posMax = new BlockPos(Math.max(startPos.getX(), posEnd.getX()), Math.max(startPos.getY(), posEnd.getY()), Math.max(startPos.getZ(), posEnd.getZ()));
 
-            ReflectionHelper.setPrivateValue(Template.class, this, size, "field_186272_c", "size");
+            ObfuscationReflectionHelper.setPrivateValue(Template.class, this, size, "field_186272_c"); // size
 
             for (BlockPos.MutableBlockPos posMutable : BlockPos.getAllInBoxMutable(posMin, posMax))
             {
