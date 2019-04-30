@@ -112,10 +112,10 @@ public class Configs
 
                             "The player-specific commands can be targeted to specific counts (like the 6th respawn for example)\n" +
                             "or a multiple of a count (similarly to the dim-loading-command prefix)\n" +
-                            "by prefixing the command like so: 'worldprimer-tracked-nth <count> <actual command>'\n" +
+                            "by prefixing the command like so: 'worldprimer-tracked-command-nth <count> <actual command>'\n" +
                             "For example in the playerRespawnCommands:\n" +
-                            "worldprimer-tracked-nth 3 say The player {PLAYER_NAME} has respawned for the third time at {PLAYER_X}, {PLAYER_Y}, {PLAYER_Z}\n" +
-                            "worldprimer-tracked-nth %5 say The player {PLAYER_NAME} has respawned for some multiple of 5 times\n\n" +
+                            "worldprimer-tracked-command-nth 3 say The player {PLAYER_NAME} has respawned for the third time at {PLAYER_X}, {PLAYER_Y}, {PLAYER_Z}\n" +
+                            "worldprimer-tracked-command-nth %5 say The player {PLAYER_NAME} has respawned for some multiple of 5 times\n\n" +
 
                             "Note that the above only applies to the other player-specific commands, but not the playerChangedDimension commands.\n" +
                             "For the playerChangedDimension commands, the same format works instead as for the dimension loading commands:\n" +
