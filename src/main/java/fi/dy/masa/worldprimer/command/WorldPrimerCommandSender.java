@@ -16,15 +16,16 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
-import fi.dy.masa.worldprimer.reference.Reference;
+import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.util.CommandSubstitutions;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender
 {
-    private static final ITextComponent DISPLAY_NAME = new TextComponentString(Reference.MOD_NAME);
     private static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
+
     private World executionWorld;
+    @Nullable private String senderName = null;
 
     public static WorldPrimerCommandSender instance()
     {
@@ -45,6 +46,8 @@ public class WorldPrimerCommandSender implements ICommandSender
         {
             if (StringUtils.isBlank(command) == false)
             {
+                command = this.handleCommandSenderNamePrefix(command);
+
                 String newCommand = CommandSubstitutions.doCommandSubstitutions(player, world, command);
                 World worldTmp = this.getEntityWorld();
                 String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
@@ -75,12 +78,56 @@ public class WorldPrimerCommandSender implements ICommandSender
                     WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", newCommand, dim);
                     manager.executeCommand(this, newCommand);
                 }
+
+                this.senderName = null;
             }
         }
 
         WorldUtils.unloadLoadedChunks(world);
 
         this.executionWorld = null;
+    }
+
+    private String handleCommandSenderNamePrefix(String originalCommand)
+    {
+        String namePrefix = "worldprimer-command-sender ";
+        final int namePrefixLength = namePrefix.length();
+
+        if (originalCommand.startsWith(namePrefix))
+        {
+            String command = originalCommand.substring(namePrefixLength);
+
+            if (command.charAt(0) == '"')
+            {
+                int endQuotePos = command.indexOf('"', 1);
+
+                if (endQuotePos > 0 && endQuotePos < command.length() - 3)
+                {
+                    this.senderName = command.substring(1, endQuotePos);
+                    return command.substring(endQuotePos + 2);
+                }
+                else
+                {
+                    WorldPrimer.logger.warn("Malformed command sender name prefix for command '{}'", originalCommand);
+                }
+            }
+            else
+            {
+                int nameEndPos = command.indexOf(' ', 1);
+
+                if (nameEndPos > 0 && nameEndPos < command.length() - 2)
+                {
+                    this.senderName = command.substring(0, nameEndPos);
+                    return command.substring(nameEndPos + 1);
+                }
+                else
+                {
+                    WorldPrimer.logger.warn("Malformed command sender name prefix for command '{}'", originalCommand);
+                }
+            }
+        }
+
+        return originalCommand;
     }
 
     private boolean isChunkLoadingCommand(String command)
@@ -98,13 +145,13 @@ public class WorldPrimerCommandSender implements ICommandSender
     @Override
     public String getName()
     {
-        return Reference.MOD_NAME + " CommandSender";
+        return this.senderName != null ? this.senderName : Configs.commandSenderName;
     }
 
     @Override
     public ITextComponent getDisplayName()
     {
-        return DISPLAY_NAME;
+        return new TextComponentString(this.getName());
     }
 
     @Override

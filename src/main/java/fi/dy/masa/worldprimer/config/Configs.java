@@ -35,6 +35,8 @@ public class Configs
     public static boolean enablePlayerQuitCommands;
     public static boolean enablePlayerRespawnCommands;
 
+    public static String commandSenderName;
+
     public static String[] dimensionLoadingCommands;
     public static String[] earlyWorldCreationCommands;
     public static String[] earlyWorldLoadingCommands;
@@ -154,6 +156,15 @@ public class Configs
 
         Property prop;
 
+        prop = conf.get(CATEGORY_GENERIC, "commandSenderName", "WorldPrimer").setRequiresMcRestart(false);
+        prop.setComment("The default command sender name used when executing the commands.\n" +
+                        "The name can be overridden per-command by using the prefix 'worldprimer-command-sender \"<name>\"'.\n" +
+                        "Note: The quotes are required if the desired name contains spaces!\n" +
+                        "This prefix must come AFTER any possible tracked or dim command\n" +
+                        "prefixes, ie. just before the actual command.\n" +
+                        "Example command: worldprimer-dim-command-nth 1 123 worldprimer-command-sender \"Tooth Fairy\" say Test Foo Bar Baz in dimension {DIMENSION}");
+        commandSenderName = prop.getString();
+
         prop = conf.get(CATEGORY_GENERIC, "enableChiselsAndBitsCrossWorldFormat", true).setRequiresMcRestart(false);
         prop.setComment("Enables saving any Chisels & Bits blocks in the cross-world compatible format\nin the 'create-structure' command when using the Schematic format");
         enableChiselsAndBitsCrossWorldFormat = prop.getBoolean();
@@ -234,8 +245,11 @@ public class Configs
                         "'worldprimer-dim-command-nth <load count> <dim id> <command>'.\n" +
                         "This would run the command only when the dimension loads for the 'load count'-th time.\n" +
                         "The count is incremented before the commands are parsed, so in other words the first load is 1, not 0.\n" +
-                        "You can also run the command every count-th time the dimension loads, by prefixing the count with a '%', so for example\n" +
-                        "worldprimer-dim-command-nth %5 1 say The End has loaded some multiple of 5 times!");
+                        "You can also run the command every count-th time the dimension loads,\n" +
+                        "by prefixing the count with a '%', so for example:\n" +
+                        "worldprimer-dim-command-nth %5 1 say The End has loaded some multiple of 5 times!\n" +
+                        "An asterisk '*' can be used as the dimension ID to run\n" +
+                        "the command in all dimensions (mostly makes sense for the nth variant).");
         dimensionLoadingCommands = prop.getStringList();
 
         prop = conf.get(CATEGORY_COMMANDS, "earlyWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
