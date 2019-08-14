@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -126,7 +127,21 @@ public abstract class SubCommand implements ISubCommand
         CommandWorldPrimer.throwCommand(message, params);
     }
 
-    protected int getDimension(String usage, String[] args, ICommandSender sender) throws CommandException
+    public static boolean getBooleanValue(String arg) throws CommandException
+    {
+        if (arg.equalsIgnoreCase("true") || arg.equalsIgnoreCase("yes") || arg.equalsIgnoreCase("on"))
+        {
+            return true;
+        }
+        else if (arg.equalsIgnoreCase("false") || arg.equalsIgnoreCase("no") || arg.equalsIgnoreCase("off"))
+        {
+            return false;
+        }
+
+        throw new WrongUsageException("Not a valid boolean argument: '" + arg + "'");
+    }
+
+    public static int getDimension(String usage, String[] args, ICommandSender sender) throws CommandException
     {
         int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
 

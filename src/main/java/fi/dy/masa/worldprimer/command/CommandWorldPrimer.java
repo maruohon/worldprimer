@@ -25,6 +25,7 @@ public class CommandWorldPrimer extends CommandBase
         this.registerSubCommand(new SubCommandPlaceStructure(this));
         this.registerSubCommand(new SubCommandCreateStructure(this));
         this.registerSubCommand(new SubCommandReloadConfigs(this));
+        this.registerSubCommand(new SubCommandSpreadPlayer(this));
     }
 
     @Override

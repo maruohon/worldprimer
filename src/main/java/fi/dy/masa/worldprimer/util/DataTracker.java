@@ -3,6 +3,8 @@ package fi.dy.masa.worldprimer.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -12,6 +14,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.config.Configs;
@@ -20,9 +24,10 @@ import fi.dy.masa.worldprimer.reference.Reference;
 public class DataTracker
 {
     private static final DataTracker INSTANCE = new DataTracker();
-    private File worldDir = new File(".");
     private final Map<Integer, Integer> dimensionLoadCounts = new HashMap<>();
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
+    private final Map<Integer, Map<UUID, BlockPos>> playerSpreadPositions = new HashMap<>();
+    private File worldDir = new File(".");
     private int serverStarts;
     private boolean dirty;
 
@@ -100,6 +105,40 @@ public class DataTracker
         this.dirty = true;
     }
 
+    public Collection<BlockPos> getPlayerSpreadPositions(int dimension)
+    {
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
+        return map != null ? map.values() : Collections.emptyList();
+    }
+
+    @Nullable
+    public BlockPos getLastPlayerSpreadPosition(EntityPlayer player)
+    {
+        int dimension = player.getEntityWorld().provider.getDimension();
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
+        return map != null ? map.get(player.getUniqueID()) : null;
+    }
+
+    public void addPlayerSpreadPosition(EntityPlayer player, BlockPos pos)
+    {
+        int dimension = player.getEntityWorld().provider.getDimension();
+        this.addPlayerSpreadPosition(dimension, player.getUniqueID(), pos);
+    }
+
+    public void addPlayerSpreadPosition(int dimension, UUID uuid, BlockPos pos)
+    {
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
+
+        if (map == null)
+        {
+            map = new HashMap<>();
+            this.playerSpreadPositions.put(dimension, map);
+        }
+
+        map.put(uuid, pos);
+        this.dirty = true;
+    }
+
     private PlayerData getOrCreatePlayerData(EntityPlayer player)
     {
         PlayerData data = this.playerData.get(player.getUniqueID());
@@ -142,6 +181,22 @@ public class DataTracker
             this.playerData.put(uuid, data);
         }
 
+        tagList = nbt.getTagList("PlayerSpreadPositions", Constants.NBT.TAG_COMPOUND);
+        tagCount = tagList.tagCount();
+
+        for (int i = 0; i < tagCount; i++)
+        {
+            NBTTagCompound tag = tagList.getCompoundTagAt(i);
+            BlockPos pos = readBlockPos(tag);
+
+            if (pos != null)
+            {
+                UUID uuid = new UUID(tag.getLong("UUIDM"), tag.getLong("UUIDL"));
+                int dimension = tag.getInteger("dim");
+                this.addPlayerSpreadPosition(dimension, uuid, pos);
+            }
+        }
+
         this.serverStarts = nbt.getInteger("ServerStarts");
     }
 
@@ -168,6 +223,25 @@ public class DataTracker
             tag.setLong("UUIDL", entry.getKey().getLeastSignificantBits());
             entry.getValue().writeToNBT(tag);
             tagList.appendTag(tag);
+        }
+
+        tagList = new NBTTagList();
+        nbt.setTag("PlayerSpreadPositions", tagList);
+
+        for (Map.Entry<Integer, Map<UUID, BlockPos>> entry : this.playerSpreadPositions.entrySet())
+        {
+            Map<UUID, BlockPos> map = entry.getValue();
+            int dimension = entry.getKey();
+
+            for (Map.Entry<UUID, BlockPos> posEntry : map.entrySet())
+            {
+                NBTTagCompound tag = new NBTTagCompound();
+                tag.setLong("UUIDM", posEntry.getKey().getMostSignificantBits());
+                tag.setLong("UUIDL", posEntry.getKey().getLeastSignificantBits());
+                tag.setInteger("dim", dimension);
+                writeBlockPosToTag(posEntry.getValue(), tag);
+                tagList.appendTag(tag);
+            }
         }
 
         nbt.setInteger("ServerStarts", this.serverStarts);
@@ -210,6 +284,7 @@ public class DataTracker
         // Clear old data regardless of whether there is a data file
         this.dimensionLoadCounts.clear();
         this.playerData.clear();
+        this.playerSpreadPositions.clear();
         this.serverStarts = 0;
 
         this.worldDir = worldDir;
@@ -397,6 +472,29 @@ public class DataTracker
 
             nbt.setTag(key, tagList);
         }
+    }
+
+    public static NBTTagCompound writeBlockPosToTag(Vec3i pos, NBTTagCompound tag)
+    {
+        tag.setInteger("x", pos.getX());
+        tag.setInteger("y", pos.getY());
+        tag.setInteger("z", pos.getZ());
+
+        return tag;
+    }
+
+    @Nullable
+    public static BlockPos readBlockPos(@Nullable NBTTagCompound tag)
+    {
+        if (tag != null &&
+            tag.hasKey("x", Constants.NBT.TAG_INT) &&
+            tag.hasKey("y", Constants.NBT.TAG_INT) &&
+            tag.hasKey("z", Constants.NBT.TAG_INT))
+        {
+            return new BlockPos(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
+        }
+
+        return null;
     }
 
     public enum PlayerDataType
