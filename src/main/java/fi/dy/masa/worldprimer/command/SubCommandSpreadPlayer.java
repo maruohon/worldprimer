@@ -178,6 +178,8 @@ public class SubCommandSpreadPlayer extends SubCommand
             BlockPos pos = DataTracker.instance().getLastPlayerSpreadPosition(player);
             List<BlockPos> existingPositions = new ArrayList<>(DataTracker.instance().getPlayerSpreadPositions(dimension));
 
+            player.getEntityWorld().playerEntities.forEach((p) -> { existingPositions.add(new BlockPos(p)); });
+
             if (updatePosition || pos == null)
             {
                 if (gridSize > 0)
