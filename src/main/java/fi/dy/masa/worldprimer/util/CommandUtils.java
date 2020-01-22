@@ -14,9 +14,19 @@ public class CommandUtils
 {
     private static boolean runCreationCommands;
 
+    public static int getDimension(EntityPlayer player)
+    {
+        return getDimension(player.getEntityWorld());
+    }
+
+    public static int getDimension(World world)
+    {
+        return world.provider.getDimension();
+    }
+
     public static void onCreateSpawn(final World world)
     {
-        final int dimension = world.provider.getDimension();
+        final int dimension = getDimension(world);
         WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition, DIM: {}", dimension);
 
         // When creating the overworld spawn, which happens once, when the level.dat doesn't yet exist.
@@ -38,7 +48,7 @@ public class CommandUtils
     {
         if (world.isRemote == false)
         {
-            final int dimension = world.provider.getDimension();
+            final int dimension = getDimension(world);
             WorldPrimer.logInfo("WorldEvent.Load, DIM: {}", dimension);
 
             if (Configs.enableTimedCommands)
@@ -61,21 +71,21 @@ public class CommandUtils
 
             if (Configs.enableDimensionLoadingCommands)
             {
-                WorldPrimer.logInfo("WorldEvent.Load - running dimensionLoadingCommands");
+                WorldPrimer.logInfo("WorldEvent.Load: Running dimensionLoadingCommands");
                 final int currentCount = DataTracker.instance().getDimensionLoadCount(dimension);
-                runDimensionCommands(null, world, world.provider.getDimension(), currentCount, Configs.dimensionLoadingCommands);
+                runDimensionCommands(null, world, getDimension(world), currentCount, Configs.dimensionLoadingCommands);
             }
         }
     }
 
     public static void onPlayerJoin(final EntityPlayer player)
     {
-        WorldPrimer.logInfo("PlayerLoggedInEvent player: {}", player);
+        WorldPrimer.logInfo("PlayerLoggedInEvent: running join commands for player {}", player);
         handlePlayerEvent(player, PlayerDataType.JOIN, Configs.enablePlayerJoinCommands, Configs.playerJoinCommands);
 
-        if (Configs.enablePlayerChangedDimensionEnterCommands)
+        if (Configs.runDimensionChangeCommandsOnJoinQuit && Configs.enablePlayerChangedDimensionEnterCommands)
         {
-            int dimension = player.getEntityWorld().provider.getDimension();
+            int dimension = getDimension(player);
             DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
 
             final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
@@ -85,12 +95,12 @@ public class CommandUtils
 
     public static void onPlayerQuit(final EntityPlayer player)
     {
-        WorldPrimer.logInfo("PlayerLoggedOutEvent player: {}", player);
+        WorldPrimer.logInfo("PlayerLoggedOutEvent: running quit commands for player {}", player);
         handlePlayerEvent(player, PlayerDataType.QUIT, Configs.enablePlayerQuitCommands, Configs.playerQuitCommands);
 
-        if (Configs.enablePlayerChangedDimensionLeaveCommands)
+        if (Configs.runDimensionChangeCommandsOnJoinQuit && Configs.enablePlayerChangedDimensionLeaveCommands)
         {
-            int dimension = player.getEntityWorld().provider.getDimension();
+            int dimension = getDimension(player);
             DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 
             final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
@@ -100,16 +110,17 @@ public class CommandUtils
 
     public static void onPlayerDeath(final EntityPlayer player)
     {
-        WorldPrimer.logInfo("LivingDeathEvent for player: {}", player);
+        WorldPrimer.logInfo("LivingDeathEvent: running death commands for player: {}", player);
         handlePlayerEvent(player, PlayerDataType.DEATH, Configs.enablePlayerDeathCommands, Configs.playerDeathCommands);
     }
 
     public static void onPlayerRespawn(final EntityPlayer player, final boolean isEndConquered)
     {
+        WorldPrimer.logInfo("PlayerRespawnEvent player: {}, leaving the End: {}", player, isEndConquered);
+
         // Don't run the respawn commands when just leaving the End
         if (isEndConquered == false)
         {
-            WorldPrimer.logInfo("PlayerRespawnEvent player: {}", player);
             handlePlayerEvent(player, PlayerDataType.RESPAWN, Configs.enablePlayerRespawnCommands, Configs.playerRespawnCommands);
         }
         // The PlayerChangedDimensionEvent doesn't seem to fire when leaving the End, so run the leave commands also here
@@ -118,7 +129,7 @@ public class CommandUtils
             if (Configs.enablePlayerChangedDimensionLeaveCommands)
             {
                 final int dimension = 1;
-                WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End) player: {}", player);
+                WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End): running dimension leave commands for player {}", player);
                 DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
                 final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 
@@ -129,7 +140,7 @@ public class CommandUtils
 
             if (Configs.enablePlayerChangedDimensionEnterCommands)
             {
-                int dimension = player.getEntityWorld().provider.getDimension();
+                int dimension = getDimension(player);
                 DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
 
                 final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
@@ -140,9 +151,11 @@ public class CommandUtils
 
     public static void onPlayerChangedDimension(final EntityPlayer player, final int fromDim, final int toDim)
     {
+        WorldPrimer.logInfo("PlayerChangedDimensionEvent player: {} from dim {}, to dim {}", player, fromDim, toDim);
+
         if (Configs.enablePlayerChangedDimensionLeaveCommands)
         {
-            WorldPrimer.logInfo("PlayerChangedDimensionEvent player: {} left dim {}", player, fromDim);
+            WorldPrimer.logInfo("PlayerChangedDimensionEvent: running dimension leave commands for player {}", player);
             DataTracker.instance().incrementPlayerDimensionEventCount(player, fromDim, PlayerDimensionDataType.LEAVE);
             final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, fromDim, PlayerDimensionDataType.LEAVE);
 
@@ -153,7 +166,7 @@ public class CommandUtils
 
         if (Configs.enablePlayerChangedDimensionEnterCommands)
         {
-            WorldPrimer.logInfo("PlayerChangedDimensionEvent player: {} entered dim {}", player, toDim);
+            WorldPrimer.logInfo("PlayerChangedDimensionEvent: running dimension enter commands for player {}", player);
             DataTracker.instance().incrementPlayerDimensionEventCount(player, toDim, PlayerDimensionDataType.ENTER);
             final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, toDim, PlayerDimensionDataType.ENTER);
 

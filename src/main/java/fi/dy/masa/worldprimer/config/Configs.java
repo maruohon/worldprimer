@@ -21,6 +21,9 @@ public class Configs
     public static boolean enableLoggingInfo;
     public static boolean enableDataTracking;
     public static boolean enableChiselsAndBitsCrossWorldFormat;
+    public static boolean runDimensionChangeCommandsOnJoinQuit;
+    public static String commandSenderName;
+
     public static boolean enableDimensionLoadingCommands;
     public static boolean enableEarlyWorldCreationCommands;
     public static boolean enableEarlyWorldLoadingCommands;
@@ -34,8 +37,6 @@ public class Configs
     public static boolean enablePlayerJoinCommands;
     public static boolean enablePlayerQuitCommands;
     public static boolean enablePlayerRespawnCommands;
-
-    public static String commandSenderName;
 
     public static String[] dimensionLoadingCommands;
     public static String[] earlyWorldCreationCommands;
@@ -177,6 +178,11 @@ public class Configs
         prop.setComment("Enables tracking of dimension load counts, player join counts etc. by storing the counts in a file in worlddir/worldprimer/data_tracker.nbt");
         enableDataTracking = prop.getBoolean();
 
+        prop = conf.get(CATEGORY_GENERIC, "runDimensionChangeCommandsOnJoinQuit", false).setRequiresMcRestart(false);
+        prop.setComment("If true, then the dimensionChangeEnter and dimensionChangeLeave commands\n" +
+                        "are also run when the player disconnects or logs in again.\n" +
+                        "If false, then those commands are ONLY run when the player is actually changing dimensions.");
+        runDimensionChangeCommandsOnJoinQuit = prop.getBoolean();
 
         /*** COMMAND TOGGLES ***/
 
