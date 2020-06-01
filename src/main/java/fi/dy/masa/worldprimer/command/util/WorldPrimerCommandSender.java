@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.command;
+package fi.dy.masa.worldprimer.command.util;
 
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +17,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.config.Configs;
-import fi.dy.masa.worldprimer.util.CommandSubstitutions;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender

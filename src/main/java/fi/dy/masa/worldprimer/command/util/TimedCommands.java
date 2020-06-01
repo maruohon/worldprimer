@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.util;
+package fi.dy.masa.worldprimer.command.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldprimer.WorldPrimer;
-import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 
 public class TimedCommands
 {
@@ -119,7 +118,7 @@ public class TimedCommands
                     if (timeStr.length() > 1 && timeStr.charAt(0) == '%')
                     {
                         isPeriodic = true;
-                        timeStr = timeStr.substring(1, timeStr.length());
+                        timeStr = timeStr.substring(1);
                     }
 
                     int index = timeStr.indexOf('-');
@@ -132,19 +131,13 @@ public class TimedCommands
                     // Offset value present (<time><+|-><offset>), ie. in the format 54321-15
                     if (index != -1)
                     {
-                        offset = Long.parseLong(timeStr.substring(index, timeStr.length()));
+                        offset = Long.parseLong(timeStr.substring(index));
                         timeStr = timeStr.substring(0, index);
                     }
 
                     final long time = Long.parseLong(timeStr);
                     final int dimension = Integer.parseInt(parts[2]);
-                    List<TimedCommand> list = TIMED_COMMANDS.get(dimension);
-
-                    if (list == null)
-                    {
-                        list = new ArrayList<TimedCommand>();
-                        TIMED_COMMANDS.put(dimension, list);
-                    }
+                    List<TimedCommand> list = TIMED_COMMANDS.computeIfAbsent(dimension, (dim) -> new ArrayList<>());
 
                     String command = String.join(" ", CommandUtils.dropFirstStrings(parts, 3));
                     list.add(new TimedCommand(command, dimension, time, offset, isPeriodic));

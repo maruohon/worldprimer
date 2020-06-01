@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.util;
+package fi.dy.masa.worldprimer.command.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -13,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class CommandSubstitutions
 {

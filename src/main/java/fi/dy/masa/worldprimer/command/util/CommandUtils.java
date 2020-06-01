@@ -1,12 +1,12 @@
-package fi.dy.masa.worldprimer.util;
+package fi.dy.masa.worldprimer.command.util;
 
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
-import fi.dy.masa.worldprimer.command.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
+import fi.dy.masa.worldprimer.util.DataTracker;
 import fi.dy.masa.worldprimer.util.DataTracker.PlayerDataType;
 import fi.dy.masa.worldprimer.util.DataTracker.PlayerDimensionDataType;
 
@@ -229,7 +229,7 @@ public class CommandUtils
 
                 if (countStr.charAt(0) == '%')
                 {
-                    countStr = countStr.substring(1, countStr.length());
+                    countStr = countStr.substring(1);
                     modulo = true;
                 }
 
@@ -289,7 +289,7 @@ public class CommandUtils
 
             if (countStr.charAt(0) == '%')
             {
-                countStr = countStr.substring(1, countStr.length());
+                countStr = countStr.substring(1);
                 modulo = true;
             }
 
