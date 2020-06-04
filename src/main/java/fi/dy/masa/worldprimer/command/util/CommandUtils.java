@@ -36,7 +36,7 @@ public class CommandUtils
             if (Configs.enableEarlyWorldCreationCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition: Running earlyWorldCreationCommands for DIM: {}", dimension);
-                WorldPrimerCommandSender.instance().runCommands(world, Configs.earlyWorldCreationCommands);
+                WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.earlyWorldCreationCommands);
             }
 
             // Defer running the commands until the world is actually ready to load
@@ -60,7 +60,7 @@ public class CommandUtils
             if (runCreationCommands && dimension == 0)
             {
                 WorldPrimer.logInfo("WorldEvent.Load: Running postWorldCreationCommands for DIM: {}", dimension);
-                WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
+                WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldCreationCommands);
                 runCreationCommands = false;
             }
 
@@ -195,7 +195,7 @@ public class CommandUtils
             }
             else
             {
-                WorldPrimerCommandSender.instance().runCommands(player, world, command);
+                WorldPrimerCommandSender.INSTANCE.runCommands(player, world, command);
             }
         }
     }
@@ -208,7 +208,7 @@ public class CommandUtils
             if (cmdParts[1].equals("*") || dimension == Integer.parseInt(cmdParts[1]))
             {
                 cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.instance().runCommands(player, world, String.join(" ", cmdParts));
+                WorldPrimerCommandSender.INSTANCE.runCommands(player, world, String.join(" ", cmdParts));
             }
         }
         catch (NumberFormatException e)
@@ -238,7 +238,7 @@ public class CommandUtils
                 if ((modulo && count != 0 && (currentCount % count) == 0) || (modulo == false && currentCount == count))
                 {
                     cmdParts = dropFirstStrings(cmdParts, 3);
-                    WorldPrimerCommandSender.instance().runCommands(player, world, String.join(" ", cmdParts));
+                    WorldPrimerCommandSender.INSTANCE.runCommands(player, world, String.join(" ", cmdParts));
                 }
             }
         }
@@ -275,7 +275,7 @@ public class CommandUtils
             }
             else
             {
-                WorldPrimerCommandSender.instance().runCommands(player, player.getEntityWorld(), command);
+                WorldPrimerCommandSender.INSTANCE.runCommands(player, player.getEntityWorld(), command);
             }
         }
     }
@@ -298,7 +298,7 @@ public class CommandUtils
             if ((modulo && count != 0 && (currentCount % count) == 0) || (modulo == false && currentCount == count))
             {
                 cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.instance().runCommands(player, player.getEntityWorld(), String.join(" ", cmdParts));
+                WorldPrimerCommandSender.INSTANCE.runCommands(player, player.getEntityWorld(), String.join(" ", cmdParts));
             }
         }
         catch (NumberFormatException e)

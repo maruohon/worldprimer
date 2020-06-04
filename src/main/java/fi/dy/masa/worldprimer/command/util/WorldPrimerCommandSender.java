@@ -21,20 +21,10 @@ import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class WorldPrimerCommandSender implements ICommandSender
 {
-    private static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
+    public static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
 
     private World executionWorld;
     @Nullable private String senderName = null;
-
-    public static WorldPrimerCommandSender instance()
-    {
-        return INSTANCE;
-    }
-
-    public void runCommands(@Nullable World world, String... commands)
-    {
-        this.runCommands(null, world, commands);
-    }
 
     public void runCommands(@Nullable EntityPlayer player, @Nullable World world, String... commands)
     {

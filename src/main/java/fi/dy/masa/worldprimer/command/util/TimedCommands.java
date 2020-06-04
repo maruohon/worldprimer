@@ -245,7 +245,7 @@ public class TimedCommands
                         if (command.getNextExecution() == currentTime)
                         {
                             WorldPrimer.logInfo("Executing a timed command '{}' @ tick {} in dim {}", command.getCommand(), currentTime, entry.getKey());
-                            WorldPrimerCommandSender.instance().runCommands(null, world, command.getCommand());
+                            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, command.getCommand());
                         }
                         else if (command.getNextExecution() > currentTime)
                         {

@@ -70,14 +70,14 @@ public class WorldPrimer
             if (Configs.enableEarlyWorldCreationCommands && count == 0)
             {
                 WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldCreationCommands");
-                WorldPrimerCommandSender.instance().runCommands(null, Configs.earlyWorldCreationCommands);
+                WorldPrimerCommandSender.INSTANCE.runCommands(null, null, Configs.earlyWorldCreationCommands);
             }
         }
 
         if (Configs.enableEarlyWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
-            WorldPrimerCommandSender.instance().runCommands(null, Configs.earlyWorldLoadingCommands);
+            WorldPrimerCommandSender.INSTANCE.runCommands(null, null, Configs.earlyWorldLoadingCommands);
         }
     }
 
@@ -99,7 +99,7 @@ public class WorldPrimer
             DataTracker.instance().getServerStartCount() == 0)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
-            WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldCreationCommands);
+            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldCreationCommands);
         }
 
         // Increment the server start count
@@ -108,7 +108,7 @@ public class WorldPrimer
         if (Configs.enablePostWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
-            WorldPrimerCommandSender.instance().runCommands(world, Configs.postWorldLoadingCommands);
+            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldLoadingCommands);
         }
     }
 
