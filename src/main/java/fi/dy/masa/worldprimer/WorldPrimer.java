@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import fi.dy.masa.worldprimer.command.CommandWorldPrimer;
+import fi.dy.masa.worldprimer.command.util.CommandParser;
 import fi.dy.masa.worldprimer.command.util.CommandSubstitutions;
 import fi.dy.masa.worldprimer.command.util.WorldPrimerCommandSender;
 import fi.dy.masa.worldprimer.config.Configs;
@@ -52,6 +53,7 @@ public class WorldPrimer
     public void onServerAboutToStart(FMLServerAboutToStartEvent event)
     {
         logInfo("FMLServerAboutToStartEvent");
+        CommandParser.init();
         Configs.loadConfigsFromFile();
 
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory,
