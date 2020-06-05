@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
+import fi.dy.masa.worldprimer.command.substitutions.PlainString;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionDimension;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionSpawnPoint;
@@ -36,7 +37,6 @@ public class CommandParser
 
     public static ParsedCommand parseCommand(final String original)
     {
-        System.out.printf("parseCommand()\n");
         StringReader reader = new StringReader(original);
         ImmutableList.Builder<IStringProvider> builder = ImmutableList.builder();
         // say foo bar {SPAWN_X}+{SPAWN_Y}+{SPAWN_Z}*{DIMENSION}
@@ -52,12 +52,12 @@ public class CommandParser
             if (substitutionRegion == null)
             {
                 final String str = reader.subString(pos, reader.getLength() - 1);
-                System.out.printf("parseCommand() end: '%s'\n", str);
-                builder.add((ctx, s) -> str);
+                builder.add(plainStringWithStrippedEscapes(str));
+                //System.out.printf("parseCommand() end: '%s'\n", str);
                 break;
             }
 
-            System.out.printf("parseCommand() sub @ %s => '%s'\n", substitutionRegion, reader.subReader(substitutionRegion).getString());
+            //System.out.printf("parseCommand() sub @ %s => '%s'\n", substitutionRegion, reader.subReader(substitutionRegion).getString());
             SubstitutionBase substitution = getSubstitutionForRegion(reader, substitutionRegion);
             Region arithmeticRegion = substitution.isNumeric() ? getArithmeticRegion(reader, pos, substitutionRegion) : null;
             int replacedStart = arithmeticRegion != null ? arithmeticRegion.start : substitutionRegion.start;
@@ -67,35 +67,31 @@ public class CommandParser
             if (replacedStart - pos > 0)
             {
                 final String str = reader.subString(pos, replacedStart - 1);
-                System.out.printf("parseCommand() prev: '%s' sub.isNum: %s\n", str, substitution.isNumeric());
-                builder.add((ctx, s) -> str);
+                builder.add(plainStringWithStrippedEscapes(str));
+                //System.out.printf("parseCommand() prev: '%s' sub.isNum: %s\n", str, substitution.isNumeric());
             }
 
             // Arithmetic operations with a substitution
             if (arithmeticRegion != null)
             {
-                System.out.printf("parseCommand() arithmetic @ %s => '%s'\n", arithmeticRegion, reader.subReader(arithmeticRegion).getString());
+                //System.out.printf("parseCommand() arithmetic @ %s => '%s'\n", arithmeticRegion, reader.subReader(arithmeticRegion).getString());
                 StringReader subReader = reader.subReader(arithmeticRegion);
                 IStringProvider provider = ArithmeticEquationParser.getArithmeticSubstitutionFor(subReader);
 
                 if (provider != null)
                 {
-                    System.out.printf("parsed an arithmetic equation\n");
                     builder.add(provider);
                 }
                 else
                 {
                     WorldPrimer.logger.warn("Failed to get and parse an arithmetic equation for '{}'", subReader.getString());
                 }
-
-                //final String arStr = reader.subString(arithmeticRegion.start, arithmeticRegion.end);
-                //builder.add((ctx, s) -> "ARIT: '" + arStr + "'");
             }
             // Just a simple substitution
             else
             {
-                System.out.printf("parseCommand() regular sub: %s\n", substitution);
                 builder.add(substitution);
+                //System.out.printf("parseCommand() regular sub: %s\n", substitution);
             }
 
             pos = replacedEnd + 1;
@@ -103,6 +99,43 @@ public class CommandParser
         }
 
         return new ParsedCommand(builder.build());
+    }
+
+    public static PlainString plainStringWithStrippedEscapes(String str)
+    {
+        int firstEscape = str.indexOf('\\');
+
+        if (firstEscape != -1)
+        {
+            final int length = str.length();
+            StringBuilder sb = new StringBuilder(length);
+            StringReader reader = new StringReader(str);
+
+            if (firstEscape > 0)
+            {
+                sb.append(str, 0, firstEscape);
+            }
+
+            reader.setPos(firstEscape);
+
+            while (reader.canRead())
+            {
+                char c = reader.peek();
+                char n = reader.peekNext();
+                reader.skip();
+
+                if (c == '\\' && (n == '{' || n == '}' || OP.indexOf(n) != -1))
+                {
+                    continue;
+                }
+
+                sb.append(c);
+            }
+
+            str = sb.toString();
+        }
+
+        return new PlainString(str);
     }
 
     @Nullable
@@ -220,11 +253,6 @@ public class CommandParser
         return region;
     }
 
-    private static boolean isValidSubstitutionStartingAt(StringReader reader, int startPos)
-    {
-        return getSubstitutionRegionStartingAt(reader, startPos) != null;
-    }
-
     private static boolean isValidSubstitutionEndingAt(StringReader reader, int endPos)
     {
         return getSubstitutionRegionEndingAt(reader, endPos) != null;
@@ -253,22 +281,6 @@ public class CommandParser
         return sub != null && sub.hasArguments() == hasArgs ? sub : null;
     }
 
-    /*
-    @Nullable
-    public static SubstitutionBase getNumericSubstitutionAt(StringReader reader, int startPos)
-    {
-        Region region = getSubstitutionRegionStartingAt(reader, startPos);
-
-        if (region != null)
-        {
-            SubstitutionBase substitution = getSubstitutionForRegion(reader, region);
-            return substitution != null && substitution.isNumeric() ? substitution : null;
-        }
-
-        return null;
-    }
-    */
-
     @Nullable
     private static Region getArithmeticRegion(StringReader reader, int startPos, Region substitutionRegion)
     {
@@ -280,7 +292,6 @@ public class CommandParser
 
         // (-(123+(456-7)*8/((9+5)-12))/56)+{FOO}-15*2*{BAR} foo baz
         // -(123+(456-7)*8/((9+5)-12))/56
-        // "-?\(?([0-9]+\)?[\+\-\*\/\%\(\)]\()+"
 
         // Check for valid arithmetic equations preceding the substitution.
         if (pos >= (startPos + 2) && reader.peekAt(pos - 2) != '\\')
@@ -385,17 +396,13 @@ public class CommandParser
 
             if (c == '(')
             {
-                // closing parenthesis before an opening parenthesis "123)(456"
-                // number before an opening parenthesis - "123(456"
-                //if (lastChar == ')' || NUM.indexOf(lastChar) != -1)
-
                 // An opening parenthesis can only be preceded by another opening
                 // parenthesis or an operator, or it can be the first character.
                 // OK: "(((123+456..." ; "123/((456-7)*3)" ; "(123+45)/7"
-                // NOT: "123(456+78)/9" ; "{FOO}(123+45)/8"
+                // NOT: "123(456+78)/9" ; "{FOO}(123+45)/8" ; "123)(456"
                 if (lastChar != 0 && lastChar != '(' && OP.indexOf(lastChar) == -1)
                 {
-                    System.out.printf("validateArithmeticEquation(): invalid left paren @ %d\n", reader.getPos());
+                    //System.out.printf("validateArithmeticEquation(): invalid left paren @ %d\n", reader.getPos());
                     return false;
                 }
 
@@ -403,15 +410,12 @@ public class CommandParser
             }
             else if (c == ')')
             {
-                // operator before a closing parenthesis "123-)"
-                //if (OP.indexOf(lastChar) != -1)
-
                 // A closing parenthesis can only be preceded by another closing parenthesis or a number.
                 // OK: "((123+4)/(3+7))*4" ; "(123+{FOO})/8"
                 // NOT: "((123+4-)/8)-65" ; "(123+{FOO}()/8"
                 if (lastChar != ')' && NUM.indexOf(lastChar) == -1 && isValidSubstitutionEndingAt(reader, reader.getPos() - 1) == false)
                 {
-                    System.out.printf("validateArithmeticEquation(): invalid right paren @ %d -> '%s'\n", reader.getPos(), reader.subString(0, reader.getPos()));
+                    //System.out.printf("validateArithmeticEquation(): invalid right paren @ %d -> '%s'\n", reader.getPos(), reader.subString(0, reader.getPos()));
                     return false;
                 }
 
@@ -420,7 +424,7 @@ public class CommandParser
             // Two operators next to each other "123++456"
             else if (OP.indexOf(c) != -1 && OP.indexOf(lastChar) != -1)
             {
-                System.out.printf("validateArithmeticEquation(): double op: '%s'\n", "" + lastChar + c);
+                //System.out.printf("validateArithmeticEquation(): double op: '%s'\n", "" + lastChar + c);
                 return false;
             }
 
@@ -428,7 +432,7 @@ public class CommandParser
             // than opening parenthesis up to this point
             if (parenLevel < 0)
             {
-                System.out.printf("validateArithmeticEquation(): parenLevel < 0 (%d)\n", parenLevel);
+                //System.out.printf("validateArithmeticEquation(): parenLevel < 0 (%d)\n", parenLevel);
                 return false;
             }
 
@@ -440,47 +444,4 @@ public class CommandParser
         // Check for balanced parenthesis count
         return parenLevel == 0;
     }
-
-    private static SubstitutionBase getArithmeticSubstitutionForRegion(StringReader reader, Region region)
-    {
-        return null; // TODO
-    }
-
-    /*
-    private static boolean addSubstitutionIfValid(ArrayList<IStringProvider> list, int startPos, StringReader reader)
-    {
-        if (isValidSubstitutionString(startPos, reader))
-        {
-            int pos = reader.getPos();
-
-            // Add the previous plain string before the substitution
-            if (startPos - pos > 0)
-            {
-                final String str = reader.substring(pos, startPos);
-                list.add((ctx) -> str);
-            }
-        }
-    }
-
-    private static boolean isValidSubstitutionString(int startPos, StringReader reader)
-    {
-        boolean isValid = false;
-        reader.storePos();
-        reader.setPos(startPos);
-
-        if (reader.peekPrevious() != '\\')
-        {
-            int endPos = reader.findNext('}');
-
-            if (endPos != -1)
-            {
-
-            }
-        }
-
-        reader.restorePos();
-
-        return isValid;
-    }
-    */
 }

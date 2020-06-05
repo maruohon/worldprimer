@@ -55,7 +55,6 @@ public class ArithmeticEquationParser
             int pos = reader.getPos();
             Token token = readToken(reader);
 
-            System.out.printf("token: %s\n", token);
             if (token == null)
             {
                 WorldPrimer.logger.warn("Failed to read token at position {} in an arithmetic equation '{}'", pos, reader.getString());
@@ -201,7 +200,7 @@ public class ArithmeticEquationParser
                 if (val1.type == TokenType.DIRECT_VALUE &&
                             val2.type == TokenType.DIRECT_VALUE)
                 {
-                    System.out.printf("reducing %.4f and %.4f with %s\n", val1.numericValue, val2.numericValue, token.operator); // TODO remove after debugging
+                    //System.out.printf("reducing %.4f and %.4f with %s\n", val1.numericValue, val2.numericValue, token.operator); // TODO remove after debugging
                     reducedTokens.set(i - 2, new Token(token.operator.calculate(val1.numericValue, val2.numericValue)));
                     reducedTokens.remove(i);
                     reducedTokens.remove(i - 1);

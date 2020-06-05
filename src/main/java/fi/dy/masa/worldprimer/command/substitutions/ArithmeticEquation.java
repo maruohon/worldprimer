@@ -18,7 +18,6 @@ public class ArithmeticEquation implements IStringProvider
     public String getString(CommandContext context, String original)
     {
         Stack<Token> stack = new Stack<>();
-        //System.out.printf("ArithmeticEquation.getString()\n");
 
         for (Token token : this.tokens)
         {

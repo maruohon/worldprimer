@@ -1,7 +1,6 @@
 package fi.dy.masa.worldprimer.command.substitutions;
 
 import javax.annotation.Nullable;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -31,7 +30,7 @@ public class CommandContext
     }
 
     @Nullable
-    public Entity getPlayer()
+    public EntityPlayer getPlayer()
     {
         return player;
     }
