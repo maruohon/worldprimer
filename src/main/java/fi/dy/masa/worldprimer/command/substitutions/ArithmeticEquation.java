@@ -36,7 +36,7 @@ public class ArithmeticEquation implements IStringProvider
                 }
                 else if (type1 == TokenType.SUBSTITUTION_VALUE)
                 {
-                    value1 = token1.substitution.getNumericValue(context, original);
+                    value1 = token1.substitution.getDoubleValue(context, original);
                 }
                 else
                 {
@@ -49,7 +49,7 @@ public class ArithmeticEquation implements IStringProvider
                 }
                 else if (type2 == TokenType.SUBSTITUTION_VALUE)
                 {
-                    value2 = token2.substitution.getNumericValue(context, original);
+                    value2 = token2.substitution.getDoubleValue(context, original);
                 }
                 else
                 {

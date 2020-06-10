@@ -53,6 +53,17 @@ public class StringReader
         return this.canPeekAt(pos) ? this.string.charAt(pos) : 0;
     }
 
+    public String subString(Region region)
+    {
+        return this.subString(region.start, region.end);
+    }
+
+    /**
+     * Note: The end index is inclusive, in contrast to the Java String::substring()
+     * @param start
+     * @param end
+     * @return
+     */
     public String subString(int start, int end)
     {
         return this.string.substring(start, end + 1);
@@ -63,6 +74,12 @@ public class StringReader
         return this.subReader(region.start, region.end);
     }
 
+    /**
+     * Note: The end index is inclusive, in contrast to the Java String::substring()
+     * @param start
+     * @param end
+     * @return
+     */
     public StringReader subReader(int start, int end)
     {
         return new StringReader(this.subString(start, end));

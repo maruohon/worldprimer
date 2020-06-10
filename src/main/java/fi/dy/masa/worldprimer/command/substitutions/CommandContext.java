@@ -10,12 +10,19 @@ public class CommandContext
     protected final MinecraftServer server;
     @Nullable protected final World world;
     @Nullable protected final EntityPlayer player;
+    protected final int count;
 
-    public CommandContext(MinecraftServer server, @Nullable World world, @Nullable EntityPlayer player)
+    public CommandContext(MinecraftServer server, @Nullable World world, @Nullable EntityPlayer player, int count)
     {
         this.server = server;
         this.world = world;
         this.player = player;
+        this.count = count;
+    }
+
+    public int getCount()
+    {
+        return this.count;
     }
 
     public MinecraftServer getServer()

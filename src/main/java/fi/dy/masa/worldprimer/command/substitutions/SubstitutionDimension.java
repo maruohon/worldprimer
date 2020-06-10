@@ -12,13 +12,7 @@ public class SubstitutionDimension extends SubstitutionBase
     @Override
     public String getString(CommandContext context, String original)
     {
-        World world = context.getWorld();
-
-        if (world == null && context.getPlayer() != null)
-        {
-            world = context.getPlayer().getEntityWorld();
-        }
-
+        World world = this.getWorldFromContext(context);
         return world != null ? String.valueOf(world.provider.getDimension()) : original;
     }
 }

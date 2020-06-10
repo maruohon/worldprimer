@@ -8,8 +8,16 @@ import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
 import fi.dy.masa.worldprimer.command.substitutions.PlainString;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionCount;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionDimension;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerName;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerPosition;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRandomNumber;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRealTime;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionSpawnPoint;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionTopBlockY;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionTopBlockYRand;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionWorldTime;
 import fi.dy.masa.worldprimer.util.Coordinate;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
@@ -17,7 +25,6 @@ public class CommandParser
 {
     public static final String NUM = "0123456789.";
     public static final String OP = "-+*/%";
-    private static final String OP_PAREN = "-+*/%()";
     private static final String NUM_OP_PAREN = "0123456789.-+*/%()";
 
     private static final HashMap<String, SubstitutionBase> SUBSTITUTIONS = new HashMap<>();
@@ -26,6 +33,21 @@ public class CommandParser
     {
         SUBSTITUTIONS.clear();
 
+        SUBSTITUTIONS.put("PLAYER_NAME", new SubstitutionPlayerName());
+        SUBSTITUTIONS.put("PLAYER_BED_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BED_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BED_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.Z));
+
+        SUBSTITUTIONS.put("COUNT", new SubstitutionCount());
         SUBSTITUTIONS.put("DIMENSION", new SubstitutionDimension());
         SUBSTITUTIONS.put("SPAWN_X", new SubstitutionSpawnPoint(Coordinate.X, WorldUtils::getWorldSpawn));
         SUBSTITUTIONS.put("SPAWN_Y", new SubstitutionSpawnPoint(Coordinate.Y, WorldUtils::getWorldSpawn));
@@ -33,6 +55,18 @@ public class CommandParser
         SUBSTITUTIONS.put("SPAWN_POINT_X", new SubstitutionSpawnPoint(Coordinate.X, World::getSpawnPoint));
         SUBSTITUTIONS.put("SPAWN_POINT_Y", new SubstitutionSpawnPoint(Coordinate.Y, World::getSpawnPoint));
         SUBSTITUTIONS.put("SPAWN_POINT_Z", new SubstitutionSpawnPoint(Coordinate.Z, World::getSpawnPoint));
+        SUBSTITUTIONS.put("TIME_TICK", new SubstitutionWorldTime(World::getTotalWorldTime));
+        SUBSTITUTIONS.put("TIME_TICK_DAY", new SubstitutionWorldTime(World::getWorldTime));
+        SUBSTITUTIONS.put("TIME_Y", new SubstitutionRealTime("yyyy"));
+        SUBSTITUTIONS.put("TIME_M", new SubstitutionRealTime("MM"));
+        SUBSTITUTIONS.put("TIME_D", new SubstitutionRealTime("dd"));
+        SUBSTITUTIONS.put("TIME_H", new SubstitutionRealTime("HH"));
+        SUBSTITUTIONS.put("TIME_I", new SubstitutionRealTime("mm"));
+        SUBSTITUTIONS.put("TIME_S", new SubstitutionRealTime("ss"));
+        SUBSTITUTIONS.put("TOP_Y", new SubstitutionTopBlockY());
+        SUBSTITUTIONS.put("TOP_Y_RAND", new SubstitutionTopBlockYRand());
+
+        SUBSTITUTIONS.put("RAND", new SubstitutionRandomNumber());
     }
 
     public static ParsedCommand parseCommand(final String original)
@@ -40,8 +74,8 @@ public class CommandParser
         StringReader reader = new StringReader(original);
         ImmutableList.Builder<IStringProvider> builder = ImmutableList.builder();
         // say foo bar {SPAWN_X}+{SPAWN_Y}+{SPAWN_Z}*{DIMENSION}
-        // say foo bar {RAND:0:15}*16+8
-        // say foo bar {RAND:0:15}*({RAND:0:15}*((16+{RAND:0:7})*(5-{RAND:0:3}))-5*{RAND:0:2})
+        // say foo bar {RAND:0,15}*16+8
+        // say foo bar {RAND:0,15}*({RAND:0,15}*((16+{RAND:0,7})*(5-{RAND:0,3}))-5*{RAND:0,2})
         int pos = 0;
 
         while (reader.canRead())
@@ -90,8 +124,19 @@ public class CommandParser
             // Just a simple substitution
             else
             {
-                builder.add(substitution);
-                //System.out.printf("parseCommand() regular sub: %s\n", substitution);
+                final String str = reader.subString(substitutionRegion);
+                SubstitutionBase finalSubstitution = substitution.buildSubstitution(str);
+
+                if (finalSubstitution != null)
+                {
+                    //System.out.printf("parseCommand() regular sub: %s\n", substitution);
+                    builder.add(substitution);
+                }
+                else
+                {
+                    //System.out.printf("parseCommand() invalid sub, falling back to string: '%s'\n", str);
+                    builder.add(plainStringWithStrippedEscapes(str));
+                }
             }
 
             pos = replacedEnd + 1;
@@ -266,7 +311,8 @@ public class CommandParser
     @Nullable
     public static SubstitutionBase getSubstitutionForRegion(StringReader reader, Region region)
     {
-        String name = reader.subString(region.start + 1, region.end - 1);
+        String substitutionString = reader.subString(region.start + 1, region.end - 1);
+        String name = substitutionString;
         int colonIndex = name.indexOf(':');
         boolean hasArgs = false;
 
@@ -276,9 +322,16 @@ public class CommandParser
             hasArgs = true;
         }
 
-        SubstitutionBase sub = SUBSTITUTIONS.get(name);
+        SubstitutionBase substitution = SUBSTITUTIONS.get(name);
 
-        return sub != null && sub.hasArguments() == hasArgs ? sub : null;
+        if (substitution != null &&
+            substitution.hasArguments() == hasArgs &&
+            substitution.isValid(substitutionString))
+        {
+            return substitution;
+        }
+
+        return null;
     }
 
     @Nullable
