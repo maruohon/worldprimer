@@ -5,8 +5,6 @@ import java.util.Date;
 
 public class SubstitutionRealTime extends SubstitutionBase
 {
-    protected static final Date DATE = new Date();
-
     protected final SimpleDateFormat format;
 
     public SubstitutionRealTime(String formatStr)
@@ -19,7 +17,6 @@ public class SubstitutionRealTime extends SubstitutionBase
     @Override
     public String getString(CommandContext context, String original)
     {
-        DATE.setTime(System.currentTimeMillis());
-        return this.format.format(DATE);
+        return this.format.format(new Date());
     }
 }

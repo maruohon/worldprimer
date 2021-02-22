@@ -63,10 +63,10 @@ public class SubstitutionTopBlockYRand extends SubstitutionBase
 
         if (world != null)
         {
-            int rx = this.rangeX;
-            int rz = this.rangeZ;
-            int x = this.centerX - rx + RAND.nextInt(rx * 2);
-            int z = this.centerZ - rz + RAND.nextInt(rz * 2);
+            int rx = this.rangeX + 1;
+            int rz = this.rangeZ + 1;
+            int x = this.centerX - RAND.nextInt(rx) + RAND.nextInt(rx);
+            int z = this.centerZ - RAND.nextInt(rz) + RAND.nextInt(rz);
 
             return String.valueOf(SubstitutionTopBlockY.getTopYAt(world, x, z));
         }

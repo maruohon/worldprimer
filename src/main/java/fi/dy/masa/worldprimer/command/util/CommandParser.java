@@ -12,6 +12,7 @@ import fi.dy.masa.worldprimer.command.substitutions.SubstitutionCount;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionDimension;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerName;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerPosition;
+import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerPosition.PositionType;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRandomNumber;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRealTime;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionSpawnPoint;
@@ -34,18 +35,18 @@ public class CommandParser
         SUBSTITUTIONS.clear();
 
         SUBSTITUTIONS.put("PLAYER_NAME", new SubstitutionPlayerName());
-        SUBSTITUTIONS.put("PLAYER_BED_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BED_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BED_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BED_SPAWN_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.BLOCK_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_X", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_Y", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_Z", new SubstitutionPlayerPosition(SubstitutionPlayerPosition.Type.EXACT_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_BED_X", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BED_Y", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BED_Z", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_X", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Y", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Z", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_X", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_Y", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_BLOCK_Z", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.Z));
+        SUBSTITUTIONS.put("PLAYER_X", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.X));
+        SUBSTITUTIONS.put("PLAYER_Y", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.Y));
+        SUBSTITUTIONS.put("PLAYER_Z", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.Z));
 
         SUBSTITUTIONS.put("COUNT", new SubstitutionCount());
         SUBSTITUTIONS.put("DIMENSION", new SubstitutionDimension());

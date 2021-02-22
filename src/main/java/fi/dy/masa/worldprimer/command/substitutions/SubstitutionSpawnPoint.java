@@ -29,7 +29,7 @@ public class SubstitutionSpawnPoint extends SubstitutionBase
 
             if (spawn != null)
             {
-                return String.valueOf(this.coordinate.getIntPos(spawn));
+                return this.coordinate.getCoordinateAsIntString(spawn);
             }
         }
 

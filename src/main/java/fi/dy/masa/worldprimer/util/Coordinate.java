@@ -1,5 +1,7 @@
 package fi.dy.masa.worldprimer.util;
 
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
@@ -9,32 +11,32 @@ public enum Coordinate
     Y(Vec3i::getY, (v) -> v.y),
     Z(Vec3i::getZ, (v) -> v.z);
 
-    private final IIntFactory<Vec3i> intFactory;
-    private final IDoubleFactory<Vec3d> doubleFactory;
+    private final ToIntFunction<Vec3i> intFunction;
+    private final ToDoubleFunction<Vec3d> doubleFunction;
 
-    Coordinate(IIntFactory<Vec3i> posFactory, IDoubleFactory<Vec3d> coordFactory)
+    Coordinate(ToIntFunction<Vec3i> posFactory, ToDoubleFunction<Vec3d> coordFactory)
     {
-        this.intFactory = posFactory;
-        this.doubleFactory = coordFactory;
+        this.intFunction = posFactory;
+        this.doubleFunction = coordFactory;
     }
 
-    public int getIntPos(Vec3i pos)
+    public int getCoordinateAsInt(Vec3i pos)
     {
-        return this.intFactory.getInt(pos);
+        return this.intFunction.applyAsInt(pos);
     }
 
-    public double getDoublePos(Vec3d pos)
+    public double getCoordinateAsDouble(Vec3d pos)
     {
-        return this.doubleFactory.getDouble(pos);
+        return this.doubleFunction.applyAsDouble(pos);
     }
 
-    public interface IIntFactory<T>
+    public String getCoordinateAsIntString(Vec3i pos)
     {
-        int getInt(T obj);
+        return String.valueOf(this.getCoordinateAsInt(pos));
     }
 
-    public interface IDoubleFactory<T>
+    public String getCoordinateAsDoubleString(Vec3d pos)
     {
-        double getDouble(T obj);
+        return String.valueOf(this.getCoordinateAsDouble(pos));
     }
 }

@@ -86,7 +86,7 @@ public class SubstitutionRandomNumber extends SubstitutionBase
             super(true, true);
 
             this.minValue = min;
-            this.range = max - min + 1.0;
+            this.range = max - min;
         }
 
         @Override

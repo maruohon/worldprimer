@@ -17,13 +17,7 @@ public class SubstitutionWorldTime extends SubstitutionBase
     public String getString(CommandContext context, String original)
     {
         World world = this.getWorldFromContext(context);
-
-        if (world != null)
-        {
-            return String.valueOf(this.timeSource.getTime(world));
-        }
-
-        return original;
+        return world != null ? String.valueOf(this.timeSource.getTime(world)) : original;
     }
 
     public interface ITimeSource

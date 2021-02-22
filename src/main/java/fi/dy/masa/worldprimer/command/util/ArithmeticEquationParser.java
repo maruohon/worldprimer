@@ -2,6 +2,7 @@ package fi.dy.masa.worldprimer.command.util;
 
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.function.DoubleBinaryOperator;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.worldprimer.WorldPrimer;
@@ -198,7 +199,7 @@ public class ArithmeticEquationParser
                 // then do those calculations and replace the operands and the
                 // operator in the token queue with the calculated value.
                 if (val1.type == TokenType.DIRECT_VALUE &&
-                            val2.type == TokenType.DIRECT_VALUE)
+                    val2.type == TokenType.DIRECT_VALUE)
                 {
                     //System.out.printf("reducing %.4f and %.4f with %s\n", val1.numericValue, val2.numericValue, token.operator); // TODO remove after debugging
                     reducedTokens.set(i - 2, new Token(token.operator.calculate(val1.numericValue, val2.numericValue)));
@@ -289,10 +290,10 @@ public class ArithmeticEquationParser
         DIVIDE      (3, (v1, v2) -> v1 / v2),
         MODULO      (3, (v1, v2) -> v1 % v2);
 
-        private final IDoubleOperation operation;
+        private final DoubleBinaryOperator operation;
         private final int precedence;
 
-        Operator(int precedence, IDoubleOperation operation)
+        Operator(int precedence, DoubleBinaryOperator operation)
         {
             this.operation = operation;
             this.precedence = precedence;
@@ -305,7 +306,7 @@ public class ArithmeticEquationParser
 
         public double calculate(double val1, double val2)
         {
-            return this.operation.calculate(val1, val2);
+            return this.operation.applyAsDouble(val1, val2);
         }
 
         @Nullable
@@ -322,10 +323,5 @@ public class ArithmeticEquationParser
 
             return null;
         }
-    }
-
-    public interface IDoubleOperation
-    {
-        double calculate(double val1, double val2);
     }
 }

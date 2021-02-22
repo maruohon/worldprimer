@@ -13,12 +13,6 @@ public class SubstitutionPlayerName extends SubstitutionBase
     public String getString(CommandContext context, String original)
     {
         EntityPlayer player = context.getPlayer();
-
-        if (player != null)
-        {
-            return player.getName();
-        }
-
-        return original;
+        return player != null ? player.getName() : original;
     }
 }
