@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.command.util;
+package fi.dy.masa.worldprimer.command.parser;
 
 public class StringReader
 {
@@ -59,14 +59,45 @@ public class StringReader
     }
 
     /**
+     * Returns the rest of the string starting from the current position
+     */
+    public String subString()
+    {
+        return this.string.substring(this.pos);
+    }
+
+    /**
+     * Returns the rest of the string starting from the given position
+     */
+    public String subString(int start)
+    {
+        return this.string.substring(start);
+    }
+
+    /**
      * Note: The end index is inclusive, in contrast to the Java String::substring()
-     * @param start
-     * @param end
-     * @return
      */
     public String subString(int start, int end)
     {
         return this.string.substring(start, end + 1);
+    }
+
+    /**
+     * Returns a string the length of length starting from the given position start
+     */
+    public String slice(int start, int length)
+    {
+        return this.string.substring(start, start + length);
+    }
+
+    public boolean startsWith(String str)
+    {
+        return this.string.startsWith(str, this.pos);
+    }
+
+    public boolean startsWith(String str, int startPos)
+    {
+        return this.string.startsWith(str, startPos);
     }
 
     public StringReader subReader(Region region)
@@ -87,9 +118,14 @@ public class StringReader
 
     public boolean skip()
     {
-        if (this.pos <= this.length)
+        return this.skip(1);
+    }
+
+    public boolean skip(int amount)
+    {
+        if (this.pos + amount <= this.length)
         {
-            ++this.pos;
+            this.pos += amount;
             return true;
         }
 
@@ -129,6 +165,11 @@ public class StringReader
         return this;
     }
 
+    public void setPosToEnd()
+    {
+        this.pos = this.length;
+    }
+
     public int getLength()
     {
         return this.length;
@@ -152,6 +193,7 @@ public class StringReader
     @Override
     public String toString()
     {
-        return "StringReader{string='" + string + "',length=" + length + ",pos=" + pos + ",storedPos=" + storedPos + '}';
+        return String.format("StringReader{string='%s',length=%d,pos=%d,storedPos=%d}",
+                             this.string, this.length, this.pos, this.storedPos);
     }
 }

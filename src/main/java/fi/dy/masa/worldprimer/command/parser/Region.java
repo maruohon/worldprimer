@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.command.util;
+package fi.dy.masa.worldprimer.command.parser;
 
 public class Region
 {

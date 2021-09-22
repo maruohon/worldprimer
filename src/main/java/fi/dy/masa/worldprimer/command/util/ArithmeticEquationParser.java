@@ -6,6 +6,8 @@ import java.util.function.DoubleBinaryOperator;
 import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.parser.Region;
+import fi.dy.masa.worldprimer.command.parser.StringReader;
 import fi.dy.masa.worldprimer.command.substitutions.ArithmeticEquation;
 import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;

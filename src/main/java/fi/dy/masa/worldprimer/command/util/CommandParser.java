@@ -5,6 +5,8 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.parser.Region;
+import fi.dy.masa.worldprimer.command.parser.StringReader;
 import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
 import fi.dy.masa.worldprimer.command.substitutions.PlainString;
 import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;
