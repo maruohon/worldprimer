@@ -33,8 +33,8 @@ public enum BooleanBinaryOperator
             return new ValueToken(TokenType.CONST_BOOLEAN, String.valueOf(newValue), new BooleanValue(newValue));
         }
 
-        throw new IllegalArgumentException("The BooleanBinaryOperator '" + this +
-                                           "' can't be applied to the arguments '" + valueTokenType1 + "'" +
-                                           " and '" + valueTokenType2 + "'");
+        String msg = String.format("The BooleanBinaryOperator '%s' can't be applied to the arguments '%s' and '%s'",
+                                   this, valueTokenType1, valueTokenType2);
+        throw new IllegalArgumentException(msg);
     }
 }

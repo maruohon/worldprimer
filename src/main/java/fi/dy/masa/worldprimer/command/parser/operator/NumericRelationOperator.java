@@ -47,14 +47,12 @@ public enum NumericRelationOperator
                 double val2 = valueTokenType2 == TokenType.CONST_INT ? ((IntValue) valueToken2.getValue()).getValue() : ((DoubleValue) valueToken2.getValue()).getValue();
                 newValue = this.doubleOp.apply(val1, val2);
             }
-        }
-        else
-        {
-            throw new IllegalArgumentException("The NumericRelationOperator '" + this +
-                                               "' can't be applied to the arguments '" + valueTokenType1 + "'" +
-                                               " and '" + valueTokenType2 + "'");
+
+            return new ValueToken(TokenType.CONST_BOOLEAN, String.valueOf(newValue), new BooleanValue(newValue));
         }
 
-        return new ValueToken(TokenType.CONST_BOOLEAN, String.valueOf(newValue), new BooleanValue(newValue));
+        String msg = String.format("The NumericRelationOperator '%s' can't be applied to the arguments '%s' and '%s'",
+                                   this, valueTokenType1, valueTokenType2);
+        throw new IllegalArgumentException(msg);
     }
 }

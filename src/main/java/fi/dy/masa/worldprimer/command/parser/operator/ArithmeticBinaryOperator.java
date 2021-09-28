@@ -53,8 +53,8 @@ public enum ArithmeticBinaryOperator
             }
         }
 
-        throw new IllegalArgumentException("The ArithmeticBinaryOperator '" + this +
-                                           "' can't be applied to the arguments '" + valueTokenType1 + "'" +
-                                           " and '" + valueTokenType2 + "'");
+        String msg = String.format("The ArithmeticBinaryOperator '%s' can't be applied to the arguments '%s' and '%s'",
+                                   this, valueTokenType1, valueTokenType2);
+        throw new IllegalArgumentException(msg);
     }
 }

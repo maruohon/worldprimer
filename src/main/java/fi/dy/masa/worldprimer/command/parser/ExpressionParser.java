@@ -104,7 +104,7 @@ public class ExpressionParser
                     TokenType lastOpType = lastOp.getType();
 
                     if (lastOpType != TokenType.LEFT_PAREN &&
-                        lastOpType.getPrecedence() <= type.getPrecedence()) // all the existing binary operators are left-associative
+                        lastOpType.getPrecedence() <= type.getPrecedence()) // all the existing/supported binary operators are left-associative
                     {
                         outputQueue.add(operatorStack.pop());
                     }

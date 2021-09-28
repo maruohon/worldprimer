@@ -65,9 +65,9 @@ public enum EqualityOperator
         }
         else
         {
-            throw new IllegalArgumentException("The EqualityOperator '" + this +
-                                               "' can't be applied to the arguments '" + valueTokenType1 + "'" +
-                                               " and '" + valueTokenType2 + "'");
+            String msg = String.format("The EqualityOperator '%s' can't be applied to the arguments '%s' and '%s'",
+                                       this, valueTokenType1, valueTokenType2);
+            throw new IllegalArgumentException(msg);
         }
 
         return new ValueToken(TokenType.CONST_BOOLEAN, String.valueOf(newValue), new BooleanValue(newValue));
