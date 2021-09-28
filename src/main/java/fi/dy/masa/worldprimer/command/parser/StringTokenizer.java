@@ -37,7 +37,7 @@ public class StringTokenizer
     }
 
     @Nullable
-    public Optional<Token> readNextToken()
+    public Optional<Token> readNextToken() throws IllegalArgumentException
     {
         Token token = readToken(this.reader, this.previousToken);
         this.previousToken = token;
@@ -45,7 +45,7 @@ public class StringTokenizer
     }
 
     @Nullable
-    public static Token readToken(StringReader reader, @Nullable Token previousToken)
+    public static Token readToken(StringReader reader, @Nullable Token previousToken) throws IllegalArgumentException
     {
         while (reader.canRead() && reader.peek() == ' ')
         {
@@ -180,12 +180,13 @@ public class StringTokenizer
         return token;
     }
 
-    private static boolean canBeUnaryOperator(@Nullable Token previousToken)
+    protected static boolean canBeUnaryOperator(@Nullable Token previousToken)
     {
         // -5
-        // 5 + -7
-        // (-5 + 7)
+        // 5 + -7 ... -5 * -9
         // {DIMENSION} == -1
+        // {DIMENSION} <= -1
+        // (-5 + 7)
         return previousToken == null ||
                previousToken.getType().getTokenCategory() == TokenCategory.OP_ARITH_BINARY ||
                previousToken.getType().getTokenCategory() == TokenCategory.OP_EQUALITY ||
@@ -193,11 +194,22 @@ public class StringTokenizer
                previousToken.getType() == TokenType.LEFT_PAREN;
     }
 
-    public static Token readNumber(StringReader reader, int startPos)
+    public static Token readNumber(StringReader reader, int startPos) throws IllegalArgumentException
     {
         int pos = startPos;
         int digitCount = 0;
         int dotCount = 0;
+        int intBase = 10;
+        boolean isHex = false;
+
+        if (reader.canPeekAt(pos + 1) &&
+            reader.peekAt(pos) == '0' &&
+            reader.peekAt(pos + 1) == 'x')
+        {
+            pos += 2;
+            isHex = true;
+            intBase = 16;
+        }
 
         while (reader.canPeekAt(pos))
         {
@@ -205,12 +217,19 @@ public class StringTokenizer
 
             if (c == '.')
             {
-                if (++dotCount > 1)
+                ++dotCount;
+                /*
+                if (isHex || ++dotCount > 1)
                 {
                     break;
                 }
+                */
             }
             else if (c >= '0' && c <= '9')
+            {
+                ++digitCount;
+            }
+            else if (isHex && (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
             {
                 ++digitCount;
             }
@@ -222,29 +241,35 @@ public class StringTokenizer
             ++pos;
         }
 
-        if (dotCount <= 1 && digitCount > 0)
+        if (dotCount <= 1 && digitCount > 0 && (isHex == false || dotCount == 0))
         {
             TokenType type = dotCount == 1 ? TokenType.CONST_DOUBLE : TokenType.CONST_INT;
-            String strValue = reader.subString(startPos, pos - 1);
+            String fullStrValue = reader.subString(startPos, pos - 1);
+            String numberStrValue = isHex ? fullStrValue.substring(2) : fullStrValue;
             Value value;
 
             try
             {
                 if (type == TokenType.CONST_DOUBLE)
                 {
-                    value = new DoubleValue(Double.parseDouble(strValue));
+                    value = new DoubleValue(Double.parseDouble(numberStrValue));
                 }
                 else
                 {
-                    value = new IntValue(Integer.parseInt(strValue));
+                    value = new IntValue(Integer.parseInt(numberStrValue, intBase));
                 }
 
-                return new ValueToken(type, strValue, value);
+                return new ValueToken(type, fullStrValue, value);
             }
             catch (Exception e)
             {
-                WorldPrimer.LOGGER.warn("Failed to parse a numeric value: '{}'", strValue, e);
+                WorldPrimer.LOGGER.warn("Failed to parse a numeric value: '{}'", fullStrValue, e);
             }
+        }
+        else
+        {
+            String msg = String.format("Invalid number: '%s'", reader.subString(startPos, pos - 1));
+            throw new IllegalArgumentException(msg);
         }
 
         return new Token(TokenType.INVALID, reader.subString(startPos));
