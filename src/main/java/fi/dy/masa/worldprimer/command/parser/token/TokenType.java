@@ -1,6 +1,5 @@
-package fi.dy.masa.worldprimer.command.parser;
+package fi.dy.masa.worldprimer.command.parser.token;
 
-import fi.dy.masa.worldprimer.command.parser.token.TokenCategory;
 import fi.dy.masa.worldprimer.command.parser.value.ValueCategory;
 
 public enum TokenType

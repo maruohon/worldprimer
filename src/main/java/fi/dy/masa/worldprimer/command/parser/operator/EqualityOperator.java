@@ -1,6 +1,6 @@
 package fi.dy.masa.worldprimer.command.parser.operator;
 
-import fi.dy.masa.worldprimer.command.parser.TokenType;
+import fi.dy.masa.worldprimer.command.parser.token.TokenType;
 import fi.dy.masa.worldprimer.command.parser.token.Token;
 import fi.dy.masa.worldprimer.command.parser.token.ValueToken;
 import fi.dy.masa.worldprimer.command.parser.value.BooleanValue;

@@ -1,6 +1,5 @@
 package fi.dy.masa.worldprimer.command.parser.token;
 
-import fi.dy.masa.worldprimer.command.parser.TokenType;
 import fi.dy.masa.worldprimer.command.parser.operator.EqualityOperator;
 
 public class EqualityOperatorToken extends Token

@@ -13,6 +13,7 @@ import fi.dy.masa.worldprimer.command.parser.token.EqualityOperatorToken;
 import fi.dy.masa.worldprimer.command.parser.token.NumericRelationOperatorToken;
 import fi.dy.masa.worldprimer.command.parser.token.Token;
 import fi.dy.masa.worldprimer.command.parser.token.TokenCategory;
+import fi.dy.masa.worldprimer.command.parser.token.TokenType;
 import fi.dy.masa.worldprimer.command.parser.token.ValueToken;
 import fi.dy.masa.worldprimer.command.parser.value.DoubleValue;
 import fi.dy.masa.worldprimer.command.parser.value.IntValue;

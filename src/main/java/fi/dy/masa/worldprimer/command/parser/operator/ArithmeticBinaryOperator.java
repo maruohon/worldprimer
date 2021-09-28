@@ -2,7 +2,7 @@ package fi.dy.masa.worldprimer.command.parser.operator;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
-import fi.dy.masa.worldprimer.command.parser.TokenType;
+import fi.dy.masa.worldprimer.command.parser.token.TokenType;
 import fi.dy.masa.worldprimer.command.parser.token.Token;
 import fi.dy.masa.worldprimer.command.parser.token.ValueToken;
 import fi.dy.masa.worldprimer.command.parser.value.DoubleValue;

@@ -1,7 +1,6 @@
 package fi.dy.masa.worldprimer.command.parser.token;
 
 import javax.annotation.Nullable;
-import fi.dy.masa.worldprimer.command.parser.TokenType;
 import fi.dy.masa.worldprimer.command.parser.value.Value;
 
 public class ValueToken extends Token

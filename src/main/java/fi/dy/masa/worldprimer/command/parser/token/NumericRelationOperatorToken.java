@@ -1,7 +1,6 @@
 package fi.dy.masa.worldprimer.command.parser.token;
 
 import fi.dy.masa.worldprimer.command.parser.operator.NumericRelationOperator;
-import fi.dy.masa.worldprimer.command.parser.TokenType;
 
 public class NumericRelationOperatorToken extends Token
 {
