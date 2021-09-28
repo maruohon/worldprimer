@@ -29,7 +29,7 @@ public class CommandSubstitutions
     {
         if (world == null)
         {
-            WorldPrimer.logger.error("World was null when trying to do command substitutions, so didn't do any!");
+            WorldPrimer.LOGGER.error("World was null when trying to do command substitutions, so didn't do any!");
             return originalCommand;
         }
 
@@ -249,7 +249,7 @@ public class CommandSubstitutions
                         }
                         catch (NumberFormatException e)
                         {
-                            WorldPrimer.logger.warn("Failed to parse relative argument '{}'", argument, e);
+                            WorldPrimer.LOGGER.warn("Failed to parse relative argument '{}'", argument, e);
                         }
                     }
                 }
@@ -298,7 +298,7 @@ public class CommandSubstitutions
             }
             catch (NumberFormatException e)
             {
-                WorldPrimer.logger.warn("Failed to parse random min or max value for argument: {}", argument);
+                WorldPrimer.LOGGER.warn("Failed to parse random min or max value for argument: {}", argument);
             }
         }
 
@@ -318,7 +318,7 @@ public class CommandSubstitutions
             }
             catch (NumberFormatException e)
             {
-                WorldPrimer.logger.warn("Failed to parse random min or max value for argument: {}", argument);
+                WorldPrimer.LOGGER.warn("Failed to parse random min or max value for argument: {}", argument);
             }
         }
 
@@ -344,7 +344,7 @@ public class CommandSubstitutions
             }
             catch (NumberFormatException e)
             {
-                WorldPrimer.logger.warn("Failed to parse arguments for TOP_Y substitution '{}'", argument);
+                WorldPrimer.LOGGER.warn("Failed to parse arguments for TOP_Y substitution '{}'", argument);
             }
         }
 
@@ -382,7 +382,7 @@ public class CommandSubstitutions
             }
             catch (NumberFormatException e)
             {
-                WorldPrimer.logger.warn("Failed to parse arguments for TOP_Y_RAND substitution '{}'", argument);
+                WorldPrimer.LOGGER.warn("Failed to parse arguments for TOP_Y_RAND substitution '{}'", argument);
             }
         }
 

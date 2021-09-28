@@ -60,7 +60,7 @@ public class ArithmeticEquationParser
 
             if (token == null)
             {
-                WorldPrimer.logger.warn("Failed to read token at position {} in an arithmetic equation '{}'", pos, reader.getString());
+                WorldPrimer.LOGGER.warn("Failed to read token at position {} in an arithmetic equation '{}'", pos, reader.getString());
                 return null;
             }
 
@@ -100,7 +100,7 @@ public class ArithmeticEquationParser
                 // Mismatched parenthesis
                 if (operatorStack.isEmpty())
                 {
-                    WorldPrimer.logger.warn("Mismatched parenthesis at position {} in an arithmetic equation '{}'", pos, reader.getString());
+                    WorldPrimer.LOGGER.warn("Mismatched parenthesis at position {} in an arithmetic equation '{}'", pos, reader.getString());
                     return null;
                 }
 
@@ -118,7 +118,7 @@ public class ArithmeticEquationParser
             // Mismatched parenthesis
             if (op.type == TokenType.LEFT_PAREN || op.type == TokenType.RIGHT_PAREN)
             {
-                WorldPrimer.logger.warn("Mismatched parenthesis in operator stack (size: {}) in an arithmetic equation '{}', stack: {}", operatorStack.size() + 1, reader.getString(), operatorStack);
+                WorldPrimer.LOGGER.warn("Mismatched parenthesis in operator stack (size: {}) in an arithmetic equation '{}', stack: {}", operatorStack.size() + 1, reader.getString(), operatorStack);
                 return null;
             }
 
@@ -175,7 +175,7 @@ public class ArithmeticEquationParser
             }
             else
             {
-                WorldPrimer.logger.warn("Invalid character '{}' at position {} in an arithmetic equation '{}'", c, reader.getPos() - 1, reader.getString());
+                WorldPrimer.LOGGER.warn("Invalid character '{}' at position {} in an arithmetic equation '{}'", c, reader.getPos() - 1, reader.getString());
                 return null;
             }
         }

@@ -98,7 +98,7 @@ public class EventHandler
                 }
                 catch (NumberFormatException e)
                 {
-                    WorldPrimer.logger.warn("EventHandler.onCommand: Invalid dimension argument in 'jed broadcast " +
+                    WorldPrimer.LOGGER.warn("EventHandler.onCommand: Invalid dimension argument in 'jed broadcast " +
                                             "delete-dimension <dim>' command: '{}'", args[2]);
                 }
             }

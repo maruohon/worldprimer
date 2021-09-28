@@ -37,7 +37,7 @@ public class TemplateWorldPrimer extends Template
         }
         catch (Exception e)
         {
-            WorldPrimer.logger.error("Failed to reflect the Template class fields", e);
+            WorldPrimer.LOGGER.error("Failed to reflect the Template class fields", e);
         }
     }
 

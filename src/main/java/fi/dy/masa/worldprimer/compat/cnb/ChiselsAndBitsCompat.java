@@ -21,7 +21,7 @@ public class ChiselsAndBitsCompat extends ChiselsAndBitsHandler implements IChis
     public void onReadyChiselsAndBits(IChiselAndBitsAPI api)
     {
         Schematic.chiselsAndBitsHandler = this;
-        WorldPrimer.logger.info("Chisels and Bits compat loaded");
+        WorldPrimer.LOGGER.info("Chisels and Bits compat loaded");
     }
 
     @Override

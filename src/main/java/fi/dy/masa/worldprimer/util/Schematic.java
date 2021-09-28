@@ -296,8 +296,8 @@ public class Schematic
                         }
                         catch (Exception e)
                         {
-                            WorldPrimer.logger.warn("Exception while trying to store TileEntity data for block '{}' at {}",
-                                    this.blocks[index], posMutable.toString(), e);
+                            WorldPrimer.LOGGER.warn("Exception while trying to store TileEntity data for block '{}' at {}",
+                                                    this.blocks[index], posMutable.toString(), e);
                         }
                     }
                 }
@@ -370,20 +370,20 @@ public class Schematic
 
             if (numBlocks != (width * height * length))
             {
-                WorldPrimer.logger.error("Schematic: Mismatched block array size compared to the width/height/length, blocks: {}, W x H x L: {} x {} x {}",
-                        numBlocks, width, height, length);
+                WorldPrimer.LOGGER.error("Schematic: Mismatched block array size compared to the width/height/length, blocks: {}, W x H x L: {} x {} x {}",
+                                         numBlocks, width, height, length);
                 return false;
             }
 
             if (numBlocks != metaArr.length)
             {
-                WorldPrimer.logger.error("Schematic: Mismatched block ID and metadata array sizes, blocks: {}, meta: {}", numBlocks, metaArr.length);
+                WorldPrimer.LOGGER.error("Schematic: Mismatched block ID and metadata array sizes, blocks: {}, meta: {}", numBlocks, metaArr.length);
                 return false;
             }
 
             if (this.readPalette(nbt) == false)
             {
-                WorldPrimer.logger.error("Schematic: Failed to read the block palette");
+                WorldPrimer.LOGGER.error("Schematic: Failed to read the block palette");
                 return false;
             }
 
@@ -396,8 +396,8 @@ public class Schematic
 
                 if (add.length != expectedAddLength)
                 {
-                    WorldPrimer.logger.error("Schematic: Add array size mismatch, blocks: {}, add: {}, expected add: {}",
-                            numBlocks, add.length, expectedAddLength);
+                    WorldPrimer.LOGGER.error("Schematic: Add array size mismatch, blocks: {}, add: {}, expected add: {}",
+                                             numBlocks, add.length, expectedAddLength);
                     return false;
                 }
 
@@ -444,7 +444,7 @@ public class Schematic
             else if (nbt.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
             {
                 // FIXME is this array 4 or 8 bits per block?
-                WorldPrimer.logger.error("Schematic: Old Schematica format detected, not currently implemented...");
+                WorldPrimer.LOGGER.error("Schematic: Old Schematica format detected, not currently implemented...");
                 return false;
             }
             // No palette, use the registry IDs directly
@@ -464,7 +464,7 @@ public class Schematic
         }
         else
         {
-            WorldPrimer.logger.error("Schematic: Missing block data in the schematic '{}'", this.fileName);
+            WorldPrimer.LOGGER.error("Schematic: Missing block data in the schematic '{}'", this.fileName);
         }
 
         return false;
@@ -488,7 +488,7 @@ public class Schematic
 
                 if (id >= this.palette.length)
                 {
-                    WorldPrimer.logger.error("Schematic: Invalid ID '{}' in SchematicaMapping for block '{}', max = 4095", id, key);
+                    WorldPrimer.LOGGER.error("Schematic: Invalid ID '{}' in SchematicaMapping for block '{}', max = 4095", id, key);
                     return false;
                 }
 
@@ -500,7 +500,7 @@ public class Schematic
                 }
                 else
                 {
-                    WorldPrimer.logger.error("Schematic: Missing/non-existing block '{}' in SchematicaMapping", key);
+                    WorldPrimer.LOGGER.error("Schematic: Missing/non-existing block '{}' in SchematicaMapping", key);
                 }
             }
         }
@@ -521,13 +521,13 @@ public class Schematic
                 }
                 catch (NumberFormatException e)
                 {
-                    WorldPrimer.logger.error("Schematic: Invalid ID '{}' (not a number) in MCEdit2 palette for block '{}'", idStr, key);
+                    WorldPrimer.LOGGER.error("Schematic: Invalid ID '{}' (not a number) in MCEdit2 palette for block '{}'", idStr, key);
                     continue;
                 }
 
                 if (id >= this.palette.length)
                 {
-                    WorldPrimer.logger.error("Schematic: Invalid ID '{}' in MCEdit2 palette for block '{}', max = 4095", id, key);
+                    WorldPrimer.LOGGER.error("Schematic: Invalid ID '{}' in MCEdit2 palette for block '{}', max = 4095", id, key);
                     return false;
                 }
 
@@ -539,7 +539,7 @@ public class Schematic
                 }
                 else
                 {
-                    WorldPrimer.logger.error("Schematic: Missing/non-existing block '{}' in MCEdit2 palette", key);
+                    WorldPrimer.LOGGER.error("Schematic: Missing/non-existing block '{}' in MCEdit2 palette", key);
                 }
             }
         }
@@ -558,7 +558,7 @@ public class Schematic
                     }
                     else
                     {
-                        WorldPrimer.logger.error("Schematic: Invalid ID {} for block '{}' from the registry", id, block.getRegistryName());
+                        WorldPrimer.LOGGER.error("Schematic: Invalid ID {} for block '{}' from the registry", id, block.getRegistryName());
                     }
                 }
             }
@@ -607,7 +607,7 @@ public class Schematic
             }
             catch (IOException e)
             {
-                WorldPrimer.logger.error("Schematic: Failed to read Schematic data from file '{}'", file.getAbsolutePath());
+                WorldPrimer.LOGGER.error("Schematic: Failed to read Schematic data from file '{}'", file.getAbsolutePath());
             }
         }
 
@@ -760,7 +760,7 @@ public class Schematic
         }
         catch (IOException e)
         {
-            WorldPrimer.logger.error("Schematic: Failed to write Schematic data to file '{}'", file.getAbsolutePath());
+            WorldPrimer.LOGGER.error("Schematic: Failed to write Schematic data to file '{}'", file.getAbsolutePath());
         }
 
         return false;

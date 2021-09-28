@@ -213,7 +213,7 @@ public class CommandUtils
         }
         catch (NumberFormatException e)
         {
-            WorldPrimer.logger.warn("Invalid dimension id '{}' in dimension-specific command '{}'", cmdParts[1], fullCommand);
+            WorldPrimer.LOGGER.warn("Invalid dimension id '{}' in dimension-specific command '{}'", cmdParts[1], fullCommand);
         }
     }
 
@@ -244,7 +244,7 @@ public class CommandUtils
         }
         catch (NumberFormatException e)
         {
-            WorldPrimer.logger.warn("Invalid syntax in dimension-specific command '{}'", fullCommand);
+            WorldPrimer.LOGGER.warn("Invalid syntax in dimension-specific command '{}'", fullCommand);
         }
     }
 
@@ -303,7 +303,7 @@ public class CommandUtils
         }
         catch (NumberFormatException e)
         {
-            WorldPrimer.logger.warn("Invalid syntax in tracked command '{}'", fullCommand);
+            WorldPrimer.LOGGER.warn("Invalid syntax in tracked command '{}'", fullCommand);
         }
     }
 

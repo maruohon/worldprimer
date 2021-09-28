@@ -130,7 +130,7 @@ public class ExpressionParser
                 // Mismatched parenthesis
                 if (operatorStack.isEmpty())
                 {
-                    WorldPrimer.logger.warn("Mismatched parenthesis");
+                    WorldPrimer.LOGGER.warn("Mismatched parenthesis");
                     return null;
                 }
 
@@ -148,7 +148,7 @@ public class ExpressionParser
             // Mismatched parenthesis
             if (op.getType().getTokenCategory() == TokenCategory.PRECEDENCE)
             {
-                WorldPrimer.logger.warn("Mismatched parenthesis in operator stack (size: {})");
+                WorldPrimer.LOGGER.warn("Mismatched parenthesis in operator stack (size: {})");
                 return null;
             }
 

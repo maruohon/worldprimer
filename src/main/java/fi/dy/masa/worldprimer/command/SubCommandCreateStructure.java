@@ -115,7 +115,7 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
 
                 if (cbCrossWorld)
                 {
-                    WorldPrimer.logger.info("Using a cross-world compatible format for any Chisels & Bits blocks");
+                    WorldPrimer.LOGGER.info("Using a cross-world compatible format for any Chisels & Bits blocks");
                 }
 
                 if (this.tryCreateSchematicWrapper(server, world, posStart, size, type, fileName, cbCrossWorld, sender))
@@ -190,7 +190,7 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
 
         if (dir.exists() == false && dir.mkdirs() == false)
         {
-            WorldPrimer.logger.warn("Failed to create structure directory '{}'", dir.getAbsolutePath());
+            WorldPrimer.LOGGER.warn("Failed to create structure directory '{}'", dir.getAbsolutePath());
             return false;
         }
 
@@ -206,7 +206,7 @@ public class SubCommandCreateStructure extends SubCommandPlaceStructure
         }
         catch (Throwable t)
         {
-            WorldPrimer.logger.warn("Failed to write structure data to file '{}'", file.getAbsolutePath(), t);
+            WorldPrimer.LOGGER.warn("Failed to write structure data to file '{}'", file.getAbsolutePath(), t);
         }
         finally
         {

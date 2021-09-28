@@ -262,7 +262,7 @@ public class DataTracker
             {
                 if (createDirs)
                 {
-                    WorldPrimer.logger.warn("Failed to create a directory for storing the data tracker file '{}'", saveDir.getPath());
+                    WorldPrimer.LOGGER.warn("Failed to create a directory for storing the data tracker file '{}'", saveDir.getPath());
                 }
 
                 return null;
@@ -307,7 +307,7 @@ public class DataTracker
         }
         catch (Exception e)
         {
-            WorldPrimer.logger.warn("Failed to read tracker data from file '{}'", file.getPath());
+            WorldPrimer.LOGGER.warn("Failed to read tracker data from file '{}'", file.getPath());
         }
     }
 
@@ -341,7 +341,7 @@ public class DataTracker
         }
         catch (Exception e)
         {
-            WorldPrimer.logger.warn("Failed to write tracker data to file");
+            WorldPrimer.LOGGER.warn("Failed to write tracker data to file");
         }
     }
 

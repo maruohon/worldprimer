@@ -52,7 +52,7 @@ public class WorldUtils
     {
         if (world == null)
         {
-            WorldPrimer.logger.warn("Failed to run the chunk loading command '{}', because the world wasn't loaded", command);
+            WorldPrimer.LOGGER.warn("Failed to run the chunk loading command '{}', because the world wasn't loaded", command);
             return false;
         }
 
@@ -83,7 +83,7 @@ public class WorldUtils
             }
         }
 
-        WorldPrimer.logger.warn("Invalid chunk loading command '{}'", command);
+        WorldPrimer.LOGGER.warn("Invalid chunk loading command '{}'", command);
 
         return false;
     }

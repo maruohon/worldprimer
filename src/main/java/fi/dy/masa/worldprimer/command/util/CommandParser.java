@@ -121,7 +121,7 @@ public class CommandParser
                 }
                 else
                 {
-                    WorldPrimer.logger.warn("Failed to get and parse an arithmetic equation for '{}'", subReader.getString());
+                    WorldPrimer.LOGGER.warn("Failed to get and parse an arithmetic equation for '{}'", subReader.getString());
                 }
             }
             // Just a simple substitution
@@ -315,6 +315,12 @@ public class CommandParser
     public static SubstitutionBase getSubstitutionForRegion(StringReader reader, Region region)
     {
         String substitutionString = reader.subString(region.start + 1, region.end - 1);
+        return getSubstitutionForString(substitutionString);
+    }
+
+    @Nullable
+    public static SubstitutionBase getSubstitutionForString(String substitutionString)
+    {
         String name = substitutionString;
         int colonIndex = name.indexOf(':');
         boolean hasArgs = false;

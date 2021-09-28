@@ -36,7 +36,7 @@ public class WorldPrimer
     @SidedProxy(clientSide = Reference.PROXY_CLIENT, serverSide = Reference.PROXY_SERVER)
     public static IProxy proxy;
 
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+    public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
     public static String configDirPath;
     public static CommandWorldPrimer commandWorldPrimer;
 
@@ -125,11 +125,11 @@ public class WorldPrimer
     {
         if (Configs.enableLoggingInfo)
         {
-            logger.info(message, params);
+            LOGGER.info(message, params);
         }
         else
         {
-            logger.debug(message, params);
+            LOGGER.debug(message, params);
         }
     }
 
@@ -139,16 +139,16 @@ public class WorldPrimer
         // Not running in a dev environment
         if (event.isDirectory() == false)
         {
-            logger.warn("*********************************************************************************************");
-            logger.warn("*****                                    WARNING                                        *****");
-            logger.warn("*****                                                                                   *****");
-            logger.warn("*****   The signature of the mod file '{}' does not match the expected fingerprint!     *****", event.getSource().getName());
-            logger.warn("*****   This might mean that the mod file has been tampered with!                       *****");
-            logger.warn("*****   If you did not download the mod {} directly from Curse/CurseForge,       *****", Reference.MOD_NAME);
-            logger.warn("*****   or using one of the well known launchers, and you did not                       *****");
-            logger.warn("*****   modify the mod file at all yourself, then it's possible,                        *****");
-            logger.warn("*****   that it may contain malware or other unwanted things!                           *****");
-            logger.warn("*********************************************************************************************");
+            LOGGER.warn("*********************************************************************************************");
+            LOGGER.warn("*****                                    WARNING                                        *****");
+            LOGGER.warn("*****                                                                                   *****");
+            LOGGER.warn("*****   The signature of the mod file '{}' does not match the expected fingerprint!     *****", event.getSource().getName());
+            LOGGER.warn("*****   This might mean that the mod file has been tampered with!                       *****");
+            LOGGER.warn("*****   If you did not download the mod {} directly from Curse/CurseForge,       *****", Reference.MOD_NAME);
+            LOGGER.warn("*****   or using one of the well known launchers, and you did not                       *****");
+            LOGGER.warn("*****   modify the mod file at all yourself, then it's possible,                        *****");
+            LOGGER.warn("*****   that it may contain malware or other unwanted things!                           *****");
+            LOGGER.warn("*********************************************************************************************");
         }
     }
 }

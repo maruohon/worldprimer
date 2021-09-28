@@ -144,12 +144,12 @@ public class TimedCommands
                 }
                 catch (NumberFormatException e)
                 {
-                    WorldPrimer.logger.warn("Invalid time or dimension value in timed command '{}'", cmd);
+                    WorldPrimer.LOGGER.warn("Invalid time or dimension value in timed command '{}'", cmd);
                 }
             }
             else
             {
-                WorldPrimer.logger.warn("Invalid timed command '{}', ignoring it!", cmd);
+                WorldPrimer.LOGGER.warn("Invalid timed command '{}', ignoring it!", cmd);
             }
         }
 

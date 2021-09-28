@@ -243,7 +243,7 @@ public class StringTokenizer
             }
             catch (Exception e)
             {
-                WorldPrimer.logger.warn("Failed to parse a numeric value: '{}'", strValue, e);
+                WorldPrimer.LOGGER.warn("Failed to parse a numeric value: '{}'", strValue, e);
             }
         }
 

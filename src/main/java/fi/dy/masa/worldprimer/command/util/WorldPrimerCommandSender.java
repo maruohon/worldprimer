@@ -59,7 +59,7 @@ public class WorldPrimerCommandSender implements ICommandSender
                     }
                     catch (CommandException e)
                     {
-                        WorldPrimer.logger.warn("Failed to execute the command '{}'", newCommand, e);
+                        WorldPrimer.LOGGER.warn("Failed to execute the command '{}'", newCommand, e);
                     }
                 }
                 else
@@ -97,7 +97,7 @@ public class WorldPrimerCommandSender implements ICommandSender
                 }
                 else
                 {
-                    WorldPrimer.logger.warn("Malformed command sender name prefix for command '{}'", originalCommand);
+                    WorldPrimer.LOGGER.warn("Malformed command sender name prefix for command '{}'", originalCommand);
                 }
             }
             else
@@ -111,7 +111,7 @@ public class WorldPrimerCommandSender implements ICommandSender
                 }
                 else
                 {
-                    WorldPrimer.logger.warn("Malformed command sender name prefix for command '{}'", originalCommand);
+                    WorldPrimer.LOGGER.warn("Malformed command sender name prefix for command '{}'", originalCommand);
                 }
             }
         }
