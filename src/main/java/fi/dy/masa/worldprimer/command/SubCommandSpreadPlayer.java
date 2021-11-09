@@ -53,12 +53,7 @@ public class SubCommandSpreadPlayer extends SubCommand
                 "--y-max=",
                 "--y-min="));
 
-        HashSet<String> names = new HashSet<>();
-
-        for (String name : server.getOnlinePlayerNames())
-        {
-            names.add(name);
-        }
+        HashSet<String> names = new HashSet<>(Arrays.asList(server.getOnlinePlayerNames()));
 
         for (int i = 0; i < args.length - 1; ++i)
         {
@@ -90,10 +85,8 @@ public class SubCommandSpreadPlayer extends SubCommand
         List<String> onlinePlayers = Arrays.asList(server.getOnlinePlayerNames());
         List<String> playerNames = new ArrayList<>();
 
-        for (int i = 0; i < args.length; ++i)
+        for (String arg : args)
         {
-            String arg = args[i];
-
             // TODO these are not really nice & clean...
 
             if (arg.startsWith("--"))
@@ -151,14 +144,13 @@ public class SubCommandSpreadPlayer extends SubCommand
 
         if (playerNames.isEmpty())
         {
-            throw new CommandException("No players given");
+            throw new WrongUsageException("No players given");
         }
 
         List<EntityPlayer> players = new ArrayList<>();
 
-        for (int i = 0; i < playerNames.size(); ++i)
+        for (String playerName : playerNames)
         {
-            String playerName = playerNames.get(i);
             EntityPlayer player = server.getPlayerList().getPlayerByUsername(playerName);
 
             if (player != null)
@@ -171,14 +163,13 @@ public class SubCommandSpreadPlayer extends SubCommand
             }
         }
 
-        for (int i = 0; i < players.size(); ++i)
+        for (EntityPlayer player : players)
         {
-            EntityPlayer player = players.get(i);
             int dimension = player.getEntityWorld().provider.getDimension();
-            BlockPos pos = DataTracker.instance().getLastPlayerSpreadPosition(player);
-            List<BlockPos> existingPositions = new ArrayList<>(DataTracker.instance().getPlayerSpreadPositions(dimension));
+            BlockPos pos = DataTracker.INSTANCE.getLastPlayerSpreadPosition(player);
+            List<BlockPos> existingPositions = new ArrayList<>(DataTracker.INSTANCE.getPlayerSpreadPositions(dimension));
 
-            player.getEntityWorld().playerEntities.forEach((p) -> { existingPositions.add(new BlockPos(p)); });
+            player.getEntityWorld().playerEntities.forEach((p) -> existingPositions.add(new BlockPos(p)));
 
             if (updatePosition || pos == null)
             {
@@ -205,7 +196,7 @@ public class SubCommandSpreadPlayer extends SubCommand
                 player.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), player.prevRotationYaw, player.prevRotationPitch);
                 player.setPositionAndUpdate(pos.getX(), pos.getY(), pos.getZ());
 
-                DataTracker.instance().addPlayerSpreadPosition(player, pos);
+                DataTracker.INSTANCE.addPlayerSpreadPosition(player, pos);
             }
         }
     }

@@ -35,7 +35,7 @@ public class EventHandler
     @SubscribeEvent
     public void onWorldSave(WorldEvent.Save event)
     {
-        DataTracker.instance().writeToDisk();
+        DataTracker.INSTANCE.writeToDisk();
     }
 
     @SubscribeEvent
@@ -94,7 +94,7 @@ public class EventHandler
                     int dimension = Integer.parseInt(args[2]);
                     WorldPrimer.logInfo("EventHandler.onCommand: Saw a dimension deletion broadcast " +
                                         "command from JED, resetting the dimension load count for dimension {}", dimension);
-                    DataTracker.instance().resetDimensionLoadCountFor(dimension);
+                    DataTracker.INSTANCE.resetDimensionLoadCountFor(dimension);
                 }
                 catch (NumberFormatException e)
                 {

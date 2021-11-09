@@ -107,9 +107,6 @@ public class StringReader
 
     /**
      * Note: The end index is inclusive, in contrast to the Java String::substring()
-     * @param start
-     * @param end
-     * @return
      */
     public StringReader subReader(int start, int end)
     {

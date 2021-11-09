@@ -28,48 +28,49 @@ public class WorldPrimerCommandSender implements ICommandSender
 
     public void runCommands(@Nullable EntityPlayer player, @Nullable World world, String... commands)
     {
+    }
+
+    public void executeCommand(String command, @Nullable World world)
+    {
         ICommandManager manager = this.getServer().getCommandManager();
         this.executionWorld = world;
 
-        for (String command : commands)
+        if (StringUtils.isBlank(command) == false)
         {
-            if (StringUtils.isBlank(command) == false)
+            command = this.handleCommandSenderNamePrefix(command);
+
+            World worldTmp = this.getEntityWorld();
+            String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
+
+            if (this.isChunkLoadingCommand(command))
             {
-                command = this.handleCommandSenderNamePrefix(command);
-
-                String newCommand = CommandSubstitutions.doCommandSubstitutions(player, world, command);
-                World worldTmp = this.getEntityWorld();
-                String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
-
-                if (this.isChunkLoadingCommand(newCommand))
-                {
-                    WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
-                    WorldUtils.executeChunkLoadingCommand(newCommand, worldTmp);
-                }
-                // Execute our own commands directly, because the commands haven't been registered
-                // yet when the dimensions first load during server start.
-                else if (this.isWorldPrimerCommand(newCommand))
-                {
-                    WorldPrimer.logInfo("Attempting to directly execute a (possibly substituted) worldprimer command '{}' in dimension {}", newCommand, dim);
-
-                    try
-                    {
-                        newCommand = newCommand.substring(12, newCommand.length()); // remove "worldprimer " from the beginning
-                        WorldPrimer.commandWorldPrimer.execute(worldTmp.getMinecraftServer(), this, newCommand.trim().split(" "));
-                    }
-                    catch (CommandException e)
-                    {
-                        WorldPrimer.LOGGER.warn("Failed to execute the command '{}'", newCommand, e);
-                    }
-                }
-                else
-                {
-                    WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", newCommand, dim);
-                    manager.executeCommand(this, newCommand);
-                }
-
-                this.senderName = null;
+                WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
+                WorldUtils.executeChunkLoadingCommand(command, worldTmp);
             }
+            // Execute our own commands directly, because the commands haven't been registered
+            // yet when the dimensions first load during server start.
+            else if (this.isWorldPrimerCommand(command))
+            {
+                WorldPrimer.logInfo("Attempting to directly execute a (possibly substituted) " +
+                                    "worldprimer command '{}' in dimension {}", command, dim);
+
+                try
+                {
+                    command = command.substring(12); // remove "worldprimer " from the beginning
+                    WorldPrimer.commandWorldPrimer.execute(worldTmp.getMinecraftServer(), this, command.trim().split(" "));
+                }
+                catch (CommandException e)
+                {
+                    WorldPrimer.LOGGER.warn("Failed to execute the command '{}'", command, e);
+                }
+            }
+            else
+            {
+                WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", command, dim);
+                manager.executeCommand(this, command);
+            }
+
+            this.senderName = null;
         }
 
         WorldUtils.unloadLoadedChunks(world);
@@ -80,10 +81,10 @@ public class WorldPrimerCommandSender implements ICommandSender
     private String handleCommandSenderNamePrefix(String originalCommand)
     {
         String namePrefix = "worldprimer-command-sender ";
-        final int namePrefixLength = namePrefix.length();
 
         if (originalCommand.startsWith(namePrefix))
         {
+            int namePrefixLength = namePrefix.length();
             String command = originalCommand.substring(namePrefixLength);
 
             if (command.charAt(0) == '"')

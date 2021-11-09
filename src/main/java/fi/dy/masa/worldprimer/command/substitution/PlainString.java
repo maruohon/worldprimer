@@ -1,6 +1,6 @@
-package fi.dy.masa.worldprimer.command.substitutions;
+package fi.dy.masa.worldprimer.command.substitution;
 
-public class PlainString implements IStringProvider
+public class PlainString implements StringSubstitution
 {
     protected final String string;
 
@@ -10,7 +10,7 @@ public class PlainString implements IStringProvider
     }
 
     @Override
-    public String getString(CommandContext context, String original)
+    public String getString(CommandContext context)
     {
         return this.string;
     }

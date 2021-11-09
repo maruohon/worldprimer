@@ -23,6 +23,6 @@ public class StringValue extends Value
     @Override
     public String toString()
     {
-        return String.valueOf(this.value);
+        return this.value;
     }
 }

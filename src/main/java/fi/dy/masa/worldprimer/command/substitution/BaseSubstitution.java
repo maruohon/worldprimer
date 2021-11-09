@@ -1,17 +1,28 @@
-package fi.dy.masa.worldprimer.command.substitutions;
+package fi.dy.masa.worldprimer.command.substitution;
 
 import javax.annotation.Nullable;
-import net.minecraft.world.World;
 
-public abstract class SubstitutionBase implements IStringProvider
+public abstract class BaseSubstitution implements StringSubstitution
 {
+    private final String substitutionName;
     protected final boolean isNumeric;
     protected final boolean hasArguments;
 
-    protected SubstitutionBase(boolean isNumeric, boolean hasArguments)
+    protected BaseSubstitution(String substitutionName, boolean isNumeric, boolean hasArguments)
     {
+        this.substitutionName = substitutionName;
         this.isNumeric = isNumeric;
         this.hasArguments = hasArguments;
+    }
+
+    public String getSubstitutionName()
+    {
+        return this.substitutionName;
+    }
+
+    public String getOriginalFullSubstitutionString()
+    {
+        return "{" + this.getSubstitutionName() + "}";
     }
 
     public final boolean isNumeric()
@@ -24,7 +35,7 @@ public abstract class SubstitutionBase implements IStringProvider
         return this.hasArguments;
     }
 
-    public boolean isValid(String originalSubstitutionString)
+    public boolean isArgumentValid(String argumentString)
     {
         return true;
     }
@@ -33,15 +44,15 @@ public abstract class SubstitutionBase implements IStringProvider
      * Builds the final substitution for a given substitution string.
      * This is meant for substitutions that take in arguments,
      * to allow them to parse the arguments and pre-build their final state.
-     * @param originalSubstitutionString
-     * @return
+     * @param argumentString the original argument string
      */
     @Nullable
-    public SubstitutionBase buildSubstitution(String originalSubstitutionString)
+    public BaseSubstitution buildSubstitution(String argumentString)
     {
         return this;
     }
 
+    /*
     public int getIntValue(CommandContext context, String original)
     {
         if (this.isNumeric)
@@ -50,9 +61,7 @@ public abstract class SubstitutionBase implements IStringProvider
             {
                 return Integer.parseInt(this.getString(context, original));
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignore) {}
         }
 
         return -1;
@@ -66,24 +75,10 @@ public abstract class SubstitutionBase implements IStringProvider
             {
                 return Double.parseDouble(this.getString(context, original));
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignore) {}
         }
 
         return Double.NaN;
     }
-
-    @Nullable
-    protected World getWorldFromContext(CommandContext context)
-    {
-        World world = context.getWorld();
-
-        if (world == null && context.getPlayer() != null)
-        {
-            world = context.getPlayer().getEntityWorld();
-        }
-
-        return world;
-    }
+    */
 }

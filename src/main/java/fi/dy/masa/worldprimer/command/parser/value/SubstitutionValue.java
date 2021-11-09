@@ -1,14 +1,19 @@
 package fi.dy.masa.worldprimer.command.parser.value;
 
-import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
+import fi.dy.masa.worldprimer.command.substitution.StringSubstitution;
 
 public class SubstitutionValue extends Value
 {
-    protected final IStringProvider stringProvider;
+    protected final StringSubstitution stringProvider;
 
-    public SubstitutionValue(IStringProvider stringProvider)
+    public SubstitutionValue(StringSubstitution stringProvider)
     {
         this.stringProvider = stringProvider;
+    }
+
+    public StringSubstitution getSubstitution()
+    {
+        return this.stringProvider;
     }
 
     @Override

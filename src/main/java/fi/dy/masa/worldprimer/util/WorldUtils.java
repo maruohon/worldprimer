@@ -48,6 +48,19 @@ public class WorldUtils
         return null;
     }
 
+    public static int getTopYAt(World world, int x, int z)
+    {
+        // Load an area of 3x3 chunks around the target location, to generate the world and structures
+        WorldUtils.loadChunks(world, (x >> 4) - 1, (z >> 4) - 1, (x >> 4) + 1, (z >> 4) + 1);
+
+        // world.getTopSolidOrLiquidBlock() will return -1 over void
+        final int top = Math.max(0, world.getTopSolidOrLiquidBlock(new BlockPos(x, 0, z)).getY());
+
+        WorldUtils.unloadLoadedChunks(world);
+
+        return top;
+    }
+
     public static boolean executeChunkLoadingCommand(String command, @Nullable World world)
     {
         if (world == null)
@@ -78,9 +91,7 @@ public class WorldUtils
 
                 return true;
             }
-            catch (NumberFormatException e)
-            {
-            }
+            catch (NumberFormatException ignore) {}
         }
 
         WorldPrimer.LOGGER.warn("Invalid chunk loading command '{}'", command);
@@ -101,13 +112,7 @@ public class WorldUtils
         final int zEnd = Math.max(chunkZ1, chunkZ2);
         final int dimension = world.provider.getDimension();
 
-        Set<ChunkPos> loadedChunks = LOADED_CHUNKS.get(world.provider.getDimension());
-
-        if (loadedChunks == null)
-        {
-            loadedChunks = new HashSet<ChunkPos>();
-            LOADED_CHUNKS.put(world.provider.getDimension(), loadedChunks);
-        }
+        Set<ChunkPos> loadedChunks = LOADED_CHUNKS.computeIfAbsent(world.provider.getDimension(), k -> new HashSet<>());
 
         WorldPrimer.logInfo("Attempting to load chunks [{},{}] to [{},{}] in dimension {}", xStart, zStart, xEnd, zEnd, dimension);
 

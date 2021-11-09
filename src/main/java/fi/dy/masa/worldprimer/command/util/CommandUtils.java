@@ -1,10 +1,10 @@
 package fi.dy.masa.worldprimer.command.util;
 
-import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.handler.CommandHandler;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.util.DataTracker;
 import fi.dy.masa.worldprimer.util.DataTracker.PlayerDataType;
@@ -24,7 +24,7 @@ public class CommandUtils
         return world.provider.getDimension();
     }
 
-    public static void onCreateSpawn(final World world)
+    public static void onCreateSpawn(World world)
     {
         final int dimension = getDimension(world);
         WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition, DIM: {}", dimension);
@@ -36,7 +36,8 @@ public class CommandUtils
             if (Configs.enableEarlyWorldCreationCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition: Running earlyWorldCreationCommands for DIM: {}", dimension);
-                WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.earlyWorldCreationCommands);
+                CommandContext ctx = new CommandContext(world, null, 0);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_CREATION, ctx);
             }
 
             // Defer running the commands until the world is actually ready to load
@@ -44,7 +45,7 @@ public class CommandUtils
         }
     }
 
-    public static void onWorldLoad(final World world)
+    public static void onWorldLoad(World world)
     {
         if (world.isRemote == false)
         {
@@ -60,250 +61,128 @@ public class CommandUtils
             if (runCreationCommands && dimension == 0)
             {
                 WorldPrimer.logInfo("WorldEvent.Load: Running postWorldCreationCommands for DIM: {}", dimension);
-                WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldCreationCommands);
+                CommandContext ctx = new CommandContext(world, null, 0);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_CREATION, ctx);
                 runCreationCommands = false;
             }
 
-            if (Configs.enableDataTracking)
-            {
-                DataTracker.instance().dimensionLoaded(dimension);
-            }
+            int dimLoadCount = DataTracker.INSTANCE.dimensionLoaded(dimension);
 
             if (Configs.enableDimensionLoadingCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.Load: Running dimensionLoadingCommands");
-                final int currentCount = DataTracker.instance().getDimensionLoadCount(dimension);
-                runDimensionCommands(null, world, getDimension(world), currentCount, Configs.dimensionLoadingCommands);
+                CommandContext ctx = new CommandContext(world, null, dimLoadCount);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.DIM_LOADING, ctx);
             }
         }
     }
 
-    public static void onPlayerJoin(final EntityPlayer player)
+    public static void onPlayerJoin(EntityPlayer player)
     {
         WorldPrimer.logInfo("PlayerLoggedInEvent: running join commands for player {}", player);
-        handlePlayerEvent(player, PlayerDataType.JOIN, Configs.enablePlayerJoinCommands, Configs.playerJoinCommands);
+        handlePlayerEvent(player, PlayerDataType.JOIN, Configs.enablePlayerJoinCommands);
 
-        if (Configs.runDimensionChangeCommandsOnJoinQuit && Configs.enablePlayerChangedDimensionEnterCommands)
+        if (Configs.enablePlayerChangedDimensionEnterCommands &&
+            Configs.runDimensionChangeCommandsOnJoinQuit)
         {
             int dimension = getDimension(player);
-            DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+            int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
 
-            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
-            runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionEnterCommands);
+            CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_ENTER, ctx);
         }
     }
 
-    public static void onPlayerQuit(final EntityPlayer player)
+    public static void onPlayerQuit(EntityPlayer player)
     {
         WorldPrimer.logInfo("PlayerLoggedOutEvent: running quit commands for player {}", player);
-        handlePlayerEvent(player, PlayerDataType.QUIT, Configs.enablePlayerQuitCommands, Configs.playerQuitCommands);
+        handlePlayerEvent(player, PlayerDataType.QUIT, Configs.enablePlayerQuitCommands);
 
-        if (Configs.runDimensionChangeCommandsOnJoinQuit && Configs.enablePlayerChangedDimensionLeaveCommands)
+        if (Configs.enablePlayerChangedDimensionLeaveCommands &&
+            Configs.runDimensionChangeCommandsOnJoinQuit)
         {
             int dimension = getDimension(player);
-            DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+            int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 
-            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
-            runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionLeaveCommands);
+            CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_LEAVE, ctx);
         }
     }
 
-    public static void onPlayerDeath(final EntityPlayer player)
+    public static void onPlayerDeath(EntityPlayer player)
     {
         WorldPrimer.logInfo("LivingDeathEvent: running death commands for player: {}", player);
-        handlePlayerEvent(player, PlayerDataType.DEATH, Configs.enablePlayerDeathCommands, Configs.playerDeathCommands);
+        handlePlayerEvent(player, PlayerDataType.DEATH, Configs.enablePlayerDeathCommands);
     }
 
-    public static void onPlayerRespawn(final EntityPlayer player, final boolean isEndConquered)
+    public static void onPlayerRespawn(EntityPlayer player, boolean isEndConquered)
     {
         WorldPrimer.logInfo("PlayerRespawnEvent player: {}, leaving the End: {}", player, isEndConquered);
 
         // Don't run the respawn commands when just leaving the End
         if (isEndConquered == false)
         {
-            handlePlayerEvent(player, PlayerDataType.RESPAWN, Configs.enablePlayerRespawnCommands, Configs.playerRespawnCommands);
+            handlePlayerEvent(player, PlayerDataType.RESPAWN, Configs.enablePlayerRespawnCommands);
         }
         // The PlayerChangedDimensionEvent doesn't seem to fire when leaving the End, so run the leave commands also here
         else
         {
             if (Configs.enablePlayerChangedDimensionLeaveCommands)
             {
-                final int dimension = 1;
                 WorldPrimer.logInfo("PlayerRespawnEvent (leaving the End): running dimension leave commands for player {}", player);
-                DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
-                final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
+                final int dimension = 1;
+                int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.LEAVE);
 
                 // Note: the dimension MUST be passed from here instead of getting it from the WorldProvider,
                 // because the player is in the target dimension already at this point
-                runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionLeaveCommands);
+                CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount, dimension);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_LEAVE, ctx);
             }
 
             if (Configs.enablePlayerChangedDimensionEnterCommands)
             {
-                int dimension = getDimension(player);
-                DataTracker.instance().incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
+                final int dimension = getDimension(player);
+                int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
 
-                final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, dimension, PlayerDimensionDataType.ENTER);
-                runDimensionCommands(player, player.getEntityWorld(), dimension, currentCount, Configs.playerChangedDimensionEnterCommands);
+                CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount, dimension);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_ENTER, ctx);
             }
         }
     }
 
-    public static void onPlayerChangedDimension(final EntityPlayer player, final int fromDim, final int toDim)
+    public static void onPlayerChangedDimension(EntityPlayer player, final int fromDim, final int toDim)
     {
         WorldPrimer.logInfo("PlayerChangedDimensionEvent player: {} from dim {}, to dim {}", player, fromDim, toDim);
 
         if (Configs.enablePlayerChangedDimensionLeaveCommands)
         {
             WorldPrimer.logInfo("PlayerChangedDimensionEvent: running dimension leave commands for player {}", player);
-            DataTracker.instance().incrementPlayerDimensionEventCount(player, fromDim, PlayerDimensionDataType.LEAVE);
-            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, fromDim, PlayerDimensionDataType.LEAVE);
+            int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, fromDim, PlayerDimensionDataType.LEAVE);
 
             // Note: the dimension MUST be passed from here instead of getting it from the WorldProvider,
             // because the player is in the target dimension already at this point
-            runDimensionCommands(player, player.getEntityWorld(), fromDim, currentCount, Configs.playerChangedDimensionLeaveCommands);
+            CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount, fromDim);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_LEAVE, ctx);
         }
 
         if (Configs.enablePlayerChangedDimensionEnterCommands)
         {
             WorldPrimer.logInfo("PlayerChangedDimensionEvent: running dimension enter commands for player {}", player);
-            DataTracker.instance().incrementPlayerDimensionEventCount(player, toDim, PlayerDimensionDataType.ENTER);
-            final int currentCount = DataTracker.instance().getPlayerDimensionEventCount(player, toDim, PlayerDimensionDataType.ENTER);
+            int currentCount = DataTracker.INSTANCE.incrementPlayerDimensionEventCount(player, toDim, PlayerDimensionDataType.ENTER);
 
-            runDimensionCommands(player, player.getEntityWorld(), toDim, currentCount, Configs.playerChangedDimensionEnterCommands);
+            CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount, toDim);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.PLAYER_DIM_ENTER, ctx);
         }
     }
 
-    private static void runDimensionCommands(@Nullable EntityPlayer player, World world, final int dimension, final int currentCount, String[] commands)
+    private static void handlePlayerEvent(EntityPlayer player, PlayerDataType type, boolean enabled)
     {
-        for (String command : commands)
-        {
-            if (StringUtils.isBlank(command) || (command.length() > 0 && command.charAt(0) == '#'))
-            {
-                continue;
-            }
+        int currentCount = DataTracker.INSTANCE.incrementPlayerDataCount(player, type);
 
-            String[] parts = command.split("\\s+", 4);
-
-            if (parts.length >= 3 && parts[0].equals("worldprimer-dim-command"))
-            {
-                runDimensionCommandsRegular(player, world, dimension, command, parts);
-            }
-            else if (Configs.enableDataTracking && parts.length >= 4 && parts[0].equals("worldprimer-dim-command-nth"))
-            {
-                runDimensionCommandsNth(player, world, dimension, command, parts, currentCount);
-            }
-            else
-            {
-                WorldPrimerCommandSender.INSTANCE.runCommands(player, world, command);
-            }
-        }
-    }
-
-    private static void runDimensionCommandsRegular(@Nullable EntityPlayer player, World world, final int dimension,
-            String fullCommand, String[] cmdParts)
-    {
-        try
-        {
-            if (cmdParts[1].equals("*") || dimension == Integer.parseInt(cmdParts[1]))
-            {
-                cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.INSTANCE.runCommands(player, world, String.join(" ", cmdParts));
-            }
-        }
-        catch (NumberFormatException e)
-        {
-            WorldPrimer.LOGGER.warn("Invalid dimension id '{}' in dimension-specific command '{}'", cmdParts[1], fullCommand);
-        }
-    }
-
-    private static void runDimensionCommandsNth(@Nullable EntityPlayer player, World world, final int dimension,
-            String fullCommand, String[] cmdParts, final int currentCount)
-    {
-        try
-        {
-            if (cmdParts[2].equals("*") || dimension == Integer.parseInt(cmdParts[2]))
-            {
-                String countStr = cmdParts[1];
-                boolean modulo = false;
-
-                if (countStr.charAt(0) == '%')
-                {
-                    countStr = countStr.substring(1);
-                    modulo = true;
-                }
-
-                int count = Integer.parseInt(countStr);
-
-                if ((modulo && count != 0 && (currentCount % count) == 0) || (modulo == false && currentCount == count))
-                {
-                    cmdParts = dropFirstStrings(cmdParts, 3);
-                    WorldPrimerCommandSender.INSTANCE.runCommands(player, world, String.join(" ", cmdParts));
-                }
-            }
-        }
-        catch (NumberFormatException e)
-        {
-            WorldPrimer.LOGGER.warn("Invalid syntax in dimension-specific command '{}'", fullCommand);
-        }
-    }
-
-    private static void handlePlayerEvent(EntityPlayer player, PlayerDataType type, boolean enabled, String[] commands)
-    {
         if (enabled)
         {
-            DataTracker.instance().incrementPlayerDataCount(player, type);
-            final int currentCount = DataTracker.instance().getPlayerDataCount(player, type);
-            runTrackedCommands(player, commands, currentCount);
-        }
-    }
-
-    private static void runTrackedCommands(EntityPlayer player, String[] commands, int currentCount)
-    {
-        for (String command : commands)
-        {
-            if (StringUtils.isBlank(command) || (command.length() > 0 && command.charAt(0) == '#'))
-            {
-                continue;
-            }
-
-            String[] parts = command.split("\\s+", 3);
-
-            if (Configs.enableDataTracking && parts.length >= 3 && parts[0].equals("worldprimer-tracked-command-nth"))
-            {
-                runTrackedCommandsNth(player, command, parts, currentCount);
-            }
-            else
-            {
-                WorldPrimerCommandSender.INSTANCE.runCommands(player, player.getEntityWorld(), command);
-            }
-        }
-    }
-
-    private static void runTrackedCommandsNth(EntityPlayer player, String fullCommand, String[] cmdParts, int currentCount)
-    {
-        try
-        {
-            String countStr = cmdParts[1];
-            boolean modulo = false;
-
-            if (countStr.charAt(0) == '%')
-            {
-                countStr = countStr.substring(1);
-                modulo = true;
-            }
-
-            int count = Integer.parseInt(countStr);
-
-            if ((modulo && count != 0 && (currentCount % count) == 0) || (modulo == false && currentCount == count))
-            {
-                cmdParts = dropFirstStrings(cmdParts, 2);
-                WorldPrimerCommandSender.INSTANCE.runCommands(player, player.getEntityWorld(), String.join(" ", cmdParts));
-            }
-        }
-        catch (NumberFormatException e)
-        {
-            WorldPrimer.LOGGER.warn("Invalid syntax in tracked command '{}'", fullCommand);
+            CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount);
+            CommandHandler.INSTANCE.executeCommands(type.getCommandType(), ctx);
         }
     }
 

@@ -18,17 +18,19 @@ import fi.dy.masa.worldprimer.command.parser.token.ValueToken;
 import fi.dy.masa.worldprimer.command.parser.value.DoubleValue;
 import fi.dy.masa.worldprimer.command.parser.value.IntValue;
 import fi.dy.masa.worldprimer.command.parser.value.StringValue;
+import fi.dy.masa.worldprimer.command.parser.value.SubstitutionValue;
 import fi.dy.masa.worldprimer.command.parser.value.Value;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;
-import fi.dy.masa.worldprimer.command.util.CommandParser;
+import fi.dy.masa.worldprimer.command.substitution.BaseSubstitution;
 
 public class StringTokenizer
 {
+    protected final SubstitutionParser substitutionParser;
     protected final StringReader reader;
     @Nullable protected Token previousToken;
 
-    public StringTokenizer(StringReader reader)
+    public StringTokenizer(SubstitutionParser substitutionParser, StringReader reader)
     {
+        this.substitutionParser = substitutionParser;
         this.reader = reader;
     }
 
@@ -40,13 +42,15 @@ public class StringTokenizer
     @Nullable
     public Optional<Token> readNextToken() throws IllegalArgumentException
     {
-        Token token = readToken(this.reader, this.previousToken);
+        Token token = readToken(this.reader, this.substitutionParser, this.previousToken);
         this.previousToken = token;
         return Optional.ofNullable(token);
     }
 
     @Nullable
-    public static Token readToken(StringReader reader, @Nullable Token previousToken) throws IllegalArgumentException
+    public static Token readToken(StringReader reader,
+                                  SubstitutionParser substitutionParser,
+                                  @Nullable Token previousToken) throws IllegalArgumentException
     {
         while (reader.canRead() && reader.peek() == ' ')
         {
@@ -144,27 +148,15 @@ public class StringTokenizer
         {
             token = readNumber(reader, startPos);
         }
-        else
+        // TODO escaping?
+        else if (c == '{')
         {
-            if (c == '{')
-            {
-                Region region = CommandParser.getSubstitutionRegionStartingAt(reader, startPos);
+            token = readVariable(reader, startPos, substitutionParser);
+        }
 
-                if (region != null)
-                {
-                    SubstitutionBase substitution = CommandParser.getSubstitutionForRegion(reader, region);
-
-                    if (substitution != null)
-                    {
-                        token = new Token(TokenType.VARIABLE, reader.subString(startPos, region.end));
-                    }
-                }
-            }
-
-            if (token == null)
-            {
-                token = readString(reader, startPos);
-            }
+        if (token == null)
+        {
+            token = readString(reader, startPos);
         }
 
         if (token == null)
@@ -195,7 +187,7 @@ public class StringTokenizer
                previousToken.getType() == TokenType.LEFT_PAREN;
     }
 
-    public static Token readNumber(StringReader reader, int startPos) throws IllegalArgumentException
+    protected static Token readNumber(StringReader reader, int startPos) throws IllegalArgumentException
     {
         int pos = startPos;
         int digitCount = 0;
@@ -276,7 +268,7 @@ public class StringTokenizer
         return new Token(TokenType.INVALID, reader.subString(startPos));
     }
 
-    public static Token readString(StringReader reader, int startPos)
+    protected static Token readString(StringReader reader, int startPos)
     {
         boolean quoted = false;
         int pos = startPos;
@@ -290,6 +282,8 @@ public class StringTokenizer
         while (reader.canPeekAt(pos))
         {
             char c = reader.peekAt(pos);
+
+            // TODO don't swallow touching substitutions
 
             if (quoted && c == '"' && reader.peekAt(pos - 1) != '\\')
             {
@@ -310,5 +304,23 @@ public class StringTokenizer
         String origString = reader.getString();
         Value value = new StringValue(origString);
         return new ValueToken(TokenType.CONST_STR, origString, value);
+    }
+
+    protected static Token readVariable(StringReader reader, int startPos, SubstitutionParser substitutionParser)
+    {
+        Region region = substitutionParser.getSubstitutionRegionStartingAt(reader, startPos);
+
+        if (region != null)
+        {
+            BaseSubstitution substitution = substitutionParser.getSubstitutionForFullRegion(reader, region, false);
+
+            if (substitution != null)
+            {
+                Value value = new SubstitutionValue(substitution);
+                return new ValueToken(TokenType.VARIABLE, reader.subString(startPos, region.end), value);
+            }
+        }
+
+        return null;
     }
 }

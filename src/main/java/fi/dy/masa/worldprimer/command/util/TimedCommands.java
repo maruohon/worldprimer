@@ -162,17 +162,7 @@ public class TimedCommands
 
         if (TIMED_COMMANDS.size() > 0)
         {
-            Iterator<Map.Entry<Integer, List<TimedCommand>>> mapIter = TIMED_COMMANDS.entrySet().iterator();
-
-            while (mapIter.hasNext())
-            {
-                Map.Entry<Integer, List<TimedCommand>> entry = mapIter.next();
-
-                if (updateTimedCommandsForDimension(entry.getKey(), removeFromCurrentTick))
-                {
-                    mapIter.remove();
-                }
-            }
+            TIMED_COMMANDS.entrySet().removeIf(entry -> updateTimedCommandsForDimension(entry.getKey(), removeFromCurrentTick));
         }
     }
 

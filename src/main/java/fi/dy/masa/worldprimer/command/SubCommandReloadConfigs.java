@@ -7,6 +7,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import fi.dy.masa.worldprimer.command.handler.CommandHandler;
 import fi.dy.masa.worldprimer.config.Configs;
 
 public class SubCommandReloadConfigs extends SubCommand
@@ -40,6 +41,7 @@ public class SubCommandReloadConfigs extends SubCommand
         if (args.length == 0)
         {
             Configs.loadConfigsFromFile();
+            CommandHandler.INSTANCE.rebuildCommands();
             this.sendMessage(sender, "worldprimer.commands.info.configs.reloaded");
         }
         else

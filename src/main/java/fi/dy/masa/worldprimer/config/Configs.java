@@ -39,6 +39,7 @@ public class Configs
     public static boolean enablePlayerRespawnCommands;
 
     public static String[] dimensionLoadingCommands;
+    public static String[] dimensionUnloadingCommands;
     public static String[] earlyWorldCreationCommands;
     public static String[] earlyWorldLoadingCommands;
     public static String[] postWorldCreationCommands;
@@ -257,6 +258,10 @@ public class Configs
                         "An asterisk '*' can be used as the dimension ID to run\n" +
                         "the command in all dimensions (mostly makes sense for the nth variant).");
         dimensionLoadingCommands = prop.getStringList();
+
+        prop = conf.get(CATEGORY_COMMANDS, "dimensionUnloadingCommands", new String[0]).setRequiresMcRestart(false);
+        prop.setComment("Commands to run when a dimension is unloaded.");
+        dimensionUnloadingCommands = prop.getStringList();
 
         prop = conf.get(CATEGORY_COMMANDS, "earlyWorldCreationCommands", new String[0]).setRequiresMcRestart(false);
         prop.setComment("Commands to run on initial world creation, before the spawn chunks have been generated or loaded.\n" +

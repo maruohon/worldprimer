@@ -1,4 +1,4 @@
-package fi.dy.masa.worldprimer.command.substitutions;
+package fi.dy.masa.worldprimer.command.substitution;
 
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
@@ -7,31 +7,33 @@ import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.worldprimer.util.Coordinate;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
-public class SubstitutionPlayerPosition extends SubstitutionBase
+public class PlayerPositionSubstitution extends BaseSubstitution
 {
-    protected final PositionType positionType;
+    protected final PlayerPositionType playerPositionType;
     protected final Coordinate coordinate;
 
-    public SubstitutionPlayerPosition(PositionType positionType, Coordinate coordinate)
+    public PlayerPositionSubstitution(String substitutionName,
+                                      PlayerPositionType playerPositionType,
+                                      Coordinate coordinate)
     {
-        super(true, false);
+        super(substitutionName, true, false);
 
-        this.positionType = positionType;
+        this.playerPositionType = playerPositionType;
         this.coordinate = coordinate;
     }
 
     @Override
-    public String getString(CommandContext context, String original)
+    public String getString(CommandContext context)
     {
         EntityPlayer player = context.getPlayer();
 
         if (player == null)
         {
-            return original;
+            return this.getOriginalFullSubstitutionString();
         }
 
-        String substituted = this.positionType.function.apply(this.coordinate, player);
-        return substituted != null ? substituted : original;
+        String substituted = this.playerPositionType.function.apply(this.coordinate, player);
+        return substituted != null ? substituted : this.getOriginalFullSubstitutionString();
     }
 
     @Nullable
@@ -60,16 +62,16 @@ public class SubstitutionPlayerPosition extends SubstitutionBase
         return null;
     }
 
-    public enum PositionType
+    public enum PlayerPositionType
     {
         BLOCK_POSITION      ((c, p) -> c.getCoordinateAsIntString(p.getPosition())),
         EXACT_POSITION      ((c, p) -> c.getCoordinateAsDoubleString(p.getPositionVector())),
-        BED_POSITION        (SubstitutionPlayerPosition::getBedLocationCoordinate),
-        BED_SPAWN_POSITION  (SubstitutionPlayerPosition::getBedSpawnLocationCoordinate);
+        BED_POSITION        (PlayerPositionSubstitution::getBedLocationCoordinate),
+        BED_SPAWN_POSITION  (PlayerPositionSubstitution::getBedSpawnLocationCoordinate);
 
         public final BiFunction<Coordinate, EntityPlayer, String> function;
 
-        PositionType(BiFunction<Coordinate, EntityPlayer, String> function)
+        PlayerPositionType(BiFunction<Coordinate, EntityPlayer, String> function)
         {
             this.function = function;
         }

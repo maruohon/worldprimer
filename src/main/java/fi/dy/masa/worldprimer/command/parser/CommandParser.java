@@ -1,81 +1,231 @@
-package fi.dy.masa.worldprimer.command.util;
+package fi.dy.masa.worldprimer.command.parser;
 
-import java.util.HashMap;
+import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.world.World;
+import net.minecraft.command.SyntaxErrorException;
 import fi.dy.masa.worldprimer.WorldPrimer;
-import fi.dy.masa.worldprimer.command.parser.Region;
-import fi.dy.masa.worldprimer.command.parser.StringReader;
-import fi.dy.masa.worldprimer.command.substitutions.IStringProvider;
-import fi.dy.masa.worldprimer.command.substitutions.PlainString;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionBase;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionCount;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionDimension;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerName;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerPosition;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionPlayerPosition.PositionType;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRandomNumber;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionRealTime;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionSpawnPoint;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionTopBlockY;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionTopBlockYRand;
-import fi.dy.masa.worldprimer.command.substitutions.SubstitutionWorldTime;
-import fi.dy.masa.worldprimer.util.Coordinate;
-import fi.dy.masa.worldprimer.util.WorldUtils;
+import fi.dy.masa.worldprimer.command.handler.ConditionalCommand;
+import fi.dy.masa.worldprimer.command.handler.Expression;
+import fi.dy.masa.worldprimer.command.handler.ParsedCommand;
+import fi.dy.masa.worldprimer.command.parser.token.Token;
+import fi.dy.masa.worldprimer.command.substitution.ArithmeticExpression;
+import fi.dy.masa.worldprimer.command.substitution.BaseSubstitution;
+import fi.dy.masa.worldprimer.command.substitution.PlainString;
+import fi.dy.masa.worldprimer.command.substitution.StringSubstitution;
 
 public class CommandParser
 {
-    public static final String NUM = "0123456789.";
-    public static final String OP = "-+*/%";
-    private static final String NUM_OP_PAREN = "0123456789.-+*/%()";
+    private static final String OP = "-+*/%";
+    //private static final String NUM = "0123456789.";
+    //private static final String NUM_OP_PAREN = "0123456789.-+*/%()";
 
-    private static final HashMap<String, SubstitutionBase> SUBSTITUTIONS = new HashMap<>();
-
-    public static void init()
+    @Nullable
+    public static ParsedCommand parseCommand(String originalString,
+                                             SubstitutionParser substitutionParser,
+                                             ExpressionParser expressionParser) throws SyntaxErrorException
     {
-        SUBSTITUTIONS.clear();
+        StringReader reader = new StringReader(originalString);
+        Expression conditionExpression = getConditionExpression(reader, substitutionParser, expressionParser);
+        ParsedCommand baseCommand = getCommand(reader, substitutionParser, expressionParser);
 
-        SUBSTITUTIONS.put("PLAYER_NAME", new SubstitutionPlayerName());
-        SUBSTITUTIONS.put("PLAYER_BED_X", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BED_Y", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BED_Z", new SubstitutionPlayerPosition(PositionType.BED_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_X", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Y", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BED_SPAWN_Z", new SubstitutionPlayerPosition(PositionType.BED_SPAWN_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_X", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_Y", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_BLOCK_Z", new SubstitutionPlayerPosition(PositionType.BLOCK_POSITION, Coordinate.Z));
-        SUBSTITUTIONS.put("PLAYER_X", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.X));
-        SUBSTITUTIONS.put("PLAYER_Y", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.Y));
-        SUBSTITUTIONS.put("PLAYER_Z", new SubstitutionPlayerPosition(PositionType.EXACT_POSITION, Coordinate.Z));
+        System.out.printf("CommandParser.parseCommand(): baseCommand = '%s', conditionExpression = '%s'\n", baseCommand != null ? baseCommand.getOriginalString() : "<null>", conditionExpression != null ? conditionExpression.getOriginalString() : "<null>");
+        if (baseCommand != null && conditionExpression != null)
+        {
+            return new ConditionalCommand(baseCommand, conditionExpression);
+        }
 
-        SUBSTITUTIONS.put("COUNT", new SubstitutionCount());
-        SUBSTITUTIONS.put("DIMENSION", new SubstitutionDimension());
-        SUBSTITUTIONS.put("SPAWN_X", new SubstitutionSpawnPoint(Coordinate.X, WorldUtils::getWorldSpawn));
-        SUBSTITUTIONS.put("SPAWN_Y", new SubstitutionSpawnPoint(Coordinate.Y, WorldUtils::getWorldSpawn));
-        SUBSTITUTIONS.put("SPAWN_Z", new SubstitutionSpawnPoint(Coordinate.Z, WorldUtils::getWorldSpawn));
-        SUBSTITUTIONS.put("SPAWN_POINT_X", new SubstitutionSpawnPoint(Coordinate.X, World::getSpawnPoint));
-        SUBSTITUTIONS.put("SPAWN_POINT_Y", new SubstitutionSpawnPoint(Coordinate.Y, World::getSpawnPoint));
-        SUBSTITUTIONS.put("SPAWN_POINT_Z", new SubstitutionSpawnPoint(Coordinate.Z, World::getSpawnPoint));
-        SUBSTITUTIONS.put("TIME_TICK", new SubstitutionWorldTime(World::getTotalWorldTime));
-        SUBSTITUTIONS.put("TIME_TICK_DAY", new SubstitutionWorldTime(World::getWorldTime));
-        SUBSTITUTIONS.put("TIME_Y", new SubstitutionRealTime("yyyy"));
-        SUBSTITUTIONS.put("TIME_M", new SubstitutionRealTime("MM"));
-        SUBSTITUTIONS.put("TIME_D", new SubstitutionRealTime("dd"));
-        SUBSTITUTIONS.put("TIME_H", new SubstitutionRealTime("HH"));
-        SUBSTITUTIONS.put("TIME_I", new SubstitutionRealTime("mm"));
-        SUBSTITUTIONS.put("TIME_S", new SubstitutionRealTime("ss"));
-        SUBSTITUTIONS.put("TOP_Y", new SubstitutionTopBlockY());
-        SUBSTITUTIONS.put("TOP_Y_RAND", new SubstitutionTopBlockYRand());
-
-        SUBSTITUTIONS.put("RAND", new SubstitutionRandomNumber());
+        return baseCommand;
     }
 
-    public static ParsedCommand parseCommand(final String original)
+    @Nullable
+    private static Expression getConditionExpression(StringReader reader,
+                                                     SubstitutionParser substitutionParser,
+                                                     ExpressionParser expressionParser) throws SyntaxErrorException
+    {
+        String prefix = "worldprimer-condition[";
+        String subString = reader.subString();
+        int prefixLength = prefix.length();
+
+        if (subString.startsWith(prefix) && subString.length() > prefixLength + 2)
+        {
+            int startIndex = prefixLength;
+            int endIndex = subString.indexOf(']', startIndex + 1);
+
+            if (endIndex != -1)
+            {
+                String conditionString = subString.substring(startIndex, endIndex);
+                StringTokenizer tokenizer = new StringTokenizer(substitutionParser, new StringReader(conditionString));
+                List<Token> tokens = expressionParser.parseAndReduceToRpn(tokenizer);
+
+                if (tokens.isEmpty() == false)
+                {
+                    reader.setPos(reader.getPos() + endIndex + 1);
+
+                    while (reader.canRead() && reader.peek() == ' ')
+                    {
+                        reader.skip();
+                    }
+
+                    return new Expression(tokens, conditionString);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static ParsedCommand getCommand(StringReader reader,
+                                            SubstitutionParser substitutionParser,
+                                            ExpressionParser expressionParser) throws SyntaxErrorException
+    {
+        ImmutableList.Builder<StringSubstitution> builder = ImmutableList.builder();
+        final int startPos = reader.getPos();
+        int unconsumedStartPos = startPos;
+
+        while (reader.canRead())
+        {
+            Region substitutionRegion = substitutionParser.getNextSubstitutionRegion(reader);
+
+            // No more substitutions, add the rest of the command string as-is
+            if (substitutionRegion == null)
+            {
+                if (reader.getPos() < reader.getLength() - 1)
+                {
+                    builder.add(plainString(reader, unconsumedStartPos));
+                }
+
+                break;
+            }
+
+            Pair<Region, Expression> pair = getArithmeticExpression(reader, substitutionRegion,
+                                                                    unconsumedStartPos, expressionParser);
+
+            // Found an arithmetic expression encompassing the next substitution
+            if (pair != null)
+            {
+                Region arithmeticRegion = pair.getLeft();
+                Expression expression = pair.getRight();
+
+                System.out.printf("CommandParser.getCommand(): Arithmetic Region: [%d, %d], expression: '%s'\n",
+                                  arithmeticRegion.start, arithmeticRegion.end, expression.getOriginalString());
+                // Add the part of the string before the arithmetic part starts
+                if (arithmeticRegion.start > unconsumedStartPos)
+                {
+                    builder.add(plainString(reader, unconsumedStartPos, arithmeticRegion.start - 1));
+                }
+
+                builder.add(new ArithmeticExpression(expression, expressionParser));
+                unconsumedStartPos = arithmeticRegion.end + 1;
+                reader.setPos(unconsumedStartPos);
+            }
+            // Just a plain substitution
+            else
+            {
+                BaseSubstitution substitution = substitutionParser.getSubstitutionForFullRegion(reader, substitutionRegion, true);
+
+                if (substitution != null)
+                {
+                    // Add the part of the string before the substitution starts
+                    if (substitutionRegion.start > unconsumedStartPos)
+                    {
+                        builder.add(plainString(reader, unconsumedStartPos, substitutionRegion.start - 1));
+                    }
+
+                    builder.add(substitution);
+                    unconsumedStartPos = substitutionRegion.end + 1;
+                    reader.setPos(unconsumedStartPos);
+                }
+                else
+                {
+                    reader.skip();
+                }
+            }
+        }
+
+        ImmutableList<StringSubstitution> parts = builder.build();
+
+        if (parts.isEmpty() == false)
+        {
+            return new ParsedCommand(parts, reader.subString(startPos));
+        }
+
+        return null;
+    }
+
+    private static PlainString plainString(StringReader reader, int startPos)
+    {
+        return plainString(reader, startPos, reader.getLength() - 1);
+    }
+
+    private static PlainString plainString(StringReader reader, int startPos, int endPos)
+    {
+        String str = reader.subString(startPos, endPos).replaceAll("\\\\([*/%+-])", "\1").replaceAll("\\\\", "\\");
+        return new PlainString(str);
+    }
+
+    @Nullable
+    private static Pair<Region, Expression>
+    getArithmeticExpression(StringReader reader, Region substitutionRegion, int minimumPos,
+                            ExpressionParser expressionParser) throws SyntaxErrorException
+    {
+        int startPos = substitutionRegion.start;
+        int endPos = substitutionRegion.end;
+        char charBefore = reader.peekAt(substitutionRegion.start - 1);
+        char charAfter = reader.peekAt(substitutionRegion.end + 1);
+
+        if (substitutionRegion.start > minimumPos &&
+            (charBefore == '(' || OP.indexOf(charBefore) != -1) &&
+            (reader.peekAt(startPos - 2) != '\\' || reader.peekAt(startPos - 3) == '\\'))
+        {
+            while (startPos > minimumPos && reader.peekAt(startPos - 1) != ' ')
+            {
+                --startPos;
+            }
+        }
+
+        if (substitutionRegion.end < reader.getLength() - 1 &&
+            (charAfter == ')' || OP.indexOf(charAfter) != -1))
+        {
+            int max = reader.getLength() - 1;
+
+            while (endPos < max && reader.peekAt(endPos + 1) != ' ')
+            {
+                ++endPos;
+            }
+        }
+
+        if (startPos != substitutionRegion.start ||
+            endPos != substitutionRegion.end)
+        {
+            StringReader subReader = reader.subReader(startPos, endPos);
+            Expression expression = null;
+
+            try
+            {
+                expression = expressionParser.parseAndReduceToExpression(subReader);
+            }
+            catch (Exception e)
+            {
+                WorldPrimer.logInfo("CommandParser.getArithmeticExpression(): Failed to parse expression '{}' (this may not be an error, depending on your command string structure)", subReader.getString());
+            }
+
+            if (expression != null)
+            {
+                return Pair.of(new Region(startPos, endPos), expression);
+            }
+        }
+
+        return null;
+    }
+
+    /*
+    public static ParsedCommand oldparseCommand(final String original)
     {
         StringReader reader = new StringReader(original);
-        ImmutableList.Builder<IStringProvider> builder = ImmutableList.builder();
+        ImmutableList.Builder<StringSubstitution> builder = ImmutableList.builder();
         // say foo bar {SPAWN_X}+{SPAWN_Y}+{SPAWN_Z}*{DIMENSION}
         // say foo bar {RAND:0,15}*16+8
         // say foo bar {RAND:0,15}*({RAND:0,15}*((16+{RAND:0,7})*(5-{RAND:0,3}))-5*{RAND:0,2})
@@ -95,7 +245,7 @@ public class CommandParser
             }
 
             //System.out.printf("parseCommand() sub @ %s => '%s'\n", substitutionRegion, reader.subReader(substitutionRegion).getString());
-            SubstitutionBase substitution = getSubstitutionForRegion(reader, substitutionRegion);
+            BaseSubstitution substitution = getSubstitutionForRegion(reader, substitutionRegion);
             Region arithmeticRegion = substitution.isNumeric() ? getArithmeticRegion(reader, pos, substitutionRegion) : null;
             int replacedStart = arithmeticRegion != null ? arithmeticRegion.start : substitutionRegion.start;
             int replacedEnd = arithmeticRegion != null ? arithmeticRegion.end : substitutionRegion.end;
@@ -112,23 +262,23 @@ public class CommandParser
             if (arithmeticRegion != null)
             {
                 //System.out.printf("parseCommand() arithmetic @ %s => '%s'\n", arithmeticRegion, reader.subReader(arithmeticRegion).getString());
-                StringReader subReader = reader.subReader(arithmeticRegion);
-                IStringProvider provider = ArithmeticEquationParser.getArithmeticSubstitutionFor(subReader);
-
-                if (provider != null)
-                {
-                    builder.add(provider);
-                }
-                else
-                {
-                    WorldPrimer.LOGGER.warn("Failed to get and parse an arithmetic equation for '{}'", subReader.getString());
-                }
+                // StringReader subReader = reader.subReader(arithmeticRegion);
+                // StringSubstitution provider = ArithmeticEquationParser.getArithmeticSubstitutionFor(subReader);
+                //
+                // if (provider != null)
+                // {
+                //     builder.add(provider);
+                // }
+                // else
+                // {
+                //     WorldPrimer.LOGGER.warn("Failed to get and parse an arithmetic equation for '{}'", subReader.getString());
+                // }
             }
             // Just a simple substitution
             else
             {
                 final String str = reader.subString(substitutionRegion);
-                SubstitutionBase finalSubstitution = substitution.buildSubstitution(str);
+                BaseSubstitution finalSubstitution = substitution.buildSubstitution(str);
 
                 if (finalSubstitution != null)
                 {
@@ -146,10 +296,10 @@ public class CommandParser
             reader.setPos(pos);
         }
 
-        return new ParsedCommand(builder.build());
+        return new ParsedCommand(builder.build(), original);
     }
 
-    public static PlainString plainStringWithStrippedEscapes(String str)
+    private static PlainString plainStringWithStrippedEscapes(String str)
     {
         int firstEscape = str.indexOf('\\');
 
@@ -240,7 +390,7 @@ public class CommandParser
     }
 
     @Nullable
-    public static Region getSubstitutionRegionStartingAt(StringReader reader, int startPos)
+    private static Region getSubstitutionRegionStartingAt(StringReader reader, int startPos)
     {
         if (reader.peekAt(startPos) != '{')
         {
@@ -312,30 +462,24 @@ public class CommandParser
     }
 
     @Nullable
-    public static SubstitutionBase getSubstitutionForRegion(StringReader reader, Region region)
+    private static BaseSubstitution getSubstitutionForRegion(StringReader reader, Region region)
     {
         String substitutionString = reader.subString(region.start + 1, region.end - 1);
         return getSubstitutionForString(substitutionString);
     }
 
     @Nullable
-    public static SubstitutionBase getSubstitutionForString(String substitutionString)
+    private static BaseSubstitution getSubstitutionForString(String substitutionString)
     {
         String name = substitutionString;
         int colonIndex = name.indexOf(':');
-        boolean hasArgs = false;
+        boolean hasArgs = colonIndex != -1;
 
-        if (colonIndex != -1)
-        {
-            name = name.substring(0, colonIndex);
-            hasArgs = true;
-        }
-
-        SubstitutionBase substitution = SUBSTITUTIONS.get(name);
+        BaseSubstitution substitution = null;
 
         if (substitution != null &&
             substitution.hasArguments() == hasArgs &&
-            substitution.isValid(substitutionString))
+            substitution.isArgumentValid(substitutionString))
         {
             return substitution;
         }
@@ -410,7 +554,7 @@ public class CommandParser
 
                         if (region != null)
                         {
-                            SubstitutionBase sub = getSubstitutionForRegion(reader, region);
+                            BaseSubstitution sub = getSubstitutionForRegion(reader, region);
 
                             if (sub != null && sub.isNumeric())
                             {
@@ -506,4 +650,5 @@ public class CommandParser
         // Check for balanced parenthesis count
         return parenLevel == 0;
     }
+    */
 }

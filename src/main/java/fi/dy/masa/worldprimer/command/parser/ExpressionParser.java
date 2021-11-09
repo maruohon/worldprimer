@@ -1,14 +1,14 @@
 package fi.dy.masa.worldprimer.command.parser;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import fi.dy.masa.worldprimer.WorldPrimer;
+import net.minecraft.command.SyntaxErrorException;
+import fi.dy.masa.worldprimer.command.handler.Expression;
 import fi.dy.masa.worldprimer.command.parser.token.ArithmeticBinaryOperatorToken;
 import fi.dy.masa.worldprimer.command.parser.token.BooleanBinaryOperatorToken;
 import fi.dy.masa.worldprimer.command.parser.token.EqualityOperatorToken;
@@ -20,9 +20,18 @@ import fi.dy.masa.worldprimer.command.parser.token.ValueToken;
 import fi.dy.masa.worldprimer.command.parser.value.BooleanValue;
 import fi.dy.masa.worldprimer.command.parser.value.DoubleValue;
 import fi.dy.masa.worldprimer.command.parser.value.IntValue;
+import fi.dy.masa.worldprimer.command.substitution.BaseSubstitution;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 
 public class ExpressionParser
 {
+    protected final SubstitutionParser substitutionParser;
+
+    public ExpressionParser(SubstitutionParser substitutionParser)
+    {
+        this.substitutionParser = substitutionParser;
+    }
+
     // Shunting-yard algorithm, from https://en.wikipedia.org/wiki/Shunting-yard_algorithm
     /*
     // This implementation does not implement composite functions,functions with variable number of arguments, and unary operators.
@@ -56,16 +65,36 @@ public class ExpressionParser
     exit.
     */
 
-    public static List<Token> parseToRpn(List<Token> tokens)
+    @Nullable
+    public Expression parseAndReduceToExpression(StringReader reader) throws SyntaxErrorException
+    {
+        StringTokenizer tokenizer = new StringTokenizer(this.substitutionParser, reader);
+        List<Token> tokens = this.parseToRpn(tokenizer::readNextToken);
+        return tokens.isEmpty() == false ? new Expression(tokens, reader.getString()) : null;
+    }
+
+    public List<Token> parseAndReduceToRpn(StringTokenizer tokenizer) throws SyntaxErrorException
+    {
+        List<Token> parsedTokens = this.parseToRpn(tokenizer::readNextToken);
+        return this.reduceRpn(parsedTokens);
+    }
+
+    public List<Token> parseAndReduceToRpn(List<Token> tokens) throws SyntaxErrorException
+    {
+        List<Token> parsedTokens = this.parseToRpn(tokens);
+        return this.reduceRpn(parsedTokens);
+    }
+
+    public List<Token> parseToRpn(List<Token> tokens) throws SyntaxErrorException
     {
         Iterator<Token> it = tokens.iterator();
         Supplier<Optional<Token>> tokenSource = () -> it.hasNext() ? Optional.of(it.next()) : Optional.empty();
-        return parseToRpn(tokenSource);
+        return this.parseToRpn(tokenSource);
     }
 
-    public static List<Token> parseToRpn(Supplier<Optional<Token>> tokenSource)
+    public List<Token> parseToRpn(Supplier<Optional<Token>> tokenSource) throws SyntaxErrorException
     {
-        ArrayList<Token> outputQueue = new ArrayList<>();
+        List<Token> outputQueue = new ArrayList<>();
         Stack<Token> operatorStack = new Stack<>();
 
         while (true)
@@ -81,7 +110,7 @@ public class ExpressionParser
 
             if (token.getType() == TokenType.INVALID)
             {
-                return Collections.emptyList();
+                throw new SyntaxErrorException("Invalid token: '" + token.getOriginalString() + "'");
             }
 
             TokenType type = token.getType();
@@ -104,8 +133,9 @@ public class ExpressionParser
                     Token lastOp = operatorStack.peek();
                     TokenType lastOpType = lastOp.getType();
 
+                    // All the existing/supported binary operators are left-associative
                     if (lastOpType != TokenType.LEFT_PAREN &&
-                        lastOpType.getPrecedence() <= type.getPrecedence()) // all the existing/supported binary operators are left-associative
+                        lastOpType.getPrecedence() <= type.getPrecedence())
                     {
                         outputQueue.add(operatorStack.pop());
                     }
@@ -123,21 +153,21 @@ public class ExpressionParser
             }
             else if (type == TokenType.RIGHT_PAREN)
             {
-                while (operatorStack.isEmpty() == false && operatorStack.peek().getType() != TokenType.LEFT_PAREN)
+                while (operatorStack.isEmpty() == false &&
+                       operatorStack.peek().getType() != TokenType.LEFT_PAREN)
                 {
                     outputQueue.add(operatorStack.pop());
                 }
 
-                // Mismatched parenthesis
-                if (operatorStack.isEmpty())
-                {
-                    WorldPrimer.LOGGER.warn("Mismatched parenthesis");
-                    return null;
-                }
-
-                if (operatorStack.peek().getType() == TokenType.LEFT_PAREN)
+                if (operatorStack.isEmpty() == false &&
+                    operatorStack.peek().getType() == TokenType.LEFT_PAREN)
                 {
                     operatorStack.pop();
+                }
+                // Mismatched parenthesis
+                else
+                {
+                    throw new SyntaxErrorException("ExpressionParser#parseToRpn(): Mismatched/extra right parenthesis found");
                 }
             }
         }
@@ -149,8 +179,7 @@ public class ExpressionParser
             // Mismatched parenthesis
             if (op.getType().getTokenCategory() == TokenCategory.PRECEDENCE)
             {
-                WorldPrimer.LOGGER.warn("Mismatched parenthesis in operator stack (size: {})");
-                return null;
+                throw new SyntaxErrorException("ExpressionParser#parseToRpn(): Mismatched parenthesis in operator stack (size: {})", operatorStack.size());
             }
 
             outputQueue.add(op);
@@ -159,12 +188,16 @@ public class ExpressionParser
         return outputQueue;
     }
 
-    @Nullable
-    public static List<Token> reduceRpn(List<Token> tokenQueue)
+    public List<Token> reduceRpn(List<Token> tokenQueue) throws SyntaxErrorException
+    {
+        return this.reduceRpn(tokenQueue, null);
+    }
+
+    public List<Token> reduceRpn(List<Token> tokenQueue, @Nullable CommandContext ctx) throws SyntaxErrorException
     {
         List<Token> reducedTokens = new ArrayList<>(tokenQueue);
 
-        for (int i = 2; i < reducedTokens.size(); ++i)
+        for (int i = 0; i < reducedTokens.size(); ++i)
         {
             Token operatorToken = reducedTokens.get(i);
             TokenType operatorTokenType = operatorToken.getType();
@@ -176,12 +209,12 @@ public class ExpressionParser
             if (i >= 1 && operatorTokenType.getArgumentCount() == 1)
             {
                 //System.out.printf("try unary reduce for op %s\n", operatorToken);
-                Token valueToken1 = reducedTokens.get(i - 1);
-                Token reducedToken = reduceUnaryValue(operatorToken, valueToken1);
+                Token valueToken1 = this.getSubstitutedValueToken(reducedTokens.get(i - 1), ctx);
+                Token reducedToken = this.reduceUnaryValue(operatorToken, valueToken1);
 
                 if (reducedToken != null)
                 {
-                    System.out.printf("UNARY reducing '%s' using op '%s' to '%s'\n", valueToken1, operatorToken, reducedToken);
+                    //System.out.printf("UNARY reducing '%s' using op '%s' to '%s'\n", valueToken1, operatorToken, reducedToken);
                     reducedTokens.set(i - 1, reducedToken);
                     reducedTokens.remove(i);
                     i -= 1; // continue from the position following the newly replaced value token
@@ -190,13 +223,13 @@ public class ExpressionParser
             else if (i >= 2 && operatorToken.getType().getArgumentCount() == 2)
             {
                 //System.out.printf("try binary reduce for op %s\n", operatorToken);
-                Token valueToken1 = reducedTokens.get(i - 2);
-                Token valueToken2 = reducedTokens.get(i - 1);
-                Token reducedToken = reduceBinaryValue(operatorToken, valueToken1, valueToken2);
+                Token valueToken1 = this.getSubstitutedValueToken(reducedTokens.get(i - 2), ctx);
+                Token valueToken2 = this.getSubstitutedValueToken(reducedTokens.get(i - 1), ctx);
+                Token reducedToken = this.reduceBinaryValue(operatorToken, valueToken1, valueToken2);
 
                 if (reducedToken != null)
                 {
-                    System.out.printf("BINARY reducing '%s' and '%s' using op '%s' to '%s'\n", valueToken1, valueToken2, operatorToken, reducedToken);
+                    //System.out.printf("BINARY reducing '%s' and '%s' using op '%s' to '%s'\n", valueToken1, valueToken2, operatorToken, reducedToken);
                     reducedTokens.set(i - 2, reducedToken);
                     reducedTokens.remove(i);
                     reducedTokens.remove(i - 1);
@@ -208,8 +241,27 @@ public class ExpressionParser
         return reducedTokens;
     }
 
+    public Token getSubstitutedValueToken(Token valueToken, @Nullable CommandContext ctx)
+    {
+        if (ctx != null && valueToken.getType() == TokenType.VARIABLE)
+        {
+            String origString = valueToken.getOriginalString();
+            String substitutionString = origString.substring(1, origString.length() - 1);
+            BaseSubstitution sub = this.substitutionParser.getSubstitutionFor(substitutionString, true);
+
+            if (sub != null)
+            {
+                String subStr = sub.getString(ctx);
+                Token token = StringTokenizer.readToken(new StringReader(subStr), this.substitutionParser, null);
+                return token != null ? token : valueToken;
+            }
+        }
+
+        return valueToken;
+    }
+
     @Nullable
-    public static Token reduceUnaryValue(Token operatorToken, Token valueToken)
+    protected Token reduceUnaryValue(Token operatorToken, Token valueToken) throws SyntaxErrorException
     {
         TokenType operatorTokenType = operatorToken.getType();
         TokenType valueTokenType = valueToken.getType();
@@ -246,8 +298,8 @@ public class ExpressionParser
             }
             else
             {
-                throw new IllegalArgumentException("The operator '" + operatorTokenType +
-                                                   "' can't be applied to the argument '" + valueTokenType + "'");
+                throw new SyntaxErrorException("The operator '" + operatorTokenType +
+                                               "' can't be applied to the argument '" + valueTokenType + "'");
             }
         }
 
@@ -255,7 +307,7 @@ public class ExpressionParser
     }
 
     @Nullable
-    public static Token reduceBinaryValue(Token operatorToken, Token valueToken1, Token valueToken2)
+    protected Token reduceBinaryValue(Token operatorToken, Token valueToken1, Token valueToken2)
     {
         TokenType operatorTokenType = operatorToken.getType();
         TokenType valueTokenType1 = valueToken1.getType();
@@ -283,7 +335,7 @@ public class ExpressionParser
                 return ((EqualityOperatorToken) operatorToken).getOperator().reduceTerms(valueToken1, valueToken2);
             }
         }
-        System.out.printf("Didn't reduce: %s %s %s\n", valueToken1, operatorToken, valueToken2);
+        //System.out.printf("Didn't reduce: %s %s %s\n", valueToken1, operatorToken, valueToken2);
 
         return null;
     }

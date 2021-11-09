@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,25 +18,27 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.handler.CommandHandler;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.reference.Reference;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 public class DataTracker
 {
-    private static final DataTracker INSTANCE = new DataTracker();
-    private final Map<Integer, Integer> dimensionLoadCounts = new HashMap<>();
+    public static final DataTracker INSTANCE = new DataTracker();
+
+    private final Int2IntOpenHashMap dimensionLoadCounts = new Int2IntOpenHashMap();
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
     private final Map<Integer, Map<UUID, BlockPos>> playerSpreadPositions = new HashMap<>();
     private File worldDir = new File(".");
     private int serverStarts;
     private boolean dirty;
 
-    public static DataTracker instance()
+    public DataTracker()
     {
-        return INSTANCE;
+        this.dimensionLoadCounts.defaultReturnValue(0);
     }
 
     public void serverStarted()
@@ -42,28 +47,18 @@ public class DataTracker
         this.dirty = true;
     }
 
-    public void dimensionLoaded(int dimension)
+    public int dimensionLoaded(int dimension)
     {
-        Integer count = this.dimensionLoadCounts.get(dimension);
-
-        if (count == null)
-        {
-            count = Integer.valueOf(1);
-        }
-        else
-        {
-            count = count + 1;
-        }
-
+        int count = this.dimensionLoadCounts.get(dimension) + 1;
         this.dimensionLoadCounts.put(dimension, count);
-
         this.dirty = true;
+
+        return count;
     }
 
     public int getDimensionLoadCount(int dimension)
     {
-        Integer count = this.dimensionLoadCounts.get(dimension);
-        return count != null ? count.intValue() : 0;
+        return this.dimensionLoadCounts.get(dimension);
     }
 
     public void resetDimensionLoadCountFor(int dimension)
@@ -93,16 +88,20 @@ public class DataTracker
         return this.getOrCreatePlayerData(player).getDimensionEventCount(dimension, type);
     }
 
-    public void incrementPlayerDataCount(EntityPlayer player, PlayerDataType type)
+    public int incrementPlayerDataCount(EntityPlayer player, PlayerDataType type)
     {
-        this.getOrCreatePlayerData(player).incrementCount(type);
+        PlayerData data = this.getOrCreatePlayerData(player);
+        int newValue = data.incrementCount(type);
         this.dirty = true;
+        return newValue;
     }
 
-    public void incrementPlayerDimensionEventCount(EntityPlayer player, int dimension, PlayerDimensionDataType type)
+    public int incrementPlayerDimensionEventCount(EntityPlayer player, int dimension, PlayerDimensionDataType type)
     {
-        this.getOrCreatePlayerData(player).incrementDimensionEventCount(dimension, type);
+        PlayerData data = this.getOrCreatePlayerData(player);
+        int newValue = data.incrementDimensionEventCount(dimension, type);
         this.dirty = true;
+        return newValue;
     }
 
     public Collection<BlockPos> getPlayerSpreadPositions(int dimension)
@@ -127,14 +126,7 @@ public class DataTracker
 
     public void addPlayerSpreadPosition(int dimension, UUID uuid, BlockPos pos)
     {
-        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
-
-        if (map == null)
-        {
-            map = new HashMap<>();
-            this.playerSpreadPositions.put(dimension, map);
-        }
-
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.computeIfAbsent(dimension, k -> new HashMap<>());
         map.put(uuid, pos);
         this.dirty = true;
     }
@@ -187,7 +179,7 @@ public class DataTracker
         for (int i = 0; i < tagCount; i++)
         {
             NBTTagCompound tag = tagList.getCompoundTagAt(i);
-            BlockPos pos = readBlockPos(tag);
+            BlockPos pos = NbtUtils.readBlockPos(tag);
 
             if (pos != null)
             {
@@ -239,7 +231,7 @@ public class DataTracker
                 tag.setLong("UUIDM", posEntry.getKey().getMostSignificantBits());
                 tag.setLong("UUIDL", posEntry.getKey().getLeastSignificantBits());
                 tag.setInteger("dim", dimension);
-                writeBlockPosToTag(posEntry.getValue(), tag);
+                NbtUtils.writeBlockPosToTag(posEntry.getValue(), tag);
                 tagList.appendTag(tag);
             }
         }
@@ -345,76 +337,53 @@ public class DataTracker
         }
     }
 
-    private static class PlayerData
+    public static class PlayerData
     {
+        private final Int2IntOpenHashMap dimensionEnterCounts = new Int2IntOpenHashMap();
+        private final Int2IntOpenHashMap dimensionLeaveCounts = new Int2IntOpenHashMap();
         private int joinCount;
         private int quitCount;
         private int deathCount;
         private int respawnCount;
-        private final Map<Integer, Integer> dimensionEnterCounts = new HashMap<Integer, Integer>();
-        private final Map<Integer, Integer> dimensionLeaveCounts = new HashMap<Integer, Integer>();
+
+        public PlayerData()
+        {
+            this.dimensionEnterCounts.defaultReturnValue(-1);
+            this.dimensionLeaveCounts.defaultReturnValue(-1);
+        }
 
         public int getCount(PlayerDataType type)
         {
-            switch (type)
-            {
-                case JOIN:      return this.joinCount;
-                case QUIT:      return this.quitCount;
-                case DEATH:     return this.deathCount;
-                case RESPAWN:   return this.respawnCount;
-                default:        return 0;
-            }
+            return type.getInt(this);
         }
 
-        public void incrementCount(PlayerDataType type)
+        public int incrementCount(PlayerDataType type)
         {
-            switch (type)
-            {
-                case JOIN:
-                    this.joinCount++;
-                    break;
-
-                case QUIT:
-                    this.quitCount++;
-                    break;
-
-                case DEATH:
-                    this.deathCount++;
-                    break;
-
-                case RESPAWN:
-                    this.respawnCount++;
-                    break;
-
-                default:
-            }
+            return type.increment(this);
         }
 
         public int getDimensionEventCount(int dimension, PlayerDimensionDataType type)
         {
-            Map<Integer, Integer> map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
-            Integer count = map.get(dimension);
-            return count != null ? count.intValue() : 0;
+            Int2IntOpenHashMap map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
+            int count = map.get(dimension);
+            return count != -1 ? count : 0;
         }
 
-        public void incrementDimensionEventCount(int dimension, PlayerDimensionDataType type)
+        public int incrementDimensionEventCount(int dimension, PlayerDimensionDataType type)
         {
-            Map<Integer, Integer> map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
-            Integer countOld = map.get(dimension);
-            int countNew = countOld != null ? countOld + 1 : 1;
-            map.put(dimension, countNew);
+            Int2IntOpenHashMap map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
+            int oldValue = map.get(dimension);
+            int newValue = oldValue != -1 ? oldValue + 1 : 1;
+
+            map.put(dimension, newValue);
+
+            return newValue;
         }
 
         public void resetDimensionEventCountsFor(int dimension)
         {
-            this.resetDimensionEventCountFor(dimension, PlayerDimensionDataType.ENTER);
-            this.resetDimensionEventCountFor(dimension, PlayerDimensionDataType.LEAVE);
-        }
-
-        public void resetDimensionEventCountFor(int dimension, PlayerDimensionDataType type)
-        {
-            Map<Integer, Integer> map = type == PlayerDimensionDataType.ENTER ? this.dimensionEnterCounts : this.dimensionLeaveCounts;
-            map.remove(dimension);
+            this.dimensionEnterCounts.remove(dimension);
+            this.dimensionLeaveCounts.remove(dimension);
         }
 
         public void readFromNBT(NBTTagCompound nbt)
@@ -474,36 +443,47 @@ public class DataTracker
         }
     }
 
-    public static NBTTagCompound writeBlockPosToTag(Vec3i pos, NBTTagCompound tag)
-    {
-        tag.setInteger("x", pos.getX());
-        tag.setInteger("y", pos.getY());
-        tag.setInteger("z", pos.getZ());
-
-        return tag;
-    }
-
-    @Nullable
-    public static BlockPos readBlockPos(@Nullable NBTTagCompound tag)
-    {
-        if (tag != null &&
-            tag.hasKey("x", Constants.NBT.TAG_INT) &&
-            tag.hasKey("y", Constants.NBT.TAG_INT) &&
-            tag.hasKey("z", Constants.NBT.TAG_INT))
-        {
-            return new BlockPos(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
-        }
-
-        return null;
-    }
-
     public enum PlayerDataType
     {
-        JOIN,
-        QUIT,
-        DEATH,
-        RESPAWN,
-        ENTER_DIM;
+        JOIN    ((d) -> d.joinCount,    (d, v) -> d.joinCount = v   , () -> CommandHandler.CommandType.PLAYER_JOIN),
+        QUIT    ((d) -> d.quitCount,    (d, v) -> d.quitCount = v   , () -> CommandHandler.CommandType.PLAYER_QUIT),
+        DEATH   ((d) -> d.deathCount,   (d, v) -> d.deathCount = v  , () -> CommandHandler.CommandType.PLAYER_DEATH),
+        RESPAWN ((d) -> d.respawnCount, (d, v) -> d.respawnCount = v, () -> CommandHandler.CommandType.PLAYER_RESPAWN);
+
+        private final ToIntFunction<PlayerData> getter;
+        private final BiConsumer<PlayerData, Integer> setter;
+        private final Supplier<CommandHandler.CommandType> typeSupplier;
+
+        PlayerDataType(ToIntFunction<PlayerData> getter,
+                       BiConsumer<PlayerData, Integer> setter,
+                       Supplier<CommandHandler.CommandType> typeSupplier)
+        {
+            this.getter = getter;
+            this.setter = setter;
+            this.typeSupplier = typeSupplier;
+        }
+
+        public int getInt(PlayerData data)
+        {
+            return this.getter.applyAsInt(data);
+        }
+
+        public int increment(PlayerData data)
+        {
+            int newValue = this.getter.applyAsInt(data) + 1;
+            this.setter.accept(data, newValue);
+            return newValue;
+        }
+
+        public void reset(PlayerData data)
+        {
+            this.setter.accept(data, 0);
+        }
+
+        public CommandHandler.CommandType getCommandType()
+        {
+            return this.typeSupplier.get();
+        }
     }
 
     public enum PlayerDimensionDataType

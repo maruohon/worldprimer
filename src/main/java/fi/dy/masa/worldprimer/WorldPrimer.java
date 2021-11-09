@@ -16,9 +16,8 @@ import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import fi.dy.masa.worldprimer.command.CommandWorldPrimer;
-import fi.dy.masa.worldprimer.command.util.CommandParser;
-import fi.dy.masa.worldprimer.command.util.CommandSubstitutions;
-import fi.dy.masa.worldprimer.command.util.WorldPrimerCommandSender;
+import fi.dy.masa.worldprimer.command.handler.CommandHandler;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
@@ -53,18 +52,19 @@ public class WorldPrimer
     public void onServerAboutToStart(FMLServerAboutToStartEvent event)
     {
         logInfo("FMLServerAboutToStartEvent");
-        CommandParser.init();
         Configs.loadConfigsFromFile();
 
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory,
                 event.getServer().getFolderName());
 
+        CommandHandler.INSTANCE.rebuildCommands();
+
         if (Configs.enableDataTracking)
         {
             // We need to read the data before any dimension loads
-            DataTracker.instance().readFromDisk(worldDir);
+            DataTracker.INSTANCE.readFromDisk(worldDir);
 
-            int count = DataTracker.instance().getServerStartCount();
+            int count = DataTracker.INSTANCE.getServerStartCount();
             logInfo("FMLServerAboutToStartEvent - server starting, previous start count: {}", count);
 
             // The server start count is incremented in the FMLServerStartedEvent,
@@ -72,14 +72,16 @@ public class WorldPrimer
             if (Configs.enableEarlyWorldCreationCommands && count == 0)
             {
                 WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldCreationCommands");
-                WorldPrimerCommandSender.INSTANCE.runCommands(null, null, Configs.earlyWorldCreationCommands);
+                CommandContext ctx = new CommandContext(null, null, 0);
+                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_CREATION, ctx);
             }
         }
 
         if (Configs.enableEarlyWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
-            WorldPrimerCommandSender.INSTANCE.runCommands(null, null, Configs.earlyWorldLoadingCommands);
+            CommandContext ctx = new CommandContext(null, null, 0);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_LOAD, ctx);
         }
     }
 
@@ -94,23 +96,26 @@ public class WorldPrimer
     public void onServerStarted(FMLServerStartedEvent event)
     {
         logInfo("FMLServerStartedEvent");
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
 
         if (Configs.enableDataTracking &&
             Configs.enablePostWorldCreationCommands &&
-            DataTracker.instance().getServerStartCount() == 0)
+            DataTracker.INSTANCE.getServerStartCount() == 0)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
-            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldCreationCommands);
+            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
+            CommandContext ctx = new CommandContext(world, null, 0);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_CREATION, ctx);
         }
 
         // Increment the server start count
-        DataTracker.instance().serverStarted();
+        DataTracker.INSTANCE.serverStarted();
 
         if (Configs.enablePostWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
-            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, Configs.postWorldLoadingCommands);
+            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
+            CommandContext ctx = new CommandContext(world, null, 0);
+            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_LOAD, ctx);
         }
     }
 
@@ -118,7 +123,6 @@ public class WorldPrimer
     public void onServerStopped(FMLServerStoppingEvent event)
     {
         logInfo("FMLServerStoppingEvent");
-        CommandSubstitutions.clearTopYCache();
     }
 
     public static void logInfo(String message, Object... params)
