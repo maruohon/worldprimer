@@ -17,7 +17,6 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import fi.dy.masa.worldprimer.command.CommandWorldPrimer;
 import fi.dy.masa.worldprimer.command.handler.CommandHandler;
-import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.proxy.IProxy;
 import fi.dy.masa.worldprimer.reference.Reference;
@@ -72,16 +71,14 @@ public class WorldPrimer
             if (Configs.enableEarlyWorldCreationCommands && count == 0)
             {
                 WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldCreationCommands");
-                CommandContext ctx = new CommandContext(null, null, 0);
-                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_CREATION, ctx);
+                CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.EARLY_WORLD_CREATION, null);
             }
         }
 
         if (Configs.enableEarlyWorldLoadingCommands)
         {
             WorldPrimer.logInfo("FMLServerAboutToStartEvent - running earlyWorldLoadingCommands");
-            CommandContext ctx = new CommandContext(null, null, 0);
-            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_LOAD, ctx);
+            CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.EARLY_WORLD_LOAD, null);
         }
     }
 
@@ -103,8 +100,7 @@ public class WorldPrimer
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldCreationCommands");
             World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
-            CommandContext ctx = new CommandContext(world, null, 0);
-            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_CREATION, ctx);
+            CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.POST_WORLD_CREATION, world);
         }
 
         // Increment the server start count
@@ -114,8 +110,7 @@ public class WorldPrimer
         {
             WorldPrimer.logInfo("FMLServerStartedEvent - running postWorldLoadingCommands");
             World world = FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
-            CommandContext ctx = new CommandContext(world, null, 0);
-            CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_LOAD, ctx);
+            CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.POST_WORLD_LOAD, world);
         }
     }
 

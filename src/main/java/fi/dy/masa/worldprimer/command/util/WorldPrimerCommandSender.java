@@ -1,13 +1,13 @@
 package fi.dy.masa.worldprimer.command.util;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandResultStats.Type;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -18,17 +18,16 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.util.WorldUtils;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class WorldPrimerCommandSender implements ICommandSender
 {
     public static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
 
     private World executionWorld;
     @Nullable private String senderName = null;
-
-    public void runCommands(@Nullable EntityPlayer player, @Nullable World world, String... commands)
-    {
-    }
 
     public void executeCommand(String command, @Nullable World world)
     {

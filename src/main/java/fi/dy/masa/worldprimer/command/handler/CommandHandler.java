@@ -3,7 +3,9 @@ package fi.dy.masa.worldprimer.command.handler;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
+import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.parser.CommandParser;
 import fi.dy.masa.worldprimer.command.parser.ExpressionParser;
@@ -37,6 +39,11 @@ public class CommandHandler
     {
         this.substitutionParser = SubstitutionParser.INSTANCE;
         this.expressionParser = new ExpressionParser(this.substitutionParser);
+    }
+
+    public void executeCommandsWithSimpleContext(CommandType type, @Nullable World world)
+    {
+        this.executeCommands(type, new CommandContext(world, null, 0));
     }
 
     public void executeCommands(CommandType type, CommandContext ctx)

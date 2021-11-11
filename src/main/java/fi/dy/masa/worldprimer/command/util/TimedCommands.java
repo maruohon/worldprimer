@@ -139,7 +139,7 @@ public class TimedCommands
                     final int dimension = Integer.parseInt(parts[2]);
                     List<TimedCommand> list = TIMED_COMMANDS.computeIfAbsent(dimension, (dim) -> new ArrayList<>());
 
-                    String command = String.join(" ", CommandUtils.dropFirstStrings(parts, 3));
+                    String command = String.join(" ", dropFirstStrings(parts, 3));
                     list.add(new TimedCommand(command, dimension, time, offset, isPeriodic));
                 }
                 catch (NumberFormatException e)
@@ -235,7 +235,7 @@ public class TimedCommands
                         if (command.getNextExecution() == currentTime)
                         {
                             WorldPrimer.logInfo("Executing a timed command '{}' @ tick {} in dim {}", command.getCommand(), currentTime, entry.getKey());
-                            WorldPrimerCommandSender.INSTANCE.runCommands(null, world, command.getCommand());
+                            WorldPrimerCommandSender.INSTANCE.executeCommand(command.getCommand(), world);
                         }
                         else if (command.getNextExecution() > currentTime)
                         {
@@ -247,5 +247,17 @@ public class TimedCommands
 
             updateAllTimedCommands(true);
         }
+    }
+
+    public static String[] dropFirstStrings(String[] input, int toDrop)
+    {
+        if (toDrop >= input.length)
+        {
+            return new String[0];
+        }
+
+        String[] arr = new String[input.length - toDrop];
+        System.arraycopy(input, toDrop, arr, 0, input.length - toDrop);
+        return arr;
     }
 }

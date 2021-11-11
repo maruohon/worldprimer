@@ -36,8 +36,7 @@ public class CommandUtils
             if (Configs.enableEarlyWorldCreationCommands)
             {
                 WorldPrimer.logInfo("WorldEvent.CreateSpawnPosition: Running earlyWorldCreationCommands for DIM: {}", dimension);
-                CommandContext ctx = new CommandContext(world, null, 0);
-                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.EARLY_WORLD_CREATION, ctx);
+                CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.EARLY_WORLD_CREATION, world);
             }
 
             // Defer running the commands until the world is actually ready to load
@@ -61,8 +60,7 @@ public class CommandUtils
             if (runCreationCommands && dimension == 0)
             {
                 WorldPrimer.logInfo("WorldEvent.Load: Running postWorldCreationCommands for DIM: {}", dimension);
-                CommandContext ctx = new CommandContext(world, null, 0);
-                CommandHandler.INSTANCE.executeCommands(CommandHandler.CommandType.POST_WORLD_CREATION, ctx);
+                CommandHandler.INSTANCE.executeCommandsWithSimpleContext(CommandHandler.CommandType.POST_WORLD_CREATION, world);
                 runCreationCommands = false;
             }
 
@@ -184,17 +182,5 @@ public class CommandUtils
             CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount);
             CommandHandler.INSTANCE.executeCommands(type.getCommandType(), ctx);
         }
-    }
-
-    public static String[] dropFirstStrings(String[] input, int toDrop)
-    {
-        if (toDrop >= input.length)
-        {
-            return new String[0];
-        }
-
-        String[] arr = new String[input.length - toDrop];
-        System.arraycopy(input, toDrop, arr, 0, input.length - toDrop);
-        return arr;
     }
 }
