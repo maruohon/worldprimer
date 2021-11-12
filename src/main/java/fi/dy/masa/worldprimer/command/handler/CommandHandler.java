@@ -51,6 +51,11 @@ public class CommandHandler
         type.getCommandList(this).execute(ctx, this.expressionParser);
     }
 
+    public void executeCommand(ParsedCommand command, CommandContext ctx)
+    {
+        command.execute(ctx, this.expressionParser);
+    }
+
     public void rebuildCommands()
     {
         for (CommandType type : CommandType.VALUES)
@@ -71,35 +76,48 @@ public class CommandHandler
 
         for (String str : originalCommands)
         {
-            str = str.trim();
+            ParsedCommand cmd = this.buildCommand(name, str);
 
-            if (str.isEmpty() || str.charAt(0) == '#')
+            if (cmd != null)
             {
-                continue;
-            }
-
-            try
-            {
-                ParsedCommand cmd = CommandParser.parseCommand(str, this.substitutionParser, this.expressionParser);
-
-                if (cmd != null)
-                {
-                    builder.add(cmd);
-                    System.out.printf("CommandHandler#buildCommands(): Parsed command: '%s' as %s\n", cmd.getOriginalString(), cmd.getClass().getName());
-                }
-                else
-                {
-                    WorldPrimer.LOGGER.warn("CommandHandler#buildCommands(): Invalid '{}' command '{}'", name, str);
-                }
-            }
-            catch (Exception e)
-            {
-                WorldPrimer.LOGGER.warn("CommandHandler#buildCommands(): Failed to parse '{}' command '{}'", name, str);
-                WorldPrimer.LOGGER.warn("CommandHandler#buildCommands():   => {}", e.getMessage());
+                builder.add(cmd);
             }
         }
 
         return builder.build();
+    }
+
+    @Nullable
+    public ParsedCommand buildCommand(String name, String rawCommandString)
+    {
+        rawCommandString = rawCommandString.trim();
+
+        if (rawCommandString.isEmpty() || rawCommandString.charAt(0) == '#')
+        {
+            return null;
+        }
+
+        try
+        {
+            ParsedCommand cmd = CommandParser.parseCommand(rawCommandString, this.substitutionParser, this.expressionParser);
+
+            if (cmd != null)
+            {
+                System.out.printf("CommandHandler#buildCommands(): Parsed command: '%s' as %s\n", cmd.getOriginalString(), cmd.getClass().getName());
+                return cmd;
+            }
+            else
+            {
+                WorldPrimer.LOGGER.warn("CommandHandler#buildCommands(): Invalid '{}' command '{}'", name, rawCommandString);
+            }
+        }
+        catch (Exception e)
+        {
+            WorldPrimer.LOGGER.warn("CommandHandler#buildCommands(): Failed to parse '{}' command '{}'", name, rawCommandString);
+            WorldPrimer.LOGGER.warn("CommandHandler#buildCommands():   => {}", e.getMessage(), e);
+        }
+
+        return null;
     }
 
     public enum CommandType

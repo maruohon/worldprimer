@@ -18,11 +18,17 @@ public class CommandList
 
     public void execute(CommandContext ctx, ExpressionParser parser)
     {
-        WorldPrimer.logInfo("Executing the commands for '{}'", this.name);
+        WorldPrimer.logInfo("Executing the commands for '{}' (command count: {})", this.name, this.commands.size());
 
         for (ParsedCommand cmd : this.commands)
         {
             cmd.execute(ctx, parser);
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "CommandList{name='" + this.name + "', commands=" + this.commands + '}';
     }
 }

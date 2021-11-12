@@ -10,6 +10,9 @@ import org.apache.commons.lang3.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.handler.CommandHandler;
+import fi.dy.masa.worldprimer.command.handler.ParsedCommand;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 
 public class TimedCommands
 {
@@ -18,14 +21,14 @@ public class TimedCommands
 
     public static class TimedCommand implements Comparable<TimedCommand>
     {
-        private final String command;
+        private final ParsedCommand command;
         private final int dimension;
         private final boolean isPeriodic;
         private final long time;
         private final long offset;
         private long nextExecution;
 
-        public TimedCommand(String command, int dimension, long time, long offset, boolean isPeriodic)
+        public TimedCommand(ParsedCommand command, int dimension, long time, long offset, boolean isPeriodic)
         {
             this.command = command;
             this.dimension = dimension;
@@ -34,7 +37,7 @@ public class TimedCommands
             this.isPeriodic = isPeriodic;
         }
 
-        public String getCommand()
+        public ParsedCommand getCommand()
         {
             return this.command;
         }
@@ -97,14 +100,14 @@ public class TimedCommands
     {
         TIMED_COMMANDS.clear();
 
-        for (String cmd : rawCommands)
+        for (String cmdStr : rawCommands)
         {
-            if (StringUtils.isBlank(cmd) || (cmd.length() > 0 && cmd.charAt(0) == '#'))
+            if (StringUtils.isBlank(cmdStr) || (cmdStr.length() > 0 && cmdStr.charAt(0) == '#'))
             {
                 continue;
             }
 
-            String[] parts = cmd.split("\\s+", 4);
+            String[] parts = cmdStr.split("\\s+", 4);
 
             if (parts.length >= 4 && parts[0].equals("worldprimer-timed-command"))
             {
@@ -139,17 +142,22 @@ public class TimedCommands
                     final int dimension = Integer.parseInt(parts[2]);
                     List<TimedCommand> list = TIMED_COMMANDS.computeIfAbsent(dimension, (dim) -> new ArrayList<>());
 
-                    String command = String.join(" ", dropFirstStrings(parts, 3));
-                    list.add(new TimedCommand(command, dimension, time, offset, isPeriodic));
+                    cmdStr = String.join(" ", dropFirstStrings(parts, 3));
+                    ParsedCommand command = CommandHandler.INSTANCE.buildCommand("Timed Command", cmdStr);
+
+                    if (command != null)
+                    {
+                        list.add(new TimedCommand(command, dimension, time, offset, isPeriodic));
+                    }
                 }
                 catch (NumberFormatException e)
                 {
-                    WorldPrimer.LOGGER.warn("Invalid time or dimension value in timed command '{}'", cmd);
+                    WorldPrimer.LOGGER.warn("Invalid time or dimension value in timed command '{}'", cmdStr);
                 }
             }
             else
             {
-                WorldPrimer.LOGGER.warn("Invalid timed command '{}', ignoring it!", cmd);
+                WorldPrimer.LOGGER.warn("Invalid timed command '{}', ignoring it!", cmdStr);
             }
         }
 
@@ -223,10 +231,12 @@ public class TimedCommands
         {
             for (Map.Entry<Integer, List<TimedCommand>> entry : TIMED_COMMANDS.entrySet())
             {
-                World world = DimensionManager.getWorld(entry.getKey());
+                int dimension = entry.getKey();
+                World world = DimensionManager.getWorld(dimension);
 
                 if (world != null)
                 {
+                    CommandContext ctx = new CommandContext(world, null, 0, dimension);
                     final long currentTime = world.getTotalWorldTime();
                     List<TimedCommand> list = entry.getValue();
 
@@ -234,8 +244,8 @@ public class TimedCommands
                     {
                         if (command.getNextExecution() == currentTime)
                         {
-                            WorldPrimer.logInfo("Executing a timed command '{}' @ tick {} in dim {}", command.getCommand(), currentTime, entry.getKey());
-                            WorldPrimerCommandSender.INSTANCE.executeCommand(command.getCommand(), world);
+                            WorldPrimer.logInfo("Executing a timed command: tick: {}, dim: {}", currentTime, dimension);
+                            CommandHandler.INSTANCE.executeCommand(command.getCommand(), ctx);
                         }
                         else if (command.getNextExecution() > currentTime)
                         {

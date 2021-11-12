@@ -144,7 +144,7 @@ public class StringReader
 
     public int findNext(String subStr)
     {
-        return this.string.substring(this.pos).indexOf(subStr);
+        return this.string.indexOf(subStr, this.pos);
     }
 
     public int getPos()
@@ -162,9 +162,29 @@ public class StringReader
         return this;
     }
 
+    public StringReader movePos(int amount)
+    {
+        int pos = this.pos + amount;
+
+        if (pos >= 0 && pos <= this.length)
+        {
+            this.pos = pos;
+        }
+
+        return this;
+    }
+
     public void setPosToEnd()
     {
         this.pos = this.length;
+    }
+
+    public void skipNextSpaces()
+    {
+        while (this.canRead() && this.peek() == ' ')
+        {
+            this.skip();
+        }
     }
 
     public int getLength()
