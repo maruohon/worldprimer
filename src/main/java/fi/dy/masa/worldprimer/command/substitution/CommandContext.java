@@ -36,9 +36,9 @@ public class CommandContext
         this.count = count;
     }
 
-    public int getCount()
+    public OptionalInt getCount()
     {
-        return this.count;
+        return this.count >= 0 ? OptionalInt.of(this.count) : OptionalInt.empty();
     }
 
     public MinecraftServer getServer()

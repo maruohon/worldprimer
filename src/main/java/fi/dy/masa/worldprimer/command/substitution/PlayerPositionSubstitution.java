@@ -27,13 +27,13 @@ public class PlayerPositionSubstitution extends BaseSubstitution
     {
         EntityPlayer player = context.getPlayer();
 
-        if (player == null)
+        if (player != null)
         {
-            return this.getOriginalFullSubstitutionString();
+            String substituted = this.playerPositionType.function.apply(this.coordinate, player);
+            return substituted != null ? substituted : this.getOriginalFullSubstitutionString();
         }
 
-        String substituted = this.playerPositionType.function.apply(this.coordinate, player);
-        return substituted != null ? substituted : this.getOriginalFullSubstitutionString();
+        return this.getOriginalFullSubstitutionString();
     }
 
     @Nullable

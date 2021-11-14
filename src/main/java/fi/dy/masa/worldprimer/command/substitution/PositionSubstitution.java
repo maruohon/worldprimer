@@ -5,14 +5,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.util.Coordinate;
 
-public class SpawnPointSubstitution extends BaseSubstitution
+public class PositionSubstitution extends BaseSubstitution
 {
     protected final Function<World, BlockPos> positionFetcher;
     protected final Coordinate coordinate;
 
-    public SpawnPointSubstitution(String substitutionName,
-                                  Function<World, BlockPos> positionFetcher,
-                                  Coordinate coordinate)
+    public PositionSubstitution(String substitutionName,
+                                Function<World, BlockPos> positionFetcher,
+                                Coordinate coordinate)
     {
         super(substitutionName, true, false);
 
@@ -27,11 +27,11 @@ public class SpawnPointSubstitution extends BaseSubstitution
 
         if (world != null)
         {
-            BlockPos spawn = this.positionFetcher.apply(world);
+            BlockPos pos = this.positionFetcher.apply(world);
 
-            if (spawn != null)
+            if (pos != null)
             {
-                return this.coordinate.getCoordinateAsIntString(spawn);
+                return this.coordinate.getCoordinateAsIntString(pos);
             }
         }
 

@@ -51,34 +51,4 @@ public abstract class BaseSubstitution implements StringSubstitution
     {
         return this;
     }
-
-    /*
-    public int getIntValue(CommandContext context, String original)
-    {
-        if (this.isNumeric)
-        {
-            try
-            {
-                return Integer.parseInt(this.getString(context, original));
-            }
-            catch (NumberFormatException ignore) {}
-        }
-
-        return -1;
-    }
-
-    public double getDoubleValue(CommandContext context, String original)
-    {
-        if (this.isNumeric)
-        {
-            try
-            {
-                return Double.parseDouble(this.getString(context, original));
-            }
-            catch (NumberFormatException ignore) {}
-        }
-
-        return Double.NaN;
-    }
-    */
 }

@@ -2,6 +2,7 @@ package fi.dy.masa.worldprimer.command.substitution;
 
 import java.util.HashMap;
 import javax.annotation.Nullable;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.command.substitution.PlayerPositionSubstitution.PlayerPositionType;
 import fi.dy.masa.worldprimer.util.Coordinate;
@@ -22,16 +23,16 @@ public class SubstitutionRegistry
     {
         this.substitutions.clear();
 
-        this.register(new CountSubstitution());
-        this.register(new DimensionSubstitution());
+        this.register(new IntegerSubstitution("COUNT", CommandContext::getCount));
+        this.register(new IntegerSubstitution("DIMENSION", CommandContext::getEventDimension));
 
-        this.register(new SpawnPointSubstitution("SPAWN_X", WorldUtils::getWorldSpawn, Coordinate.X));
-        this.register(new SpawnPointSubstitution("SPAWN_Y", WorldUtils::getWorldSpawn, Coordinate.Y));
-        this.register(new SpawnPointSubstitution("SPAWN_Z", WorldUtils::getWorldSpawn, Coordinate.Z));
+        this.register(new PositionSubstitution("SPAWN_X", WorldUtils::getWorldSpawn, Coordinate.X));
+        this.register(new PositionSubstitution("SPAWN_Y", WorldUtils::getWorldSpawn, Coordinate.Y));
+        this.register(new PositionSubstitution("SPAWN_Z", WorldUtils::getWorldSpawn, Coordinate.Z));
 
-        this.register(new SpawnPointSubstitution("SPAWN_POINT_X", World::getSpawnPoint, Coordinate.X));
-        this.register(new SpawnPointSubstitution("SPAWN_POINT_Y", World::getSpawnPoint, Coordinate.Y));
-        this.register(new SpawnPointSubstitution("SPAWN_POINT_Z", World::getSpawnPoint, Coordinate.Z));
+        this.register(new PositionSubstitution("SPAWN_POINT_X", World::getSpawnPoint, Coordinate.X));
+        this.register(new PositionSubstitution("SPAWN_POINT_Y", World::getSpawnPoint, Coordinate.Y));
+        this.register(new PositionSubstitution("SPAWN_POINT_Z", World::getSpawnPoint, Coordinate.Z));
 
         this.register(new WorldTimeSubstitution("TIME_TICK", World::getTotalWorldTime));
         this.register(new WorldTimeSubstitution("TIME_TICK_DAY", World::getWorldTime));
@@ -41,8 +42,8 @@ public class SubstitutionRegistry
         this.register(new TopBlockYRandSubstitution());
         this.register(new TopBlockYSubstitution());
 
-        this.register(new PlayerNameSubstitution());
-        this.register(new PlayerUuidSubstitution());
+        this.register(new PlayerAttributeSubstitution("PLAYER_NAME", EntityPlayer::getName));
+        this.register(new PlayerAttributeSubstitution("PLAYER_UUID", (p) -> p.getUniqueID().toString()));
 
         this.register(new PlayerPositionSubstitution("PLAYER_BED_X", PlayerPositionType.BED_POSITION, Coordinate.X));
         this.register(new PlayerPositionSubstitution("PLAYER_BED_Y", PlayerPositionType.BED_POSITION, Coordinate.Y));
