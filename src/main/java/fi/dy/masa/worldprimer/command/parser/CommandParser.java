@@ -84,7 +84,7 @@ public class CommandParser
             // No more substitutions, add the rest of the command string as-is
             if (substitutionRegion == null)
             {
-                if (unconsumedStartPos < reader.getLength() - 1)
+                if (unconsumedStartPos < reader.getLength())
                 {
                     builder.add(plainString(reader, unconsumedStartPos));
                 }
