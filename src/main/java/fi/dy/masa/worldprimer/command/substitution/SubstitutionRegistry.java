@@ -1,11 +1,14 @@
 package fi.dy.masa.worldprimer.command.substitution;
 
 import java.util.HashMap;
+import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.command.substitution.PlayerPositionSubstitution.PlayerPositionType;
+import fi.dy.masa.worldprimer.command.util.CommandUtils;
 import fi.dy.masa.worldprimer.util.Coordinate;
+import fi.dy.masa.worldprimer.util.DataTracker;
 import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class SubstitutionRegistry
@@ -23,8 +26,16 @@ public class SubstitutionRegistry
     {
         this.substitutions.clear();
 
-        this.register(new IntegerSubstitution("COUNT", CommandContext::getCount));
+        this.register(new IntegerSubstitution("COUNT",     CommandContext::getCount));
         this.register(new IntegerSubstitution("DIMENSION", CommandContext::getEventDimension));
+
+        this.register(new IntegerSubstitution("DIM_LOAD_COUNT",     (ctx) -> ctx.getEventDimension().isPresent() ? OptionalInt.of(DataTracker.INSTANCE.getDimensionLoadCount(ctx.getEventDimension().getAsInt())) : OptionalInt.empty()));
+        this.register(new IntegerSubstitution("SERVER_START_COUNT", (ctx) -> OptionalInt.of(DataTracker.INSTANCE.getServerStartCount())));
+
+        this.register(new IntegerSubstitution("PLAYER_DEATH_COUNT",   (ctx) -> CommandUtils.getPlayerEventCount(DataTracker.PlayerDataType.DEATH, ctx)));
+        this.register(new IntegerSubstitution("PLAYER_JOIN_COUNT",    (ctx) -> CommandUtils.getPlayerEventCount(DataTracker.PlayerDataType.JOIN, ctx)));
+        this.register(new IntegerSubstitution("PLAYER_QUIT_COUNT",    (ctx) -> CommandUtils.getPlayerEventCount(DataTracker.PlayerDataType.QUIT, ctx)));
+        this.register(new IntegerSubstitution("PLAYER_RESPAWN_COUNT", (ctx) -> CommandUtils.getPlayerEventCount(DataTracker.PlayerDataType.RESPAWN, ctx)));
 
         this.register(new PositionSubstitution("SPAWN_X", WorldUtils::getWorldSpawn, Coordinate.X));
         this.register(new PositionSubstitution("SPAWN_Y", WorldUtils::getWorldSpawn, Coordinate.Y));
@@ -34,16 +45,18 @@ public class SubstitutionRegistry
         this.register(new PositionSubstitution("SPAWN_POINT_Y", World::getSpawnPoint, Coordinate.Y));
         this.register(new PositionSubstitution("SPAWN_POINT_Z", World::getSpawnPoint, Coordinate.Z));
 
-        this.register(new WorldTimeSubstitution("TIME_TICK", World::getTotalWorldTime));
-        this.register(new WorldTimeSubstitution("TIME_TICK_DAY", World::getWorldTime));
+        this.register(new WorldTimeSubstitution("WORLD_DAY_TICK",   World::getWorldTime));
+        this.register(new WorldTimeSubstitution("WORLD_TOTAL_TICK", World::getTotalWorldTime));
 
         this.register(new RandomNumberSubstitution());
         this.register(new RealTimeSubstitution());
         this.register(new TopBlockYRandSubstitution());
         this.register(new TopBlockYSubstitution());
 
-        this.register(new PlayerAttributeSubstitution("PLAYER_NAME", EntityPlayer::getName));
-        this.register(new PlayerAttributeSubstitution("PLAYER_UUID", (p) -> p.getUniqueID().toString()));
+        this.register(new PlayerAttributeSubstitution("PLAYER_AGE",    (p) -> String.valueOf(p.ticksExisted)));
+        this.register(new PlayerAttributeSubstitution("PLAYER_NAME",   EntityPlayer::getName));
+        this.register(new PlayerAttributeSubstitution("PLAYER_HEALTH", (p) -> String.valueOf(p.getHealth())));
+        this.register(new PlayerAttributeSubstitution("PLAYER_UUID",   (p) -> p.getUniqueID().toString()));
 
         this.register(new PlayerPositionSubstitution("PLAYER_BED_X", PlayerPositionType.BED_POSITION, Coordinate.X));
         this.register(new PlayerPositionSubstitution("PLAYER_BED_Y", PlayerPositionType.BED_POSITION, Coordinate.Y));

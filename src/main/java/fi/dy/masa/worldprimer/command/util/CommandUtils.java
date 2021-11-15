@@ -1,5 +1,6 @@
 package fi.dy.masa.worldprimer.command.util;
 
+import java.util.OptionalInt;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import fi.dy.masa.worldprimer.WorldPrimer;
@@ -182,5 +183,17 @@ public class CommandUtils
             CommandContext ctx = new CommandContext(player.getEntityWorld(), player, currentCount);
             CommandHandler.INSTANCE.executeCommands(type.getCommandType(), ctx);
         }
+    }
+
+    public static OptionalInt getPlayerEventCount(PlayerDataType type, CommandContext ctx)
+    {
+        EntityPlayer player = ctx.getPlayer();
+
+        if (player != null)
+        {
+            return OptionalInt.of(DataTracker.INSTANCE.getPlayerDataCount(player, type));
+        }
+
+        return OptionalInt.empty();
     }
 }
