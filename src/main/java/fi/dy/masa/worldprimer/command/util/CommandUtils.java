@@ -64,7 +64,7 @@ public class CommandUtils
                 runCreationCommands = false;
             }
 
-            int dimLoadCount = DataTracker.INSTANCE.dimensionLoaded(dimension);
+            int dimLoadCount = DataTracker.INSTANCE.incrementDimensionLoadCount(dimension);
 
             if (Configs.enableDimensionLoadingCommands)
             {

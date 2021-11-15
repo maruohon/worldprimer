@@ -41,24 +41,53 @@ public class DataTracker
         this.dimensionLoadCounts.defaultReturnValue(0);
     }
 
-    public void serverStarted()
+    public int getServerStartCount()
+    {
+        return this.serverStarts;
+    }
+
+    public int getDimensionLoadCount(int dimension)
+    {
+        return this.dimensionLoadCounts.get(dimension);
+    }
+
+    public int getPlayerDataCount(EntityPlayer player, PlayerDataType type)
+    {
+        return this.getOrCreatePlayerData(player).getCount(type);
+    }
+
+    public int getPlayerDimensionEventCount(EntityPlayer player, int dimension, PlayerDimensionDataType type)
+    {
+        return this.getOrCreatePlayerData(player).getDimensionEventCount(dimension, type);
+    }
+
+    public Collection<BlockPos> getPlayerSpreadPositions(int dimension)
+    {
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
+        return map != null ? map.values() : Collections.emptyList();
+    }
+
+    @Nullable
+    public BlockPos getLastPlayerSpreadPosition(EntityPlayer player)
+    {
+        int dimension = player.getEntityWorld().provider.getDimension();
+        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
+        return map != null ? map.get(player.getUniqueID()) : null;
+    }
+
+    public void incrementServerStartCount()
     {
         this.serverStarts++;
         this.dirty = true;
     }
 
-    public int dimensionLoaded(int dimension)
+    public int incrementDimensionLoadCount(int dimension)
     {
         int count = this.dimensionLoadCounts.get(dimension) + 1;
         this.dimensionLoadCounts.put(dimension, count);
         this.dirty = true;
 
         return count;
-    }
-
-    public int getDimensionLoadCount(int dimension)
-    {
-        return this.dimensionLoadCounts.get(dimension);
     }
 
     public void resetDimensionLoadCountFor(int dimension)
@@ -71,21 +100,6 @@ public class DataTracker
         }
 
         this.dirty = true;
-    }
-
-    public int getServerStartCount()
-    {
-        return this.serverStarts;
-    }
-
-    public int getPlayerDataCount(EntityPlayer player, PlayerDataType type)
-    {
-        return this.getOrCreatePlayerData(player).getCount(type);
-    }
-
-    public int getPlayerDimensionEventCount(EntityPlayer player, int dimension, PlayerDimensionDataType type)
-    {
-        return this.getOrCreatePlayerData(player).getDimensionEventCount(dimension, type);
     }
 
     public int incrementPlayerDataCount(EntityPlayer player, PlayerDataType type)
@@ -102,20 +116,6 @@ public class DataTracker
         int newValue = data.incrementDimensionEventCount(dimension, type);
         this.dirty = true;
         return newValue;
-    }
-
-    public Collection<BlockPos> getPlayerSpreadPositions(int dimension)
-    {
-        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
-        return map != null ? map.values() : Collections.emptyList();
-    }
-
-    @Nullable
-    public BlockPos getLastPlayerSpreadPosition(EntityPlayer player)
-    {
-        int dimension = player.getEntityWorld().provider.getDimension();
-        Map<UUID, BlockPos> map = this.playerSpreadPositions.get(dimension);
-        return map != null ? map.get(player.getUniqueID()) : null;
     }
 
     public void addPlayerSpreadPosition(EntityPlayer player, BlockPos pos)
@@ -242,7 +242,7 @@ public class DataTracker
     }
 
     @Nullable
-    private File getDataDir(boolean createDirs)
+    private File getDataDir()
     {
         File saveDir = this.worldDir;
 
@@ -250,13 +250,10 @@ public class DataTracker
         {
             saveDir = new File(saveDir, Reference.MOD_ID);
 
-            if (saveDir.exists() == false && (createDirs == false || saveDir.mkdirs() == false))
+            if (saveDir.exists() == false && saveDir.mkdirs() == false)
             {
-                if (createDirs)
-                {
-                    WorldPrimer.LOGGER.warn("Failed to create a directory for storing the data tracker file '{}'", saveDir.getPath());
-                }
-
+                WorldPrimer.LOGGER.warn("Failed to create a directory for storing the data tracker file '{}'",
+                                        saveDir.getPath());
                 return null;
             }
 
@@ -312,7 +309,7 @@ public class DataTracker
 
         try
         {
-            File saveDir = this.getDataDir(true);
+            File saveDir = this.getDataDir();
 
             if (saveDir != null)
             {
@@ -322,12 +319,17 @@ public class DataTracker
                 CompressedStreamTools.writeCompressed(this.writeToNBT(new NBTTagCompound()), os);
                 os.close();
 
-                if (fileReal.exists())
+                if (fileReal.exists() && fileReal.delete() == false)
                 {
-                    fileReal.delete();
+                    WorldPrimer.LOGGER.warn("Failed to remove old data file '{}'", fileReal.getAbsolutePath());
                 }
 
-                fileTmp.renameTo(fileReal);
+                if (fileTmp.renameTo(fileReal) == false)
+                {
+                    WorldPrimer.LOGGER.warn("Failed to rename data file '{}' to '{}'",
+                                            fileTmp.getAbsolutePath(), fileReal.getAbsolutePath());
+                }
+
                 this.dirty = false;
             }
         }

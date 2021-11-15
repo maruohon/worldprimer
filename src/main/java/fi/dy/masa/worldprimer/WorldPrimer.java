@@ -104,7 +104,7 @@ public class WorldPrimer
         }
 
         // Increment the server start count
-        DataTracker.INSTANCE.serverStarted();
+        DataTracker.INSTANCE.incrementServerStartCount();
 
         if (Configs.enablePostWorldLoadingCommands)
         {
