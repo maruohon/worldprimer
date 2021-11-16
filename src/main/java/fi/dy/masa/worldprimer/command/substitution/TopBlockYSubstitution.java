@@ -22,7 +22,7 @@ public class TopBlockYSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         return this.getOriginalFullSubstitutionString();
     }
@@ -61,7 +61,7 @@ public class TopBlockYSubstitution extends BaseSubstitution
         }
 
         @Override
-        public String getString(CommandContext ctx)
+        public String evaluate(CommandContext ctx)
         {
             World world = ctx.getWorld();
     

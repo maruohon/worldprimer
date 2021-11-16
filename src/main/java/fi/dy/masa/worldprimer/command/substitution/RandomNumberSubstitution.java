@@ -47,7 +47,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         return this.getOriginalFullSubstitutionString();
     }
@@ -68,7 +68,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
         }
 
         @Override
-        public String getString(CommandContext context)
+        public String evaluate(CommandContext context)
         {
             return String.valueOf(this.minValue + RAND.nextInt(this.range));
         }
@@ -90,7 +90,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
         }
 
         @Override
-        public String getString(CommandContext context)
+        public String evaluate(CommandContext context)
         {
             return String.valueOf(this.minValue + RAND.nextDouble() * this.range);
         }

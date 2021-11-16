@@ -14,7 +14,7 @@ public class RealTimeSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         return this.getOriginalFullSubstitutionString();
     }
@@ -38,7 +38,7 @@ public class RealTimeSubstitution extends BaseSubstitution
         }
 
         @Override
-        public String getString(CommandContext context)
+        public String evaluate(CommandContext context)
         {
             DATE.setTime(System.currentTimeMillis());
             return this.format.format(DATE);

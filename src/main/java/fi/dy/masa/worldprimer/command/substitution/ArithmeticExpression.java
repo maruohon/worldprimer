@@ -18,7 +18,7 @@ public class ArithmeticExpression implements StringSubstitution
     }
 
     @Override
-    public String getString(CommandContext ctx)
+    public String evaluate(CommandContext ctx)
     {
         try
         {

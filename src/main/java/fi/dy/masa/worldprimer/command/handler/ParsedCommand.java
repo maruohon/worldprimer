@@ -28,14 +28,14 @@ public class ParsedCommand
     {
         if (this.commandParts.size() == 1)
         {
-            return this.commandParts.get(0).getString(ctx);
+            return this.commandParts.get(0).evaluate(ctx);
         }
 
         StringBuilder sb = new StringBuilder();
 
         for (StringSubstitution provider : this.commandParts)
         {
-            sb.append(provider.getString(ctx));
+            sb.append(provider.evaluate(ctx));
         }
 
         return sb.toString();

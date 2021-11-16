@@ -10,7 +10,7 @@ public class PlainString implements StringSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         return this.string;
     }

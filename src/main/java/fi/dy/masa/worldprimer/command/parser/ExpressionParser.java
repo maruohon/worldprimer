@@ -251,7 +251,7 @@ public class ExpressionParser
 
             if (sub != null)
             {
-                String subStr = sub.getString(ctx);
+                String subStr = sub.evaluate(ctx);
                 Token token = StringTokenizer.readToken(new StringReader(subStr), this.substitutionParser, null);
                 return token != null ? token : valueToken;
             }

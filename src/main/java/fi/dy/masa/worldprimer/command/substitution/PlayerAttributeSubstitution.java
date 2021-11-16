@@ -15,7 +15,7 @@ public class PlayerAttributeSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         EntityPlayer player = context.getPlayer();
         return player != null ? this.stringFunction.apply(player) : this.getOriginalFullSubstitutionString();

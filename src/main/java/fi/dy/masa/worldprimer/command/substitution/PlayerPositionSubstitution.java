@@ -23,7 +23,7 @@ public class PlayerPositionSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext context)
+    public String evaluate(CommandContext context)
     {
         EntityPlayer player = context.getPlayer();
 

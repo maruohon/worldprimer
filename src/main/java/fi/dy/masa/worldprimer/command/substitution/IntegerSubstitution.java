@@ -15,7 +15,7 @@ public class IntegerSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext ctx)
+    public String evaluate(CommandContext ctx)
     {
         OptionalInt intValue = this.intSource.apply(ctx);
         return intValue.isPresent() ? String.valueOf(intValue.getAsInt()) : this.getOriginalFullSubstitutionString();

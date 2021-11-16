@@ -15,7 +15,7 @@ public class WorldTimeSubstitution extends BaseSubstitution
     }
 
     @Override
-    public String getString(CommandContext ctx)
+    public String evaluate(CommandContext ctx)
     {
         World world = ctx.getWorld();
 
