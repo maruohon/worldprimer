@@ -8,9 +8,9 @@ public class RealTimeSubstitution extends BaseSubstitution
 {
     protected static final Date DATE = new Date();
 
-    public RealTimeSubstitution()
+    public RealTimeSubstitution(String substitutionName)
     {
-        super("TIME_IRL", true);
+        super(substitutionName, true);
     }
 
     @Override

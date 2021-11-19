@@ -48,10 +48,10 @@ public class SubstitutionRegistry
         this.register(new WorldTimeSubstitution("WORLD_DAY_TICK",   World::getWorldTime));
         this.register(new WorldTimeSubstitution("WORLD_TOTAL_TICK", World::getTotalWorldTime));
 
-        this.register(new RandomNumberSubstitution());
-        this.register(new RealTimeSubstitution());
-        this.register(new TopBlockYRandSubstitution());
-        this.register(new TopBlockYSubstitution());
+        this.register(new RandomNumberSubstitution("RAND"));
+        this.register(new RealTimeSubstitution("TIME_IRL"));
+        this.register(new TopBlockYRandSubstitution("TOP_Y_RAND"));
+        this.register(new TopBlockYSubstitution("TOP_Y"));
 
         this.register(new PlayerAttributeSubstitution("PLAYER_AGE",    (p) -> String.valueOf(p.ticksExisted)));
         this.register(new PlayerAttributeSubstitution("PLAYER_NAME",   EntityPlayer::getName));
@@ -75,7 +75,7 @@ public class SubstitutionRegistry
         this.register(new PlayerPositionSubstitution("PLAYER_Z", PlayerPositionType.EXACT_POSITION, Coordinate.Z));
     }
 
-    protected void register(BaseSubstitution substitution)
+    public void register(BaseSubstitution substitution)
     {
         this.substitutions.put(substitution.getSubstitutionName(), substitution);
     }

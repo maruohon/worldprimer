@@ -10,9 +10,9 @@ public class TopBlockYSubstitution extends BaseSubstitution
 {
     private static final Pattern PATTERN_TOP_Y = Pattern.compile("(?<x>-?[0-9]+),(?<z>-?[0-9]+)");
 
-    public TopBlockYSubstitution()
+    public TopBlockYSubstitution(String substitutionName)
     {
-        super("TOP_Y", true);
+        super(substitutionName, true);
     }
 
     @Override

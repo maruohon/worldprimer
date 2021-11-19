@@ -12,9 +12,9 @@ public class TopBlockYRandSubstitution extends BaseSubstitution
     private static final Random RAND = new Random();
     private static final Pattern PATTERN_TOP_Y_RAND = Pattern.compile("(?<x>-?[0-9]+),(?<z>-?[0-9]+);(?<rx>[0-9]+),(?<rz>[0-9]+)");
 
-    public TopBlockYRandSubstitution()
+    public TopBlockYRandSubstitution(String substitutionName)
     {
-        super("TOP_Y_RAND", true);
+        super(substitutionName, true);
     }
 
     @Override

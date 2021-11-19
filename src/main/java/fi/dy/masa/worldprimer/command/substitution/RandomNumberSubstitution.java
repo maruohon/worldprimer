@@ -10,9 +10,9 @@ public class RandomNumberSubstitution extends BaseSubstitution
     protected static final Pattern PATTERN_RAND_DOUBLE = Pattern.compile("(?<min>-?(?:[0-9]+\\.)?[0-9]+),(?<max>-?(?:[0-9]+\\.)?[0-9]+)");
     protected static final Pattern PATTERN_RAND_INT    = Pattern.compile("(?<min>-?[0-9]+),(?<max>-?[0-9]+)");
 
-    public RandomNumberSubstitution()
+    public RandomNumberSubstitution(String substitutionName)
     {
-        super("RAND", true);
+        super(substitutionName, true);
     }
 
     @Override
