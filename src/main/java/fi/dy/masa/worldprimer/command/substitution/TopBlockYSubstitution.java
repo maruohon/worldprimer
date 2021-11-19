@@ -12,13 +12,7 @@ public class TopBlockYSubstitution extends BaseSubstitution
 
     public TopBlockYSubstitution()
     {
-        super("TOP_Y", true, true);
-    }
-
-    @Override
-    public boolean isArgumentValid(String argumentString)
-    {
-        return PATTERN_TOP_Y.matcher(argumentString).matches();
+        super("TOP_Y", true);
     }
 
     @Override
@@ -54,7 +48,7 @@ public class TopBlockYSubstitution extends BaseSubstitution
 
         protected TopBlockYSubstitutionArgs(String argumentString, int x, int z)
         {
-            super("TOP_Y", argumentString, true, false);
+            super("TOP_Y", argumentString, false);
 
             this.x = x;
             this.z = z;

@@ -10,7 +10,7 @@ public class RealTimeSubstitution extends BaseSubstitution
 
     public RealTimeSubstitution()
     {
-        super("TIME_IRL", false, true);
+        super("TIME_IRL", true);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class RealTimeSubstitution extends BaseSubstitution
 
         public RealTimeSubstitutionArgs(String formatStr)
         {
-            super("TIME_IRL", formatStr, false, false);
+            super("TIME_IRL", formatStr, false);
 
             this.format = new SimpleDateFormat(formatStr);
         }

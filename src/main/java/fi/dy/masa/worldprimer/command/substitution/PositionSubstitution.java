@@ -14,7 +14,7 @@ public class PositionSubstitution extends BaseSubstitution
                                 Function<World, BlockPos> positionFetcher,
                                 Coordinate coordinate)
     {
-        super(substitutionName, true, false);
+        super(substitutionName, false);
 
         this.positionFetcher = positionFetcher;
         this.coordinate = coordinate;

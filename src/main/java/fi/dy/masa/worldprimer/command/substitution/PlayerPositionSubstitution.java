@@ -16,7 +16,7 @@ public class PlayerPositionSubstitution extends BaseSubstitution
                                       PlayerPositionType playerPositionType,
                                       Coordinate coordinate)
     {
-        super(substitutionName, true, false);
+        super(substitutionName, false);
 
         this.playerPositionType = playerPositionType;
         this.coordinate = coordinate;

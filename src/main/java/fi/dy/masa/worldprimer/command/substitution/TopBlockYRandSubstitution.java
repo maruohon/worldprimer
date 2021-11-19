@@ -14,13 +14,7 @@ public class TopBlockYRandSubstitution extends BaseSubstitution
 
     public TopBlockYRandSubstitution()
     {
-        super("TOP_Y_RAND", true, true);
-    }
-
-    @Override
-    public boolean isArgumentValid(String argumentString)
-    {
-        return PATTERN_TOP_Y_RAND.matcher(argumentString).matches();
+        super("TOP_Y_RAND", true);
     }
 
     @Override
@@ -57,7 +51,7 @@ public class TopBlockYRandSubstitution extends BaseSubstitution
 
         protected TopBlockYRandSubstitutionArgs(String argumentString, int centerX, int centerZ, int rangeX, int rangeZ)
         {
-            super("TOP_Y_RAND", argumentString, true, false);
+            super("TOP_Y_RAND", argumentString, false);
 
             this.centerX = centerX;
             this.centerZ = centerZ;

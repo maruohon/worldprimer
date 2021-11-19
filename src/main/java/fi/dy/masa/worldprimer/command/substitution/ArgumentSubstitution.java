@@ -6,10 +6,9 @@ public abstract class ArgumentSubstitution extends BaseSubstitution
 
     protected ArgumentSubstitution(String substitutionName,
                                    String argumentsString,
-                                   boolean isNumeric,
                                    boolean hasArguments)
     {
-        super(substitutionName, isNumeric, hasArguments);
+        super(substitutionName, hasArguments);
 
         this.argumentsString = argumentsString;
     }

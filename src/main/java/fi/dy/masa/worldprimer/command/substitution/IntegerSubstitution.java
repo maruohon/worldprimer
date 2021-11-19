@@ -9,7 +9,7 @@ public class IntegerSubstitution extends BaseSubstitution
 
     public IntegerSubstitution(String name, Function<CommandContext, OptionalInt> intSource)
     {
-        super(name, true, false);
+        super(name, false);
 
         this.intSource = intSource;
     }

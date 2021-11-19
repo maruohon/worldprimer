@@ -126,14 +126,10 @@ public class SubstitutionParser
         if (substitution != null &&
             substitution.hasArguments() == hasArgs)
         {
-            if (buildFinalSubstitution)
+            if (hasArgs && buildFinalSubstitution)
             {
                 String arg = nameAndArgs.substring(colonIndex + 1);
-
-                if (substitution.isArgumentValid(arg))
-                {
-                    return substitution.buildSubstitution(arg);
-                }
+                return substitution.buildSubstitution(arg);
             }
             else
             {

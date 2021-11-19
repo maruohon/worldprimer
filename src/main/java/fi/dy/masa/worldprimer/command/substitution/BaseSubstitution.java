@@ -5,13 +5,11 @@ import javax.annotation.Nullable;
 public abstract class BaseSubstitution implements StringSubstitution
 {
     private final String substitutionName;
-    protected final boolean isNumeric;
     protected final boolean hasArguments;
 
-    protected BaseSubstitution(String substitutionName, boolean isNumeric, boolean hasArguments)
+    protected BaseSubstitution(String substitutionName, boolean hasArguments)
     {
         this.substitutionName = substitutionName;
-        this.isNumeric = isNumeric;
         this.hasArguments = hasArguments;
     }
 
@@ -25,19 +23,9 @@ public abstract class BaseSubstitution implements StringSubstitution
         return "{" + this.getSubstitutionName() + "}";
     }
 
-    public final boolean isNumeric()
-    {
-        return this.isNumeric;
-    }
-
     public final boolean hasArguments()
     {
         return this.hasArguments;
-    }
-
-    public boolean isArgumentValid(String argumentString)
-    {
-        return true;
     }
 
     /**

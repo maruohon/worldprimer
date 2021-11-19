@@ -9,7 +9,7 @@ public class PlayerAttributeSubstitution extends BaseSubstitution
 
     public PlayerAttributeSubstitution(String name, Function<EntityPlayer, String> stringFunction)
     {
-        super(name, false, false);
+        super(name, false);
 
         this.stringFunction = stringFunction;
     }

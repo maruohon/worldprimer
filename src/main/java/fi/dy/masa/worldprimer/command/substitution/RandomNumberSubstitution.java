@@ -12,13 +12,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
 
     public RandomNumberSubstitution()
     {
-        super("RAND", true, true);
-    }
-
-    @Override
-    public boolean isArgumentValid(String argumentString)
-    {
-        return PATTERN_RAND_DOUBLE.matcher(argumentString).matches();
+        super("RAND", true);
     }
 
     @Override
@@ -61,7 +55,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
 
         public RandomIntSubstitution(String argumentString, int min, int max)
         {
-            super("RAND", argumentString, true, false);
+            super("RAND", argumentString, false);
 
             this.minValue = min;
             this.range = max - min + 1;
@@ -83,7 +77,7 @@ public class RandomNumberSubstitution extends BaseSubstitution
 
         public RandomDoubleSubstitution(String argumentString, double min, double max)
         {
-            super("RAND", argumentString, true, false);
+            super("RAND", argumentString, false);
 
             this.minValue = min;
             this.range = max - min;

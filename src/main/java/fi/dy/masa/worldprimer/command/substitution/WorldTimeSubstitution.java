@@ -9,7 +9,7 @@ public class WorldTimeSubstitution extends BaseSubstitution
     public WorldTimeSubstitution(String substitutionName,
                                  WorldTimeSource worldTimeSource)
     {
-        super(substitutionName, true, false);
+        super(substitutionName, false);
 
         this.worldTimeSource = worldTimeSource;
     }
