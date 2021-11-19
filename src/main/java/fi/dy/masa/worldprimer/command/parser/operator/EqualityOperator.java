@@ -14,10 +14,10 @@ public enum EqualityOperator
     EQUAL       ((v1, v2) -> v1 == v2, (v1, v2) -> v1 == v2, (v1, v2) -> v1 == v2, String::equals),
     NOT_EQUAL   ((v1, v2) -> v1 != v2, (v1, v2) -> v1 != v2, (v1, v2) -> v1 != v2, (v1, v2) -> ! v1.equals(v2));
 
-    protected final BooleanOp booleanOp;
-    protected final IntOp intOp;
-    protected final DoubleOp doubleOp;
-    protected final StringOp stringOp;
+    private final BooleanOp booleanOp;
+    private final IntOp intOp;
+    private final DoubleOp doubleOp;
+    private final StringOp stringOp;
 
     EqualityOperator(BooleanOp booleanOp, IntOp intOp, DoubleOp doubleOp, StringOp stringOp)
     {

@@ -29,8 +29,8 @@ public enum TokenType
     VARIABLE                (8, 0, TokenCategory.VARIABLE_VALUE,   ValueCategory.UNKNOWN),
     INVALID                 (9, 0, TokenCategory.INVALID,          ValueCategory.NONE);
 
-    protected final TokenCategory tokenCategory;
-    protected final ValueCategory valueCategory;
+    private final TokenCategory tokenCategory;
+    private final ValueCategory valueCategory;
     private final int precedence;
     private final int argumentCount;
 

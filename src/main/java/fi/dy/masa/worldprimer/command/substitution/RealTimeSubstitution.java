@@ -6,8 +6,6 @@ import javax.annotation.Nullable;
 
 public class RealTimeSubstitution extends BaseSubstitution
 {
-    protected static final Date DATE = new Date();
-
     public RealTimeSubstitution(String substitutionName)
     {
         super(substitutionName, true);
@@ -28,20 +26,22 @@ public class RealTimeSubstitution extends BaseSubstitution
 
     protected static class RealTimeSubstitutionArgs extends ArgumentSubstitution
     {
+        protected final Date date;
         protected final SimpleDateFormat format;
 
         public RealTimeSubstitutionArgs(String formatStr)
         {
             super("TIME_IRL", formatStr, false);
 
+            this.date = new Date();
             this.format = new SimpleDateFormat(formatStr);
         }
 
         @Override
         public String evaluate(CommandContext context)
         {
-            DATE.setTime(System.currentTimeMillis());
-            return this.format.format(DATE);
+            this.date.setTime(System.currentTimeMillis());
+            return this.format.format(this.date);
         }
     }
 }

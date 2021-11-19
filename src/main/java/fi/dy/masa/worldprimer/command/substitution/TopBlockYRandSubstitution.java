@@ -66,10 +66,10 @@ public class TopBlockYRandSubstitution extends BaseSubstitution
     
             if (world != null)
             {
-                int rx = this.rangeX + 1;
-                int rz = this.rangeZ + 1;
-                int x = this.centerX - RAND.nextInt(rx) + RAND.nextInt(rx);
-                int z = this.centerZ - RAND.nextInt(rz) + RAND.nextInt(rz);
+                int rndX = RAND.nextInt(this.rangeX * 2 + 1);
+                int rndZ = RAND.nextInt(this.rangeZ * 2 + 1);
+                int x = this.centerX - this.rangeX + rndX;
+                int z = this.centerZ - this.rangeZ + rndZ;
     
                 return String.valueOf(WorldUtils.getTopYAt(world, x, z));
             }

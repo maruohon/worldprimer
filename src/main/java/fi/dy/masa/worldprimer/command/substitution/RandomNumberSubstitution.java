@@ -58,13 +58,13 @@ public class RandomNumberSubstitution extends BaseSubstitution
             super("RAND", argumentString, false);
 
             this.minValue = min;
-            this.range = max - min + 1;
+            this.range = max - min;
         }
 
         @Override
         public String evaluate(CommandContext context)
         {
-            return String.valueOf(this.minValue + RAND.nextInt(this.range));
+            return String.valueOf(this.minValue + RAND.nextInt(this.range + 1));
         }
     }
 
