@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -15,10 +16,13 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class CommandWorldPrimer extends CommandBase
 {
-    private final Map<String, ISubCommand> subCommands = new HashMap<String, ISubCommand>();
+    private final Map<String, ISubCommand> subCommands = new HashMap<>();
 
     public CommandWorldPrimer()
     {
@@ -26,6 +30,7 @@ public class CommandWorldPrimer extends CommandBase
         this.registerSubCommand(new SubCommandCreateStructure(this));
         this.registerSubCommand(new SubCommandReloadConfigs(this));
         this.registerSubCommand(new SubCommandSpreadPlayer(this));
+        this.registerSubCommand(new SubCommandTestExecutors(this));
     }
 
     @Override
@@ -42,8 +47,7 @@ public class CommandWorldPrimer extends CommandBase
 
     public List<String> getCommandNamesSorted()
     {
-        List<String> commands = new ArrayList<String>();
-        commands.addAll(this.getSubCommandNames());
+        List<String> commands = new ArrayList<>(this.getSubCommandNames());
         commands.add("help");
         Collections.sort(commands);
 
