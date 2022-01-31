@@ -12,10 +12,24 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 
 public class WorldUtils
 {
     private static final Map<Integer, Set<ChunkPos>> LOADED_CHUNKS = new HashMap<>();
+
+    public static World getWorldFromDimensionName(CommandContext ctx, String name)
+    {
+        try
+        {
+            int dim = Integer.parseInt(name);
+            World world = ctx.getServer().getWorld(dim);
+            return world != null ? world : ctx.getServer().worlds[0];
+        }
+        catch (Exception ignore) {}
+
+        return ctx.getWorld() != null ? ctx.getWorld() : ctx.getServer().worlds[0];
+    }
 
     public static BlockPos getWorldSpawn(World world)
     {

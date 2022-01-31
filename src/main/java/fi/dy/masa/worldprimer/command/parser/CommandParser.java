@@ -1,6 +1,8 @@
 package fi.dy.masa.worldprimer.command.parser;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.ImmutableList;
@@ -12,35 +14,52 @@ import fi.dy.masa.worldprimer.command.handler.ParsedCommand;
 import fi.dy.masa.worldprimer.command.parser.token.Token;
 import fi.dy.masa.worldprimer.command.substitution.ArithmeticExpression;
 import fi.dy.masa.worldprimer.command.substitution.BaseSubstitution;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 import fi.dy.masa.worldprimer.command.substitution.PlainString;
 import fi.dy.masa.worldprimer.command.substitution.StringSubstitution;
+import fi.dy.masa.worldprimer.util.WorldUtils;
 
 public class CommandParser
 {
+    public static final CommandParser INSTANCE = new CommandParser();
+
+    protected final ImmutableList<CommandPrefix> commandPrefixes;
+
+    protected CommandParser()
+    {
+        ImmutableList.Builder<CommandPrefix> builder = ImmutableList.builder();
+
+        addPrefixes(builder, this::csn,  "wp-csn",  "worldprimer-command-sender-name");
+        addPrefixes(builder, this::eid,  "wp-eid",  "worldprimer-execute-in-dimension");
+        addPrefixes(builder, this::eap,  "wp-eap",  "worldprimer-execute-as-player");
+        addPrefixes(builder, this::eupe, "wp-eupe", "worldprimer-execute-using-player-entity");
+
+        this.commandPrefixes = builder.build();
+    }
+
     @Nullable
-    public static ParsedCommand parseCommand(String originalString,
-                                             SubstitutionParser substitutionParser,
-                                             ExpressionParser expressionParser) throws SyntaxErrorException
+    public ParsedCommand parseCommand(String originalString,
+                                      SubstitutionParser substitutionParser,
+                                      ExpressionParser expressionParser) throws SyntaxErrorException
     {
         StringReader reader = new StringReader(originalString);
-        Expression conditionExpression = getConditionExpression(reader, substitutionParser, expressionParser);
-        ParsedCommand baseCommand = getCommand(reader, substitutionParser, expressionParser);
+        Expression conditionExpression = this.getConditionExpression(reader, substitutionParser, expressionParser);
+        ParsedCommand.Builder commandBuilder = this.getCommandPrefixes(reader);
+        ParsedCommand baseCommand = this.getCommand(reader, substitutionParser, expressionParser, commandBuilder);
 
-        System.out.printf("CommandParser.parseCommand(): baseCommand = '%s', conditionExpression = '%s'\n",
-                          baseCommand != null ? baseCommand.getOriginalString() : "<null>",
-                          conditionExpression != null ? conditionExpression.getOriginalString() : "<null>");
+        //System.out.printf("CommandParser.parseCommand(): baseCommand = '%s', conditionExpression = '%s'\n", baseCommand != null ? baseCommand.getOriginalString() : "<null>", conditionExpression != null ? conditionExpression.getOriginalString() : "<null>");
         if (baseCommand != null && conditionExpression != null)
         {
-            return new ConditionalCommand(baseCommand, conditionExpression);
+            return new ConditionalCommand(baseCommand, conditionExpression, commandBuilder);
         }
 
         return baseCommand;
     }
 
     @Nullable
-    private static Expression getConditionExpression(StringReader reader,
-                                                     SubstitutionParser substitutionParser,
-                                                     ExpressionParser expressionParser) throws SyntaxErrorException
+    protected Expression getConditionExpression(StringReader reader,
+                                                SubstitutionParser substitutionParser,
+                                                ExpressionParser expressionParser) throws SyntaxErrorException
     {
         String prefix = "worldprimer-condition[";
         String subString = reader.subString();
@@ -69,9 +88,10 @@ public class CommandParser
     }
 
     @Nullable
-    private static ParsedCommand getCommand(StringReader reader,
-                                            SubstitutionParser substitutionParser,
-                                            ExpressionParser expressionParser)
+    protected ParsedCommand getCommand(StringReader reader,
+                                       SubstitutionParser substitutionParser,
+                                       ExpressionParser expressionParser,
+                                       ParsedCommand.Builder commandBuilder)
     {
         ImmutableList.Builder<StringSubstitution> builder = ImmutableList.builder();
         final int startPos = reader.getPos();
@@ -86,23 +106,21 @@ public class CommandParser
             {
                 if (unconsumedStartPos < reader.getLength())
                 {
-                    builder.add(plainString(reader, unconsumedStartPos));
+                    builder.add(this.plainString(reader, unconsumedStartPos));
                 }
 
                 break;
             }
 
-            Pair<Region, Expression> pair = getArithmeticExpression(reader, substitutionRegion,
-                                                                    unconsumedStartPos, expressionParser);
+            Pair<Region, Expression> pair = this.getArithmeticExpression(reader, substitutionRegion,
+                                                                         unconsumedStartPos, expressionParser);
 
             // Found an arithmetic expression encompassing the next substitution
             if (pair != null)
             {
-                Region arithmeticRegion = pair.getLeft();
-                System.out.printf("CommandParser.getCommand(): Arithmetic Region: [%d, %d], expression: '%s'\n",
-                                  arithmeticRegion.start, arithmeticRegion.end, pair.getRight().getOriginalString());
+                //System.out.printf("CommandParser.getCommand(): Arithmetic Region: [%d, %d], expression: '%s'\n", pair.getLeft().start, pair.getLeft().end, pair.getRight().getOriginalString());
                 StringSubstitution substitution = new ArithmeticExpression(pair.getRight(), expressionParser);
-                unconsumedStartPos = addAndAdvance(arithmeticRegion, substitution, builder, reader, unconsumedStartPos);
+                unconsumedStartPos = this.addAndAdvance(pair.getLeft(), substitution, builder, reader, unconsumedStartPos);
             }
             // Just a plain substitution
             else
@@ -111,9 +129,8 @@ public class CommandParser
 
                 if (substitution != null)
                 {
-                    System.out.printf("CommandParser.getCommand(): Substitution: [%d, %d], sub: '%s'\n",
-                                      substitutionRegion.start, substitutionRegion.end, substitution.getOriginalFullSubstitutionString());
-                    unconsumedStartPos = addAndAdvance(substitutionRegion, substitution, builder, reader, unconsumedStartPos);
+                    //System.out.printf("CommandParser.getCommand(): Substitution: [%d, %d], sub: '%s'\n", substitutionRegion.start, substitutionRegion.end, substitution.getOriginalFullSubstitutionString());
+                    unconsumedStartPos = this.addAndAdvance(substitutionRegion, substitution, builder, reader, unconsumedStartPos);
                 }
                 else
                 {
@@ -126,20 +143,20 @@ public class CommandParser
 
         if (parts.isEmpty() == false)
         {
-            return new ParsedCommand(parts, reader.subString(startPos));
+            return new ParsedCommand(parts, reader.subString(startPos), commandBuilder);
         }
 
         return null;
     }
 
-    private static int addAndAdvance(Region region, StringSubstitution substitution,
-                                     ImmutableList.Builder<StringSubstitution> builder,
-                                     StringReader reader, int unconsumedStartPos)
+    protected int addAndAdvance(Region region, StringSubstitution substitution,
+                                ImmutableList.Builder<StringSubstitution> builder,
+                                StringReader reader, int unconsumedStartPos)
     {
         // Add the part of the string before the substitution or arithmetic expression region starts
         if (region.start > unconsumedStartPos)
         {
-            builder.add(plainString(reader, unconsumedStartPos, region.start - 1));
+            builder.add(this.plainString(reader, unconsumedStartPos, region.start - 1));
         }
 
         builder.add(substitution);
@@ -149,25 +166,110 @@ public class CommandParser
         return unconsumedStartPos;
     }
 
-    private static PlainString plainString(StringReader reader, int startPos)
+    protected PlainString plainString(StringReader reader, int startPos)
     {
-        return plainString(reader, startPos, reader.getLength() - 1);
+        return this.plainString(reader, startPos, reader.getLength() - 1);
     }
 
-    private static PlainString plainString(StringReader reader, int startPos, int endPos)
+    protected PlainString plainString(StringReader reader, int startPos, int endPos)
     {
         String str = reader.subString(startPos, endPos);
         str = str.replaceAll("\\$\\\\\\(", "\\$("); // $\( => $(
         str = str.replaceAll("\\$\\\\\\\\\\(", "\\$\\\\("); // $\\( => $\(
-        str = str.replaceAll("\\\\\\{", "{"); // $\{ => ${
+        str = str.replaceAll("\\\\\\{", "{"); // \{ => {
         return new PlainString(str);
     }
 
+    protected ParsedCommand.Builder getCommandPrefixes(StringReader reader)
+    {
+        ParsedCommand.Builder builder = ParsedCommand.builder();
+
+        while (reader.canRead())
+        {
+            if (this.getFirstPrefixAndAdvance(reader, builder) == false)
+            {
+                break;
+            }
+        }
+
+        return builder;
+    }
+
+    protected boolean getFirstPrefixAndAdvance(StringReader reader, ParsedCommand.Builder builder)
+    {
+        for (CommandPrefix prefix : this.commandPrefixes)
+        {
+            if (reader.startsWith(prefix.name))
+            {
+                int prefixLength = prefix.name.length();
+
+                if (prefix.hasArgument == false)
+                {
+                    prefix.nonParameterizedBuilderFunction.accept(builder);
+                    reader.movePos(prefixLength);
+                }
+                else
+                {
+                    String arg = readBracketedArgument(reader, reader.getPos() + prefixLength);
+                    //System.out.printf("getFirstPrefixAndAdvance(): arg: %s\n", arg);
+
+                    if (arg == null)
+                    {
+                        WorldPrimer.LOGGER.warn("Invalid command prefix argument for prefix '{}' in command '{}'",
+                                                prefix.name, reader.getString());
+                        break;
+                    }
+
+                    prefix.parameterizedBuilderFunction.accept(builder, arg);
+                    reader.movePos(prefixLength + arg.length() + 2);
+                }
+
+                reader.skipNextSpaces();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Nullable
-    private static Pair<Region, Expression>
-    getArithmeticExpression(StringReader reader,
-                            Region substitutionRegion, int minimumPos,
-                            ExpressionParser expressionParser)
+    protected static String readBracketedArgument(StringReader reader, int startPos)
+    {
+        if (reader.peekAt(startPos) == '[')
+        {
+            int pos = startPos + 1;
+            int nesting = 1;
+
+            while (reader.canPeekAt(pos))
+            {
+                char c = reader.peekAt(pos);
+
+                if (c == ']' && --nesting == 0)
+                {
+                    if (pos > startPos + 1)
+                    {
+                        return reader.subString(startPos + 1, pos - 1);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else if (c == '[')
+                {
+                    ++nesting;
+                }
+
+                ++pos;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    protected Pair<Region, Expression> getArithmeticExpression(StringReader reader, Region substitutionRegion,
+                                                               int minimumPos, ExpressionParser expressionParser)
     {
         final int regStartPos = reader.getString().indexOf("$(", minimumPos);
 
@@ -220,5 +322,69 @@ public class CommandParser
         }
 
         return null;
+    }
+
+    protected void csn(ParsedCommand.Builder builder, String arg)
+    {
+        builder.withSenderNameFunction((ctx) -> arg);
+    }
+
+    protected void eid(ParsedCommand.Builder builder, String arg)
+    {
+        builder.withExecutionWorldFunction((ctx) -> WorldUtils.getWorldFromDimensionName(ctx, arg));
+    }
+
+    protected void eap(ParsedCommand.Builder builder)
+    {
+        builder.withSenderFunction(CommandContext::getPlayer);
+    }
+
+    protected void eupe(ParsedCommand.Builder builder)
+    {
+        builder.withSenderEntityFunction((CommandContext::getPlayer));
+    }
+
+    protected static class CommandPrefix
+    {
+        public final String name;
+        public final boolean hasArgument;
+        @Nullable public final BiConsumer<ParsedCommand.Builder, String> parameterizedBuilderFunction;
+        @Nullable public final Consumer<ParsedCommand.Builder> nonParameterizedBuilderFunction;
+
+        public CommandPrefix(String name, @Nullable BiConsumer<ParsedCommand.Builder, String> parameterizedBuilderFunction)
+        {
+            this.name = name;
+            this.hasArgument = true;
+            this.parameterizedBuilderFunction = parameterizedBuilderFunction;
+            this.nonParameterizedBuilderFunction = null;
+        }
+
+        public CommandPrefix(String name, @Nullable Consumer<ParsedCommand.Builder> nonParameterizedBuilderFunction)
+        {
+            this.name = name;
+            this.hasArgument = false;
+            this.parameterizedBuilderFunction = null;
+            this.nonParameterizedBuilderFunction = nonParameterizedBuilderFunction;
+        }
+    }
+
+    private static void addPrefixes(ImmutableList.Builder<CommandPrefix> builder,
+                                    @Nullable BiConsumer<ParsedCommand.Builder, String> parameterizedBuilderFunction,
+                                    String... names)
+    {
+        for (String name : names)
+        {
+            builder.add(new CommandPrefix(name, parameterizedBuilderFunction));
+        }
+    }
+
+    private static void addPrefixes(ImmutableList.Builder<CommandPrefix> builder,
+                                    @Nullable Consumer<ParsedCommand.Builder> nonParameterizedBuilderFunction,
+                                    String... names)
+    {
+        for (String name : names)
+        {
+            builder.add(new CommandPrefix(name, nonParameterizedBuilderFunction));
+        }
     }
 }

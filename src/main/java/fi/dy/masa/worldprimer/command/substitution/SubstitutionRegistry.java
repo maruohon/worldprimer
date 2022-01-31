@@ -53,7 +53,6 @@ public class SubstitutionRegistry
         this.register(new TopBlockYRandSubstitution("TOP_Y_RAND"));
         this.register(new TopBlockYSubstitution("TOP_Y"));
 
-        this.register(new PlayerAttributeSubstitution("PLAYER_AGE",    (p) -> String.valueOf(p.ticksExisted)));
         this.register(new PlayerAttributeSubstitution("PLAYER_NAME",   EntityPlayer::getName));
         this.register(new PlayerAttributeSubstitution("PLAYER_HEALTH", (p) -> String.valueOf(p.getHealth())));
         this.register(new PlayerAttributeSubstitution("PLAYER_UUID",   (p) -> p.getUniqueID().toString()));

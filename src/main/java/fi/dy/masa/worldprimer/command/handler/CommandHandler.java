@@ -99,7 +99,7 @@ public class CommandHandler
 
         try
         {
-            ParsedCommand cmd = CommandParser.parseCommand(rawCommandString, this.substitutionParser, this.expressionParser);
+            ParsedCommand cmd = CommandParser.INSTANCE.parseCommand(rawCommandString, this.substitutionParser, this.expressionParser);
 
             if (cmd != null)
             {

@@ -97,7 +97,7 @@ public class StringReader
 
     public boolean startsWith(String str, int startPos)
     {
-        return this.string.startsWith(str, startPos);
+        return this.string.startsWith(str, this.pos + startPos);
     }
 
     public StringReader subReader(Region region)

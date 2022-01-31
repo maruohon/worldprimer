@@ -5,7 +5,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandResultStats.Type;
-import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -16,8 +15,9 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldprimer.WorldPrimer;
+import fi.dy.masa.worldprimer.command.handler.ParsedCommand;
+import fi.dy.masa.worldprimer.command.substitution.CommandContext;
 import fi.dy.masa.worldprimer.config.Configs;
-import fi.dy.masa.worldprimer.util.WorldUtils;
 import mcp.MethodsReturnNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
@@ -26,115 +26,124 @@ public class WorldPrimerCommandSender implements ICommandSender
 {
     public static final WorldPrimerCommandSender INSTANCE = new WorldPrimerCommandSender();
 
-    private World executionWorld;
-    @Nullable private String senderName = null;
+    @Nullable private World executionWorld;
+    @Nullable private ICommandSender sender;
+    @Nullable private Entity senderEntity;
+    @Nullable private String senderName;
 
-    public void executeCommand(String command, @Nullable World world)
+    public void executeCommand(ParsedCommand command, String commandStr, CommandContext ctx)
     {
-        ICommandManager manager = this.getServer().getCommandManager();
-        this.executionWorld = world;
-
-        if (StringUtils.isBlank(command) == false)
+        try
         {
-            command = this.handleCommandSenderNamePrefix(command);
-
-            World worldTmp = this.getEntityWorld();
-            String dim = worldTmp != null ? String.valueOf(worldTmp.provider.getDimension()) : "<none>";
-
-            if (this.isChunkLoadingCommand(command))
+            if (StringUtils.isBlank(commandStr) == false)
             {
-                WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
-                WorldUtils.executeChunkLoadingCommand(command, worldTmp);
-            }
-            // Execute our own commands directly, because the commands haven't been registered
-            // yet when the dimensions first load during server start.
-            else if (this.isWorldPrimerCommand(command))
-            {
-                WorldPrimer.logInfo("Attempting to directly execute a (possibly substituted) " +
-                                    "worldprimer command '{}' in dimension {}", command, dim);
+                this.applyOverrides(command, ctx);
 
-                try
+                MinecraftServer server = this.getServer();
+                ICommandSender sender = this.getCommandSender();
+                World world = this.getExecutionWorld(sender);
+                String dimStr = world != null ? String.valueOf(world.provider.getDimension()) : "<none>";
+
+                // TODO move the chunk loading commands to be actual commands
+                /*
+                if (this.isChunkLoadingCommand(command))
                 {
-                    command = command.substring(12); // remove "worldprimer " from the beginning
-                    WorldPrimer.commandWorldPrimer.execute(worldTmp.getMinecraftServer(), this, command.trim().split(" "));
+                    WorldPrimer.logInfo("Attempting to load chunks in dimension {}", dim);
+                    WorldUtils.executeChunkLoadingCommand(command, worldTmp);
                 }
-                catch (CommandException e)
+                */
+                // Execute our own commands directly, because the commands haven't been registered
+                // yet when the dimensions first load during server start.
+                if (this.isWorldPrimerCommand(commandStr))
                 {
-                    WorldPrimer.LOGGER.warn("Failed to execute the command '{}'", command, e);
+                    WorldPrimer.logInfo("Attempting to directly execute a (possibly substituted) " +
+                                        "/worldprimer command '{}' in dimension {}", commandStr, dimStr);
+
+                    try
+                    {
+                        String subStr = commandStr.substring(12); // remove "worldprimer " from the beginning
+                        WorldPrimer.commandWorldPrimer.execute(server, sender, subStr.trim().split(" "));
+                    }
+                    catch (CommandException e)
+                    {
+                        WorldPrimer.LOGGER.warn("Failed to execute the command '{}'", commandStr, e);
+                    }
+                }
+                else
+                {
+                    WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", commandStr, dimStr);
+                    server.getCommandManager().executeCommand(sender, commandStr);
                 }
             }
-            else
-            {
-                WorldPrimer.logInfo("Running a (possibly substituted) command: '{}' in dimension {}", command, dim);
-                manager.executeCommand(this, command);
-            }
-
-            this.senderName = null;
         }
+        finally
+        {
+            this.clearOverrides();
+        }
+    }
 
-        WorldUtils.unloadLoadedChunks(world);
+    private void applyOverrides(ParsedCommand command, CommandContext ctx)
+    {
+        this.executionWorld = command.getExecutionWorld(ctx);
+        this.sender = command.getCommandSender(ctx);
+        this.senderEntity = command.getCommandSenderEntity(ctx);
+        this.senderName = command.getCommandSenderName(ctx);
+    }
 
+    private void clearOverrides()
+    {
         this.executionWorld = null;
-    }
-
-    private String handleCommandSenderNamePrefix(String originalCommand)
-    {
-        String namePrefix = "worldprimer-command-sender ";
-
-        if (originalCommand.startsWith(namePrefix))
-        {
-            int namePrefixLength = namePrefix.length();
-            String command = originalCommand.substring(namePrefixLength);
-
-            if (command.charAt(0) == '"')
-            {
-                int endQuotePos = command.indexOf('"', 1);
-
-                if (endQuotePos > 0 && endQuotePos < command.length() - 3)
-                {
-                    this.senderName = command.substring(1, endQuotePos);
-                    return command.substring(endQuotePos + 2);
-                }
-                else
-                {
-                    WorldPrimer.LOGGER.warn("Malformed command sender name prefix for command '{}'", originalCommand);
-                }
-            }
-            else
-            {
-                int nameEndPos = command.indexOf(' ', 1);
-
-                if (nameEndPos > 0 && nameEndPos < command.length() - 2)
-                {
-                    this.senderName = command.substring(0, nameEndPos);
-                    return command.substring(nameEndPos + 1);
-                }
-                else
-                {
-                    WorldPrimer.LOGGER.warn("Malformed command sender name prefix for command '{}'", originalCommand);
-                }
-            }
-        }
-
-        return originalCommand;
-    }
-
-    private boolean isChunkLoadingCommand(String command)
-    {
-        String[] parts = command.split(" ");
-        return parts.length > 0 && (parts[0].equals("worldprimer-load-chunks") || parts[0].equals("worldprimer-load-blocks"));
+        this.sender = null;
+        this.senderEntity = null;
+        this.senderName = null;
     }
 
     private boolean isWorldPrimerCommand(String command)
     {
-        String[] parts = command.split(" ");
-        return parts.length > 0 && parts[0].equals("worldprimer");
+        return command.startsWith("worldprimer ");
+    }
+
+    private ICommandSender getCommandSender()
+    {
+        return this.sender != null ? this.sender : this;
+    }
+
+    @Nullable
+    private World getExecutionWorld(ICommandSender sender)
+    {
+        Entity entity = sender.getCommandSenderEntity();
+
+        if (entity != null)
+        {
+            return entity.getEntityWorld();
+        }
+
+        return sender.getEntityWorld();
+    }
+
+    @Override
+    @Nullable
+    public Entity getCommandSenderEntity()
+    {
+        return this.senderEntity;
+    }
+
+    @Override
+    public World getEntityWorld()
+    {
+        return this.executionWorld != null ? this.executionWorld : this.getServer().worlds[0];
     }
 
     @Override
     public String getName()
     {
         return this.senderName != null ? this.senderName : Configs.commandSenderName;
+    }
+
+    @Override
+    public MinecraftServer getServer()
+    {
+        return FMLCommonHandler.instance().getMinecraftServerInstance();
     }
 
     @Override
@@ -168,19 +177,6 @@ public class WorldPrimerCommandSender implements ICommandSender
     }
 
     @Override
-    public World getEntityWorld()
-    {
-        return this.executionWorld != null ? this.executionWorld : FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
-    }
-
-    @Override
-    @Nullable
-    public Entity getCommandSenderEntity()
-    {
-        return null;
-    }
-
-    @Override
     public boolean sendCommandFeedback()
     {
         return false;
@@ -189,11 +185,5 @@ public class WorldPrimerCommandSender implements ICommandSender
     @Override
     public void setCommandStat(Type type, int amount)
     {
-    }
-
-    @Override
-    public MinecraftServer getServer()
-    {
-        return FMLCommonHandler.instance().getMinecraftServerInstance();
     }
 }

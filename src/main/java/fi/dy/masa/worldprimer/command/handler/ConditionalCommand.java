@@ -9,9 +9,10 @@ public class ConditionalCommand extends ParsedCommand
     protected final Expression conditionExpression;
 
     public ConditionalCommand(ParsedCommand baseCommand,
-                              Expression conditionExpression)
+                              Expression conditionExpression,
+                              Builder builder)
     {
-        super(baseCommand.commandParts, baseCommand.originalString);
+        super(baseCommand.commandParts, baseCommand.originalString, builder);
 
         this.conditionExpression = conditionExpression;
     }
