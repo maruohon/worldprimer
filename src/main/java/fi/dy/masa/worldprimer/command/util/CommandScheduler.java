@@ -70,9 +70,8 @@ public class CommandScheduler
                     {
                         final long time = Long.parseLong(timeStr);
                         final int dimension = Integer.parseInt(parts[2]);
-                        List<ScheduledCommand> list = this.scheduledCommands.computeIfAbsent(dimension, (dim) -> new ArrayList<>());
 
-                        list.add(new ScheduledCommand(command, dimension, time, offset, isPeriodic));
+                        this.addScheduleCommand(command, time, offset, isPeriodic, dimension);
                     }
                 }
                 catch (NumberFormatException e)
@@ -87,6 +86,12 @@ public class CommandScheduler
         }
 
         this.updateAllScheduledCommands(false);
+    }
+
+    public void addScheduleCommand(ParsedCommand command, long time, long offset, boolean periodic, int dimension)
+    {
+        List<ScheduledCommand> list = this.scheduledCommands.computeIfAbsent(dimension, (dim) -> new ArrayList<>());
+        list.add(new ScheduledCommand(command, dimension, time, offset, periodic));
     }
 
     public void updateAllScheduledCommands(boolean removeFromCurrentTick)

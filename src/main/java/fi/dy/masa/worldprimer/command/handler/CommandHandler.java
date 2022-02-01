@@ -103,7 +103,7 @@ public class CommandHandler
 
             if (cmd != null)
             {
-                System.out.printf("CommandHandler#buildCommands(): Parsed command: '%s' as %s\n", cmd.getOriginalString(), cmd.getClass().getName());
+                //System.out.printf("CommandHandler#buildCommands(): Parsed command: '%s' as %s\n", cmd.getOriginalString(), cmd.getClass().getName());
                 return cmd;
             }
             else
