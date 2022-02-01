@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldprimer.WorldPrimer;
 import fi.dy.masa.worldprimer.command.util.CommandUtils;
-import fi.dy.masa.worldprimer.command.util.TimedCommands;
+import fi.dy.masa.worldprimer.command.util.CommandScheduler;
 import fi.dy.masa.worldprimer.config.Configs;
 import fi.dy.masa.worldprimer.util.DataTracker;
 
@@ -43,7 +43,7 @@ public class EventHandler
     {
         if (Configs.enableTimedCommands && event.side == Side.SERVER && event.phase == TickEvent.Phase.END)
         {
-            TimedCommands.runTimedCommands();
+            CommandScheduler.INSTANCE.runScheduledCommands();
         }
     }
 

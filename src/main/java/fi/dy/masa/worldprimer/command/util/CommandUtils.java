@@ -54,7 +54,7 @@ public class CommandUtils
 
             if (Configs.enableTimedCommands)
             {
-                TimedCommands.updateTimedCommandsForDimension(dimension);
+                CommandScheduler.INSTANCE.updateScheduledCommandsForDimension(dimension);
             }
 
             // The creation commands are only run via this method when not using dimension load count tracking

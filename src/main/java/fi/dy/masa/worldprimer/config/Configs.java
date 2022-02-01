@@ -6,7 +6,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import fi.dy.masa.worldprimer.command.util.TimedCommands;
+import fi.dy.masa.worldprimer.command.util.CommandScheduler;
 import fi.dy.masa.worldprimer.reference.Reference;
 
 public class Configs
@@ -292,8 +292,7 @@ public class Configs
                         "worldprimer-timed-command %1200 0 say Something happens now!\n" +
                         "worldprimer-timed-command %1200+80 0 Say something happened 4 seconds ago!");
         timedCommands = prop.getStringList();
-        TimedCommands.setTimedCommands(timedCommands);
-        TimedCommands.updateAllTimedCommands(false);
+        CommandScheduler.INSTANCE.setScheduledCommands(timedCommands);
 
         /**** player commands ****/
 
